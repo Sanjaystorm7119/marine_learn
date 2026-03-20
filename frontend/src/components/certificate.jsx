@@ -51,7 +51,7 @@ const certTimeline = [
 
 const sidebarItems = [
   { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
-  { label: "My Courses", icon: BookOpen, href: "course/cybersecurity/maritime-cybersecurity-q1" },
+  { label: "My Courses", icon: BookOpen, href: "/dashboard" },
   { label: "Calendar", icon: Calendar, href: "/dashboard" },
   { label: "Certificates", icon: Award, href: "/certificates", active: true },
   { label: "Reports", icon: BarChart3, href: "/dashboard" },
