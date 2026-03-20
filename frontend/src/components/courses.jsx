@@ -13,7 +13,7 @@ import "../pages/courses.css";
 
 const sidebarItems = [
   { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
-  { label: "My Courses", icon: BookOpen, href: "/dashboard", active: true },
+  { label: "My Courses", icon: BookOpen, href: "/course/cybersecurity", active: true },
   { label: "Calendar", icon: Calendar, href: "/dashboard" },
   { label: "Certificates", icon: Award, href: "/certificates" },
   { label: "Reports", icon: BarChart3, href: "/dashboard" },

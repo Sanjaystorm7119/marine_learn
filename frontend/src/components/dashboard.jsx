@@ -105,6 +105,7 @@ const forYouCourses = [
   { id: 5, title: "Electrical Systems at Sea", dept: "Electrical", tag: "ELECTRICAL", tagColor: "cl-tag--electrical", lessons: 20, instructor: "Chief Eng. Adams", icon: Zap, image: courseElectrical, departmentId: "electrical", courseId: "marine-electrical-safety" },
   { id: 6, title: "Maritime Catering & Hygiene", dept: "Catering", tag: "CATERING", tagColor: "cl-tag--catering", lessons: 12, instructor: "Chef Maria L.", icon: UtensilsCrossed, image: courseCatering, departmentId: "catering", courseId: "maritime-food-safety" },
   { id: 7, title: "Advanced Navigation & ECDIS", dept: "Navigation", tag: "NAVIGATION", tagColor: "cl-tag--navigation", lessons: 28, instructor: "Capt. James M.", icon: Navigation, image: courseNavigation, departmentId: "navigation", courseId: "radar-arpa-fundamentals" },
+  { id: 8, title: "Maritime Cybersecurity Fundamentals (Q1)", dept: "Cybersecurity", tag: "CYBER", tagColor: "cl-tag--safety", lessons: 16, instructor: "Security Officer", icon: Shield, image: courseSafety, departmentId: "cybersecurity", courseId: "maritime-cybersecurity-q1" },
 ];
 
 const recentActivity = [
@@ -131,7 +132,7 @@ const leaderboard = [
 
 const sidebarItems = [
   { label: "Dashboard", icon: LayoutDashboard, active: true, href: "/dashboard" },
-  { label: "My Courses", icon: BookOpen, href: "/dashboard" },
+  { label: "My Courses", icon: BookOpen, href: "/course/cybersecurity/maritime-cybersecurity-q1" },
   { label: "Calendar", icon: Calendar, href: "/dashboard" },
   { label: "Certificates", icon: Award, href: "/certificates" },
   { label: "Reports", icon: BarChart3, href: "/dashboard" },

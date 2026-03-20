@@ -1,5 +1,9 @@
 import ecdisLesson1 from "../assets/GPS Spoofing Defense - Lesson 1 Summary_720p_caption.mp4";// courseData.js — Course data for all departments
 import ecdisLesson2 from "../assets/GNSS Vulnerability Analysis - Lesson 2 Summary_720p_caption.mp4";
+// ─── External course modules from constants/ ─────────────────────────────────
+// To remove a module: delete its constants file and remove the import below.
+import { cybersecurityQ1Course } from "../constants/cybersecurity_study_material";
+
 const coursesByDepartment = {
   deck: [
     {
@@ -783,6 +787,12 @@ const coursesByDepartment = {
     },
   ],
 
+  // ─── Cybersecurity Training — sourced from constants/cybersecurity_study_material.js
+  // To remove this department: delete the constants files and remove this block.
+  cybersecurity: [
+    cybersecurityQ1Course,
+  ],
+
   catering: [
     {
       id: "catering-data-privacy",
@@ -950,6 +960,7 @@ export function getDepartmentTitle(departmentId) {
     navigation: "Navigation Department",
     electrical: "Electrical Department",
     catering: "Catering Department",
+    cybersecurity: "Cybersecurity Training",
   };
   return titles[departmentId] || departmentId;
 }
