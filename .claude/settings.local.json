@@ -12,7 +12,10 @@
       "Bash(grep -r fetch.*http:// 'C:\\\\E-learning web\\\\E-learning web \\(3\\) - Copy\\\\E-learning web/frontend/src')",
       "Bash(python3 -c \"import models, schemas, crud, auth, database; print\\(''All backend imports OK''\\)\")",
       "Bash(ls:*)",
-      "Bash(grep -E \"\\\\.\\(jsx|js\\)$\")"
+      "Bash(grep -E \"\\\\.\\(jsx|js\\)$\")",
+      "Bash(python -c \":*)",
+      "Bash(pip install:*)",
+      "Bash(npm run:*)"
     ]
   }
 }

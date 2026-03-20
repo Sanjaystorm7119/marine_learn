@@ -208,9 +208,9 @@ frontend/src/
 
 ### Custom Hooks (`src/hooks/`)
 
-| Hook | File | Purpose |
-|---|---|---|
-| `useDebounce` | `useDebounce.js` | Delays a value update by N ms (default 300ms) after the last change. Used by dashboard search to avoid filtering on every keystroke. |
+| Hook          | File             | Purpose |
+|---            |---               |---      |
+| `useDebounce` | `useDebounce.js` | Delays a value update by N ms (default 300ms) after the last change. Used by dashboard search to avoid filtering on every keystroke.|
 
 ### Backend (`backend/`)
 
