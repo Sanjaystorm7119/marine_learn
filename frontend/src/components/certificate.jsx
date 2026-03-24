@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import {
-  Anchor, Award, BookOpen, LayoutDashboard, Clock, Calendar,
+  Anchor, Award, BookOpen, LayoutDashboard, Clock, Calendar, BookMarked,
   Download, Eye, Share2, ExternalLink, CheckCircle2, Loader2,
   Shield, Flame, Navigation, Ship, Zap, UtensilsCrossed,
   GraduationCap, FileText, BarChart3, Settings, HelpCircle,
@@ -51,8 +51,9 @@ const certTimeline = [
 
 const sidebarItems = [
   { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
-  { label: "My Courses", icon: BookOpen, href: "/dashboard" },
-  { label: "Calendar", icon: Calendar, href: "/dashboard" },
+  { label: "My Courses",      icon: BookOpen,   href: "/mycourses" },
+  { label: "Study Materials", icon: BookMarked, href: "/study-materials" },
+  { label: "Calendar",        icon: Calendar,   href: "/calendar" },
   { label: "Certificates", icon: Award, href: "/certificates", active: true },
   { label: "Reports", icon: BarChart3, href: "/dashboard" },
   { label: "Resources", icon: FileText, href: "/dashboard" },

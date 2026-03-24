@@ -33,6 +33,7 @@ import {
   Star,
   Layers,
   BookOpenCheck,
+  BookMarked,
 } from "lucide-react";
 
 import "../pages/dashboard.css";
@@ -278,8 +279,9 @@ const sidebarItems = [
     active: true,
     href: "/dashboard",
   },
-  { label: "My Courses", icon: BookOpen, href: "/mycourses" },
-  { label: "Calendar", icon: Calendar, href: "/calendar" },
+  { label: "My Courses",      icon: BookOpen,   href: "/mycourses" },
+  { label: "Study Materials", icon: BookMarked, href: "/study-materials" },
+  { label: "Calendar",        icon: Calendar,   href: "/calendar" },
   { label: "Certificates", icon: Award, href: "/certificates" },
   { label: "Reports", icon: BarChart3, href: "/dashboard" },
   { label: "Resources", icon: FileText, href: "/dashboard" },

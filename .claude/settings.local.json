@@ -12,7 +12,30 @@
       "Bash(grep -r fetch.*http:// 'C:\\\\E-learning web\\\\E-learning web \\(3\\) - Copy\\\\E-learning web/frontend/src')",
       "Bash(python3 -c \"import models, schemas, crud, auth, database; print\\(''All backend imports OK''\\)\")",
       "Bash(ls:*)",
-      "Bash(grep -E \"\\\\.\\(jsx|js\\)$\")"
+      "Bash(grep -E \"\\\\.\\(jsx|js\\)$\")",
+      "Bash(python -c \":*)",
+      "Bash(source venv/Scripts/activate)",
+      "Bash(python seed_courses.py)",
+      "Bash(npm run:*)",
+      "Bash(curl:*)",
+      "Bash(__NEW_LINE_cc4cdec2b0045bab__ curl:*)",
+      "Bash(grep -rn \"db-shell\\\\|db-sidebar\\\\|db-topbar\" 'C:/E-learning web/E-learning web \\(3\\) - Copy/E-learning web/frontend/src/' --include=*.css --include=*.jsx)",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(''''\\\\n''''.join\\(d[''''paths''''].keys\\(\\)\\)\\)\")",
+      "Bash(netstat -ano)",
+      "Bash(taskkill /PID 31916 /F)",
+      "Bash(taskkill /PID 29704 /F)",
+      "Bash(cmd //c \"taskkill /PID 31916 /F\")",
+      "Bash(cmd //c \"taskkill /PID 29704 /F\")",
+      "Bash(python -c \"from routers import course_router; print\\(course_router.router.routes\\)\")",
+      "Bash(cmd //c \"netstat -ano | findstr :8000 | findstr LISTENING\")",
+      "Bash(cmd //c \"wmic process where ProcessId=31916 get ExecutablePath,CommandLine 2>nul\")",
+      "Bash(cmd //c \"wmic process where ProcessId=15304 get ExecutablePath,CommandLine 2>nul\")",
+      "Bash(cmd //c \"taskkill /PID 15304 /F\")",
+      "Bash(python -c \"import main; print\\([r.path for r in main.app.routes if ''course'' in r.path]\\)\")",
+      "Bash(cmd //c \"for /f \"\"tokens=5\"\" %a in \\(''''netstat -ano ^| findstr :8000 ^| findstr LISTENING''''\\) do taskkill /PID %a /F\")",
+      "Bash(cmd //c \"taskkill /PID 15656 /F & taskkill /PID 29704 /F & taskkill /PID 15304 /F & taskkill /PID 31916 /F & taskkill /PID 29648 /F\" 2>&1)",
+      "Bash(cmd //c \"taskkill /PID 21624 /F\" 2>&1)",
+      "Bash(cat:*)"
     ]
   }
 }

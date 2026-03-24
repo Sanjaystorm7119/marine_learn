@@ -27,6 +27,8 @@
 .sidebar-content {
   display: flex;
   flex-direction: column;
+  height: 100%;
+  overflow: hidden;
 }
 
 .sidebar-logo-area {
@@ -75,11 +77,13 @@
 }
 
 .sidebar-nav {
-  padding: 22px;
+  padding: 12px 22px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  margin-top: 10px;
+  gap: 2px;
+  margin-top: 4px;
+  flex: 1;
+  overflow-y: auto;
 }
 
 .sidebar-nav-item {
@@ -122,6 +126,7 @@
 .sidebar-user-area {
   padding: 12px;
   border-top: 1px solid hsl(207, 25%, 88% / 0.5);
+  flex-shrink: 0;
 }
 
 .sidebar-user {

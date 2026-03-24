@@ -1,0 +1,16 @@
+Total materials: 5
+ID: 1, Title: Maritime Cybersecurity Awareness Training, Target Roles (repr): ['crew', 'officer', 'department_head', 'admin'], Type: <class 'list'>
+ID: 2, Title: Maritime Cybersecurity Awareness, Target Roles (repr): ['crew', 'officer', 'department_head', 'admin'], Type: <class 'list'>
+ID: 3, Title: ECDIS Cybersecurity, Target Roles (repr): ['crew', 'officer', 'department_head', 'admin'], Type: <class 'list'>
+ID: 4, Title: Bridge Systems Advanced Security, Target Roles (repr): ['officer', 'department_head', 'admin'], Type: <class 'list'>
+ID: 5, Title: Department Security Management, Target Roles (repr): ['department_head', 'admin'], Type: <class 'list'>
+Total users: 9
+ID: 8, Email: sanjayyyy@random.com, Role: admin
+ID: 10, Email: john@doe.com, Role: crew
+ID: 11, Email: random1@gmail.com, Role: crew
+ID: 2, Email: sanjay1@random.com, Role: crew
+ID: 3, Email: jogn@doe.com, Role: department head
+ID: 1, Email: sanjay@random.com, Role: officers
+ID: 12, Email: ran@ran.com, Role: crew
+ID: 14, Email: san@jay.com, Role: crew
+ID: 15, Email: 123@123.com, Role: crew

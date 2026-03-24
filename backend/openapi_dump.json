@@ -1,0 +1,10 @@
+[
+  "/signup",
+  "/login",
+  "/users/me",
+  "/users/",
+  "/users/{user_id}",
+  "/users/{user_id}/role",
+  "/admin/stats",
+  "/"
+]
