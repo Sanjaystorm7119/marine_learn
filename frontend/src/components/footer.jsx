@@ -1,4 +1,13 @@
-import { Anchor, Mail, Phone, MapPin, Facebook, Twitter, Linkedin, Youtube } from "lucide-react";
+import {
+  Anchor,
+  Mail,
+  Phone,
+  MapPin,
+  Facebook,
+  Twitter,
+  Linkedin,
+  Youtube,
+} from "lucide-react";
 import "../pages/footer.css";
 
 const Footer = () => {
@@ -6,7 +15,6 @@ const Footer = () => {
     <footer className="footer-bg" id="contact">
       <div className="footer-container">
         <div className="footer-grid">
-
           {/* Brand */}
           <div className="footer-brand">
             <div className="footer-logo">
@@ -14,7 +22,8 @@ const Footer = () => {
               <span className="footer-logo-text">MarineLearn</span>
             </div>
             <p className="footer-tagline">
-              Empowering maritime professionals with world-class training and certification programs for a safer ocean.
+              Empowering maritime professionals with world-class training and
+              certification programs for a safer ocean.
             </p>
             <div className="footer-socials">
               {[Facebook, Twitter, Linkedin, Youtube].map((Icon, i) => (
@@ -29,11 +38,15 @@ const Footer = () => {
           <div className="footer-col">
             <h4 className="footer-col-title">Quick Links</h4>
             <ul className="footer-links">
-              {["Home", "Courses", "Departments", "About Us", "Contact"].map((link) => (
-                <li key={link}>
-                  <a href="#" className="footer-link">{link}</a>
-                </li>
-              ))}
+              {["Home", "Courses", "Departments", "About Us", "Contact"].map(
+                (link) => (
+                  <li key={link}>
+                    <a href="#" className="footer-link">
+                      {link}
+                    </a>
+                  </li>
+                ),
+              )}
             </ul>
           </div>
 
@@ -41,9 +54,18 @@ const Footer = () => {
           <div className="footer-col">
             <h4 className="footer-col-title">Departments</h4>
             <ul className="footer-links">
-              {["Deck Department", "Engine Department", "Safety & Survival", "Navigation", "Electrical", "Catering & Hotel"].map((dept) => (
+              {[
+                "Deck Department",
+                "Engine Department",
+                "Safety & Survival",
+                "Navigation",
+                "Electrical",
+                "Catering & Hotel",
+              ].map((dept) => (
                 <li key={dept}>
-                  <a href="#" className="footer-link">{dept}</a>
+                  <a href="#" className="footer-link">
+                    {dept}
+                  </a>
                 </li>
               ))}
             </ul>
@@ -71,10 +93,16 @@ const Footer = () => {
 
         {/* Bottom Bar */}
         <div className="footer-bottom">
-          <p className="footer-copy">© 2026 MarineLearn. All rights reserved.</p>
+          <p className="footer-copy">
+            © 2026 MarineLearn. All rights reserved.
+          </p>
           <div className="footer-legal">
-            <a href="#" className="footer-legal-link">Privacy Policy</a>
-            <a href="#" className="footer-legal-link">Terms of Service</a>
+            <a href="#" className="footer-legal-link">
+              Privacy Policy
+            </a>
+            <a href="#" className="footer-legal-link">
+              Terms of Service
+            </a>
           </div>
         </div>
       </div>

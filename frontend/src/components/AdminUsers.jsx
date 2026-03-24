@@ -10,7 +10,7 @@ const AdminUsers = () => {
   const [updateMessage, setUpdateMessage] = useState(null);
   const navigate = useNavigate();
 
-  const roles = ["Crews", "Officers", "Department Head", "Admin"];
+  const roles = ["crews", "officers", "department head", "admin"];
 
   useEffect(() => {
     fetchUsers();
@@ -28,7 +28,6 @@ const AdminUsers = () => {
 
       const response = await fetch("http://127.0.0.1:8000/users/", {
         headers: {
-            
           Authorization: `Bearer ${token}`,
         },
       });
@@ -87,7 +86,7 @@ const AdminUsers = () => {
     full_name: "",
     email: "",
     password: "",
-    role: "Crews",
+    role: "crews",
     department: "",
   });
 
@@ -122,7 +121,7 @@ const AdminUsers = () => {
         full_name: "",
         email: "",
         password: "",
-        role: "Crews",
+        role: "crews",
         department: "",
       });
       setTimeout(() => setUpdateMessage(null), 3000);
