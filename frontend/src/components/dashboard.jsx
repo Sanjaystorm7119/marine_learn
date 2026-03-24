@@ -2,11 +2,37 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import {
-  Anchor, BookOpen, GraduationCap, LayoutDashboard, Award, Clock,
-  TrendingUp, Play, ChevronRight, Bell, Search, User, LogOut,
-  Ship, Navigation, Flame, Shield, Zap, UtensilsCrossed,
-  Calendar, FileText, BarChart3, Settings, HelpCircle, Menu, X,
-  CheckCircle2, Circle, Star, Layers, BookOpenCheck
+  Anchor,
+  BookOpen,
+  GraduationCap,
+  LayoutDashboard,
+  Award,
+  Clock,
+  TrendingUp,
+  Play,
+  ChevronRight,
+  Bell,
+  Search,
+  User,
+  LogOut,
+  Ship,
+  Navigation,
+  Flame,
+  Shield,
+  Zap,
+  UtensilsCrossed,
+  Calendar,
+  FileText,
+  BarChart3,
+  Settings,
+  HelpCircle,
+  Menu,
+  X,
+  CheckCircle2,
+  Circle,
+  Star,
+  Layers,
+  BookOpenCheck,
 } from "lucide-react";
 
 import "../pages/dashboard.css";
@@ -70,7 +96,7 @@ function runSearch(query) {
       (c) =>
         c.title.toLowerCase().includes(q) ||
         c.description.toLowerCase().includes(q) ||
-        c.department.toLowerCase().includes(q)
+        c.department.toLowerCase().includes(q),
     )
     .slice(0, 5);
 
@@ -80,7 +106,7 @@ function runSearch(query) {
         m.title.toLowerCase().includes(q) ||
         m.courseTitle.toLowerCase().includes(q) ||
         m.department.toLowerCase().includes(q) ||
-        m.topics.toLowerCase().includes(q)
+        m.topics.toLowerCase().includes(q),
     )
     .slice(0, 5);
 
@@ -89,36 +115,152 @@ function runSearch(query) {
 
 /* ── Mock Data ── */
 const stats = [
-  { label: "Enrolled Courses", value: "12", icon: BookOpen, change: "+2 this month", colorClass: "stat-icon-blue" },
-  { label: "Completed", value: "7", icon: Award, change: "58% completion", colorClass: "stat-icon-green" },
-  { label: "Hours Logged", value: "186", icon: Clock, change: "+24 this week", colorClass: "stat-icon-amber" },
-  { label: "Certificates", value: "5", icon: GraduationCap, change: "2 pending", colorClass: "stat-icon-violet" },
+  {
+    label: "Enrolled Courses",
+    value: "12",
+    icon: BookOpen,
+    change: "+2 this month",
+    colorClass: "stat-icon-blue",
+  },
+  {
+    label: "Completed",
+    value: "7",
+    icon: Award,
+    change: "58% completion",
+    colorClass: "stat-icon-green",
+  },
+  {
+    label: "Hours Logged",
+    value: "186",
+    icon: Clock,
+    change: "+24 this week",
+    colorClass: "stat-icon-amber",
+  },
+  {
+    label: "Certificates",
+    value: "5",
+    icon: GraduationCap,
+    change: "2 pending",
+    colorClass: "stat-icon-violet",
+  },
 ];
 
 const continueLearning = [
-  { id: 1, title: "STCW Basic Safety Training", dept: "Safety", tag: "SAFETY", tagColor: "cl-tag--safety", icon: Shield, progress: 85, nextModule: "Fire Prevention Drills", image: courseSafety, departmentId: "safety", courseId: "stcw-basic-safety" },
-  { id: 2, title: "Marine Engine Operations", dept: "Engine", tag: "ENGINE", tagColor: "cl-tag--engine", icon: Flame, progress: 62, nextModule: "Diesel Propulsion Systems", image: courseEngine, departmentId: "engine", courseId: "engine-scada-security" },
-  { id: 4, title: "Deck Officer Certificate", dept: "Deck", tag: "DECK", tagColor: "cl-tag--deck", icon: Ship, progress: 30, nextModule: "Cargo Handling Procedures", image: courseDeck, departmentId: "deck", courseId: "ecdis-cybersecurity" },
+  {
+    id: 1,
+    title: "STCW Basic Safety Training",
+    dept: "Safety",
+    tag: "SAFETY",
+    tagColor: "cl-tag--safety",
+    icon: Shield,
+    progress: 85,
+    nextModule: "Fire Prevention Drills",
+    image: courseSafety,
+    departmentId: "safety",
+    courseId: "stcw-basic-safety",
+  },
+  {
+    id: 2,
+    title: "Marine Engine Operations",
+    dept: "Engine",
+    tag: "ENGINE",
+    tagColor: "cl-tag--engine",
+    icon: Flame,
+    progress: 62,
+    nextModule: "Diesel Propulsion Systems",
+    image: courseEngine,
+    departmentId: "engine",
+    courseId: "engine-scada-security",
+  },
+  {
+    id: 4,
+    title: "Deck Officer Certificate",
+    dept: "Deck",
+    tag: "DECK",
+    tagColor: "cl-tag--deck",
+    icon: Ship,
+    progress: 30,
+    nextModule: "Cargo Handling Procedures",
+    image: courseDeck,
+    departmentId: "deck",
+    courseId: "ecdis-cybersecurity",
+  },
 ];
 
 const forYouCourses = [
-  { id: 5, title: "Electrical Systems at Sea", dept: "Electrical", tag: "ELECTRICAL", tagColor: "cl-tag--electrical", lessons: 20, instructor: "Chief Eng. Adams", icon: Zap, image: courseElectrical, departmentId: "electrical", courseId: "marine-electrical-safety" },
-  { id: 6, title: "Maritime Catering & Hygiene", dept: "Catering", tag: "CATERING", tagColor: "cl-tag--catering", lessons: 12, instructor: "Chef Maria L.", icon: UtensilsCrossed, image: courseCatering, departmentId: "catering", courseId: "maritime-food-safety" },
-  { id: 7, title: "Advanced Navigation & ECDIS", dept: "Navigation", tag: "NAVIGATION", tagColor: "cl-tag--navigation", lessons: 28, instructor: "Capt. James M.", icon: Navigation, image: courseNavigation, departmentId: "navigation", courseId: "radar-arpa-fundamentals" },
+  {
+    id: 5,
+    title: "Electrical Systems at Sea",
+    dept: "Electrical",
+    tag: "ELECTRICAL",
+    tagColor: "cl-tag--electrical",
+    lessons: 20,
+    instructor: "Chief Eng. Adams",
+    icon: Zap,
+    image: courseElectrical,
+    departmentId: "electrical",
+    courseId: "marine-electrical-safety",
+  },
+  {
+    id: 6,
+    title: "Maritime Catering & Hygiene",
+    dept: "Catering",
+    tag: "CATERING",
+    tagColor: "cl-tag--catering",
+    lessons: 12,
+    instructor: "Chef Maria L.",
+    icon: UtensilsCrossed,
+    image: courseCatering,
+    departmentId: "catering",
+    courseId: "maritime-food-safety",
+  },
+  {
+    id: 7,
+    title: "Advanced Navigation & ECDIS",
+    dept: "Navigation",
+    tag: "NAVIGATION",
+    tagColor: "cl-tag--navigation",
+    lessons: 28,
+    instructor: "Capt. James M.",
+    icon: Navigation,
+    image: courseNavigation,
+    departmentId: "navigation",
+    courseId: "radar-arpa-fundamentals",
+  },
 ];
 
 const recentActivity = [
-  { text: "Completed Module 5: Fire Prevention", time: "2 hours ago", icon: CheckCircle2 },
-  { text: "Started Bridge Simulation Exercise", time: "5 hours ago", icon: Play },
+  {
+    text: "Completed Module 5: Fire Prevention",
+    time: "2 hours ago",
+    icon: CheckCircle2,
+  },
+  {
+    text: "Started Bridge Simulation Exercise",
+    time: "5 hours ago",
+    icon: Play,
+  },
   { text: "Earned Certificate: Basic Safety", time: "1 day ago", icon: Award },
-  { text: "Submitted Quiz: Engine Fundamentals", time: "2 days ago", icon: FileText },
+  {
+    text: "Submitted Quiz: Engine Fundamentals",
+    time: "2 days ago",
+    icon: FileText,
+  },
   { text: "Joined study group: Deck Officers", time: "3 days ago", icon: User },
 ];
 
 const upcomingDeadlines = [
   { title: "STCW Quiz 3", date: "Feb 25, 2026", course: "STCW Basic Safety" },
-  { title: "Engine Lab Report", date: "Feb 28, 2026", course: "Marine Engine Operations" },
-  { title: "Final Assessment", date: "Mar 5, 2026", course: "Deck Officer Certificate" },
+  {
+    title: "Engine Lab Report",
+    date: "Feb 28, 2026",
+    course: "Marine Engine Operations",
+  },
+  {
+    title: "Final Assessment",
+    date: "Mar 5, 2026",
+    course: "Deck Officer Certificate",
+  },
 ];
 
 const leaderboard = [
@@ -130,9 +272,14 @@ const leaderboard = [
 ];
 
 const sidebarItems = [
-  { label: "Dashboard", icon: LayoutDashboard, active: true, href: "/dashboard" },
-  { label: "My Courses", icon: BookOpen, href: "/dashboard" },
-  { label: "Calendar", icon: Calendar, href: "/dashboard" },
+  {
+    label: "Dashboard",
+    icon: LayoutDashboard,
+    active: true,
+    href: "/dashboard",
+  },
+  { label: "My Courses", icon: BookOpen, href: "/mycourses" },
+  { label: "Calendar", icon: Calendar, href: "/calendar" },
   { label: "Certificates", icon: Award, href: "/certificates" },
   { label: "Reports", icon: BarChart3, href: "/dashboard" },
   { label: "Resources", icon: FileText, href: "/dashboard" },
@@ -142,7 +289,7 @@ const sidebarItems = [
 
 const Dashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const[mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   const [userName, setUserName] = useState("Loading...");
   const navigate = useNavigate();
@@ -195,7 +342,7 @@ const Dashboard = () => {
       }
       try {
         const response = await fetch("http://localhost:8000/users/me", {
-          headers: { "Authorization": `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
         });
         if (response.ok) {
           const userData = await response.json();
@@ -210,19 +357,26 @@ const Dashboard = () => {
       }
     };
     fetchUserData();
-  },[navigate]);
+  }, [navigate]);
 
   return (
-    <div className={`dashboard-root${sidebarOpen ? " sidebar-open" : " sidebar-collapsed"}`}>
+    <div
+      className={`dashboard-root${sidebarOpen ? " sidebar-open" : " sidebar-collapsed"}`}
+    >
       {/* Desktop Sidebar */}
-      <aside className={`sidebar-desktop${sidebarOpen ? " sidebar-desktop--open" : " sidebar-desktop--collapsed"}`}>
+      <aside
+        className={`sidebar-desktop${sidebarOpen ? " sidebar-desktop--open" : " sidebar-desktop--collapsed"}`}
+      >
         <Sidenav sidebarOpen={sidebarOpen} sidebarItems={sidebarItems} />
       </aside>
 
       {/* Mobile Sidebar Overlay */}
       {mobileSidebarOpen && (
         <div className="sidebar-mobile-overlay">
-          <div className="sidebar-mobile-backdrop" onClick={() => setMobileSidebarOpen(false)} />
+          <div
+            className="sidebar-mobile-backdrop"
+            onClick={() => setMobileSidebarOpen(false)}
+          />
           <aside className="sidebar-mobile-panel">
             <Sidenav sidebarOpen={true} sidebarItems={sidebarItems} />
           </aside>
@@ -250,7 +404,9 @@ const Dashboard = () => {
                 type="text"
                 value={searchQuery}
                 onChange={handleSearchChange}
-                onFocus={() => debouncedQuery.trim().length >= 2 && setSearchOpen(true)}
+                onFocus={() =>
+                  debouncedQuery.trim().length >= 2 && setSearchOpen(true)
+                }
                 placeholder="Search courses, modules..."
                 className="topbar-search-input"
                 autoComplete="off"
@@ -284,15 +440,25 @@ const Dashboard = () => {
                 >
                   {!hasResults ? (
                     <div className="search-empty">
-                      <Search style={{ width: 24, height: 24, opacity: 0.3, marginBottom: 8 }} />
-                      <p>No results for <strong>"{debouncedQuery}"</strong></p>
+                      <Search
+                        style={{
+                          width: 24,
+                          height: 24,
+                          opacity: 0.3,
+                          marginBottom: 8,
+                        }}
+                      />
+                      <p>
+                        No results for <strong>"{debouncedQuery}"</strong>
+                      </p>
                     </div>
                   ) : (
                     <>
                       {searchResults.courses.length > 0 && (
                         <div className="search-group">
                           <p className="search-group-label">
-                            <BookOpen style={{ width: 12, height: 12 }} /> Courses
+                            <BookOpen style={{ width: 12, height: 12 }} />{" "}
+                            Courses
                           </p>
                           {searchResults.courses.map((course) => (
                             <Link
@@ -302,12 +468,25 @@ const Dashboard = () => {
                               onClick={handleResultClick}
                               role="option"
                             >
-                              <span className="search-result-icon">{course.icon}</span>
+                              <span className="search-result-icon">
+                                {course.icon}
+                              </span>
                               <div className="search-result-info">
-                                <p className="search-result-title">{course.title}</p>
-                                <p className="search-result-meta">{course.department}</p>
+                                <p className="search-result-title">
+                                  {course.title}
+                                </p>
+                                <p className="search-result-meta">
+                                  {course.department}
+                                </p>
                               </div>
-                              <ChevronRight style={{ width: 14, height: 14, flexShrink: 0, opacity: 0.4 }} />
+                              <ChevronRight
+                                style={{
+                                  width: 14,
+                                  height: 14,
+                                  flexShrink: 0,
+                                  opacity: 0.4,
+                                }}
+                              />
                             </Link>
                           ))}
                         </div>
@@ -327,15 +506,26 @@ const Dashboard = () => {
                               role="option"
                             >
                               <span className="search-result-icon search-result-icon--module">
-                                <BookOpenCheck style={{ width: 14, height: 14 }} />
+                                <BookOpenCheck
+                                  style={{ width: 14, height: 14 }}
+                                />
                               </span>
                               <div className="search-result-info">
-                                <p className="search-result-title">{mod.title}</p>
+                                <p className="search-result-title">
+                                  {mod.title}
+                                </p>
                                 <p className="search-result-meta">
                                   {mod.courseTitle} · {mod.duration}
                                 </p>
                               </div>
-                              <ChevronRight style={{ width: 14, height: 14, flexShrink: 0, opacity: 0.4 }} />
+                              <ChevronRight
+                                style={{
+                                  width: 14,
+                                  height: 14,
+                                  flexShrink: 0,
+                                  opacity: 0.4,
+                                }}
+                              />
                             </Link>
                           ))}
                         </div>
@@ -347,7 +537,8 @@ const Dashboard = () => {
                           className="search-browse-all"
                           onClick={handleResultClick}
                         >
-                          Browse all courses <ChevronRight style={{ width: 13, height: 13 }} />
+                          Browse all courses{" "}
+                          <ChevronRight style={{ width: 13, height: 13 }} />
                         </Link>
                       </div>
                     </>
@@ -376,7 +567,9 @@ const Dashboard = () => {
             <h1 className="welcome-heading">
               Welcome back, <span className="welcome-name">{userName}!</span>
             </h1>
-            <p className="welcome-sub">Track your maritime training progress and continue learning.</p>
+            <p className="welcome-sub">
+              Track your maritime training progress and continue learning.
+            </p>
           </motion.div>
 
           {/* Stats Grid */}
@@ -413,8 +606,8 @@ const Dashboard = () => {
                 <div className="section-header">
                   <h2 className="section-title">Continue Learning</h2>
                   <Link to="/coursepage" className="view-all-btn">
-  See All <ChevronRight className="view-all-icon" />
-</Link>
+                    See All <ChevronRight className="view-all-icon" />
+                  </Link>
                 </div>
 
                 <div className="cl-list">
@@ -427,18 +620,35 @@ const Dashboard = () => {
                     >
                       <div className="cl-card">
                         <div className="cl-card-body">
-                          <img src={course.image} alt={course.title} className="cl-thumb" />
+                          <img
+                            src={course.image}
+                            alt={course.title}
+                            className="cl-thumb"
+                          />
                           <div className="cl-info">
-                            <span className={`cl-tag ${course.tagColor}`}>{course.tag}</span>
+                            <span className={`cl-tag ${course.tagColor}`}>
+                              {course.tag}
+                            </span>
                             <h3 className="cl-title">{course.title}</h3>
-                            <p className="cl-next">Next Module: <span className="cl-next-name">{course.nextModule}</span></p>
+                            <p className="cl-next">
+                              Next Module:{" "}
+                              <span className="cl-next-name">
+                                {course.nextModule}
+                              </span>
+                            </p>
                             <div className="cl-progress-track">
-                              <div className="cl-progress-fill" style={{ width: `${course.progress}%` }} />
+                              <div
+                                className="cl-progress-fill"
+                                style={{ width: `${course.progress}%` }}
+                              />
                             </div>
                           </div>
-                          <Link to={`/course/${course.departmentId}/${course.courseId}`} className="cl-resume-btn">
-  Resume Course
-</Link>
+                          <Link
+                            to={`/course/${course.departmentId}/${course.courseId}`}
+                            className="cl-resume-btn"
+                          >
+                            Resume Course
+                          </Link>
                         </div>
                       </div>
                     </motion.div>
@@ -451,8 +661,8 @@ const Dashboard = () => {
                 <div className="section-header">
                   <h2 className="section-title">For You</h2>
                   <Link to="/coursepage" className="view-all-btn">
-  See All <ChevronRight className="view-all-icon" />
-</Link>
+                    See All <ChevronRight className="view-all-icon" />
+                  </Link>
                 </div>
 
                 <div className="fy-grid">
@@ -463,12 +673,22 @@ const Dashboard = () => {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.05 * i, duration: 0.4 }}
                     >
-                      <Link to={`/course/${course.departmentId}/${course.courseId}`} className="fy-card" style={{ textDecoration: "none" }}>
+                      <Link
+                        to={`/course/${course.departmentId}/${course.courseId}`}
+                        className="fy-card"
+                        style={{ textDecoration: "none" }}
+                      >
                         <div className="fy-img-wrap">
-                          <img src={course.image} alt={course.title} className="fy-img" />
+                          <img
+                            src={course.image}
+                            alt={course.title}
+                            className="fy-img"
+                          />
                         </div>
                         <div className="fy-card-body">
-                          <span className={`cl-tag ${course.tagColor}`}>{course.tag}</span>
+                          <span className={`cl-tag ${course.tagColor}`}>
+                            {course.tag}
+                          </span>
                           <h3 className="fy-title">{course.title}</h3>
                           <p className="fy-lessons">{course.lessons} Lessons</p>
                           <div className="fy-instructor">
@@ -476,7 +696,9 @@ const Dashboard = () => {
                               <User className="fy-avatar-icon" />
                             </div>
                             <div>
-                              <p className="fy-instructor-name">{course.instructor}</p>
+                              <p className="fy-instructor-name">
+                                {course.instructor}
+                              </p>
                               <p className="fy-instructor-label">Instructor</p>
                             </div>
                           </div>
@@ -529,7 +751,9 @@ const Dashboard = () => {
                       </div>
                       <div className="deadline-info">
                         <p className="deadline-title">{item.title}</p>
-                        <p className="deadline-meta">{item.date} · {item.course}</p>
+                        <p className="deadline-meta">
+                          {item.date} · {item.course}
+                        </p>
                       </div>
                     </div>
                   ))}
@@ -549,15 +773,25 @@ const Dashboard = () => {
                       className={`leaderboard-item${user.name === "You" ? " leaderboard-item--you" : ""}`}
                     >
                       <span className={`leaderboard-rank rank-${user.rank}`}>
-                        {user.rank <= 3 ? <Star className="rank-star" /> : `#${user.rank}`}
+                        {user.rank <= 3 ? (
+                          <Star className="rank-star" />
+                        ) : (
+                          `#${user.rank}`
+                        )}
                       </span>
                       <div className="leaderboard-avatar">
                         <User className="leaderboard-avatar-icon" />
                       </div>
                       <div className="leaderboard-name-wrap">
-                        <p className={`leaderboard-name${user.name === "You" ? " leaderboard-name--you" : ""}`}>{user.name}</p>
+                        <p
+                          className={`leaderboard-name${user.name === "You" ? " leaderboard-name--you" : ""}`}
+                        >
+                          {user.name}
+                        </p>
                       </div>
-                      <span className="leaderboard-points">{user.points} pts</span>
+                      <span className="leaderboard-points">
+                        {user.points} pts
+                      </span>
                     </div>
                   ))}
                 </div>
