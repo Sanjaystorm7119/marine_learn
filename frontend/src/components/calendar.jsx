@@ -16,9 +16,8 @@ import "../pages/dashboard.css";
 /* ── Sidebar Items — Calendar is active ── */
 const sidebarItems = [
   { label: "Dashboard",    icon: LayoutDashboard, href: "/dashboard" },
-  { label: "My Courses",      icon: BookOpen,   href: "/mycourses" },
-  { label: "Study Materials", icon: BookMarked, href: "/study-materials" },
-  { label: "Calendar",        icon: Calendar,   href: "/calendar", active: true },
+  { label: "My Courses",   icon: BookOpen,         href: "/mycourses" },
+  { label: "Calendar",     icon: Calendar,          href: "/calendar", active: true },
   { label: "Certificates", icon: Award,             href: "/certificates" },
   { label: "Reports",      icon: BarChart3,         href: "/dashboard" },
   { label: "Resources",    icon: FileText,          href: "/dashboard" },

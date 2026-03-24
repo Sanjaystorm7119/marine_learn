@@ -5,7 +5,7 @@ import { coursesByDepartment } from "./courseData";
 import {
   LayoutDashboard, BookOpen, Award, BarChart3,
   FileText, Settings, HelpCircle, Calendar,
-  Search, Bell, Menu, BookMarked,
+  Search, Bell, Menu
 } from "lucide-react";
 import Sidenav from "./sidenav";
 import "../pages/mycourse.css";
@@ -14,9 +14,8 @@ import "../pages/dashboard.css";
 // ─── Sidebar items (same as dashboard) ───────────────────────────────────────
 const sidebarItems = [
   { label: "Dashboard",   icon: LayoutDashboard, href: "/dashboard" },
-  { label: "My Courses",      icon: BookOpen,   href: "/mycourses", active: true },
-  { label: "Study Materials", icon: BookMarked, href: "/study-materials" },
-  { label: "Calendar",        icon: Calendar,   href: "/calendar" },
+  { label: "My Courses",  icon: BookOpen,        href: "/mycourses", active: true },
+  { label: "Calendar",    icon: Calendar,        href: "/calendar" },
   { label: "Certificates",icon: Award,           href: "/certificates" },
   { label: "Reports",     icon: BarChart3,       href: "/dashboard" },
   { label: "Resources",   icon: FileText,        href: "/dashboard" },

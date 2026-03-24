@@ -2,9 +2,7 @@
   "permissions": {
     "allow": [
       "Bash(source venv/Scripts/activate)",
-      "Bash(uvicorn main:app --reload)",
-      "Bash(python seed.py)",
-      "Bash(python -c \":*)"
+      "Bash(uvicorn main:app --reload)"
     ]
   }
 }

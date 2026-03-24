@@ -19,8 +19,6 @@ import AdminUsers from "./components/AdminUsers";
 import AdminUserDetails from "./components/AdminUserDetails";
 import AdminLayout from "./components/AdminLayout";
 import MyCourses from "./components/mycourse";
-import StudyMaterials from "./components/StudyMaterials";
-import StudyMaterialView from "./components/StudyMaterialView";
 
 import "./index.css";
 
@@ -35,10 +33,7 @@ const PublicLayout = ({ children }) => {
       "/calendar",
       "/certificates",
       "/mycourses",
-      "/study-materials",
-    ].includes(location.pathname) ||
-    location.pathname.startsWith("/admin") ||
-    location.pathname.startsWith("/study-materials/");
+    ].includes(location.pathname) || location.pathname.startsWith("/admin");
 
   return (
     <>
@@ -77,8 +72,6 @@ function App() {
                   element={<CoursePage />}
                 />
                 <Route path="/mycourses" element={<MyCourses />} />
-                <Route path="/study-materials" element={<StudyMaterials />} />
-                <Route path="/study-materials/:materialKey" element={<StudyMaterialView />} />
               </Routes>
             </PublicLayout>
           }
