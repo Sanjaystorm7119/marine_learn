@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from fastapi import HTTPException
 import models
 import schemas
 from passlib.context import CryptContext
@@ -9,12 +10,15 @@ def hash_password(password: str):
     return pwd_context.hash(password)
 
 def create_user(db: Session, user: schemas.UserCreate):
+    existing = db.query(models.User).filter(models.User.email == user.email).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Email already registered")
     hashed_password = hash_password(user.password)
     db_user = models.User(
         full_name=user.full_name,
         email=user.email,
         hashed_password=hashed_password,
-        role="crew" 
+        role="crew"
     )
     db.add(db_user)
     db.commit()

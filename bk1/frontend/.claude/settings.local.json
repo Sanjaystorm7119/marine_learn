@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c \":*)",
+      "Bash(source venv/Scripts/activate)",
+      "Bash(python seed_study_data.py)",
+      "Bash(npm run:*)",
+      "Bash(cat:*)",
+      "Bash(ls:*)",
+      "Bash(curl -s http://127.0.0.1:8000/study/modules)",
+      "Bash(curl:*)"
+    ]
+  }
+}

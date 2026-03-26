@@ -12,7 +12,11 @@
       "Bash(grep -r fetch.*http:// 'C:\\\\E-learning web\\\\E-learning web \\(3\\) - Copy\\\\E-learning web/frontend/src')",
       "Bash(python3 -c \"import models, schemas, crud, auth, database; print\\(''All backend imports OK''\\)\")",
       "Bash(ls:*)",
-      "Bash(grep -E \"\\\\.\\(jsx|js\\)$\")"
+      "Bash(grep -E \"\\\\.\\(jsx|js\\)$\")",
+      "Bash(tasklist)",
+      "Bash(taskkill:*)",
+      "Bash(source venv/Scripts/activate)",
+      "Bash(uvicorn main:app --reload --host 0.0.0.0 --port 8000)"
     ]
   }
 }

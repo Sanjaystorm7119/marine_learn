@@ -1,0 +1,258 @@
+/* ─── MyCourses Layout ───────────────────────────────────────────────────── */
+.mc-root {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1rem;
+}
+
+@media (min-width: 1024px) {
+  .mc-root {
+    padding: 1.5rem;
+  }
+}
+
+/* ─── Header ─────────────────────────────────────────────────────────────── */
+.mc-header {
+  margin-bottom: 0.25rem;
+}
+
+.mc-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: hsl(var(--foreground));
+  font-family: var(--font-heading, inherit);
+  line-height: 1.2;
+}
+
+@media (min-width: 1024px) {
+  .mc-title {
+    font-size: 1.875rem;
+  }
+}
+
+.mc-subtitle {
+  color: hsl(var(--muted-foreground));
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+/* ─── Grid ───────────────────────────────────────────────────────────────── */
+.mc-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+}
+
+@media (min-width: 640px) {
+  .mc-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .mc-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1280px) {
+  .mc-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* ─── Card ───────────────────────────────────────────────────────────────── */
+.mc-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border) / 0.6);
+  border-radius: var(--radius, 0.75rem);
+  overflow: hidden;
+  cursor: pointer;
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.mc-card:hover {
+  box-shadow: 0 10px 25px -5px rgba(0,0,0,0.12), 0 4px 10px -3px rgba(0,0,0,0.08);
+  border-color: hsl(var(--primary) / 0.3);
+}
+
+/* Thumbnail */
+.mc-card__thumb {
+  height: 7rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mc-card__icon {
+  font-size: 2.5rem;
+  line-height: 1;
+  transition: transform 0.3s ease;
+}
+
+.mc-card:hover .mc-card__icon {
+  transform: scale(1.1);
+}
+
+/* Body */
+.mc-card__body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  padding: 1rem;
+}
+
+.mc-card__title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: hsl(var(--foreground));
+  margin-top: 0.5rem;
+  line-height: 1.4;
+  /* 2-line clamp */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.mc-card__desc {
+  font-size: 0.75rem;
+  color: hsl(var(--muted-foreground));
+  margin-top: 0.25rem;
+  line-height: 1.5;
+  flex: 1;
+  /* 2-line clamp */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Footer row */
+.mc-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid hsl(var(--border) / 0.5);
+}
+
+.mc-card__meta {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  color: hsl(var(--muted-foreground));
+}
+
+/* ─── Department Tags ─────────────────────────────────────────────────────── */
+.mc-tag {
+  display: inline-block;
+  font-size: 0.625rem;       /* 10px */
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  width: fit-content;
+}
+
+.mc-tag--deck {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.mc-tag--engine {
+  background: #ffedd5;
+  color: #c2410c;
+}
+
+.mc-tag--safety {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.mc-tag--navigation {
+  background: #e0e7ff;
+  color: #4338ca;
+}
+
+.mc-tag--electrical {
+  background: #fef9c3;
+  color: #a16207;
+}
+
+.mc-tag--catering {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.mc-tag--default {
+  background: hsl(var(--muted));
+  color: hsl(var(--muted-foreground));
+}
+
+
+/* ─── Dark mode overrides ─────────────────────────────────────────────────── */
+.dark .mc-tag--deck       { background: rgba(59,130,246,0.15); color: #93c5fd; }
+.dark .mc-tag--engine     { background: rgba(249,115,22,0.15);  color: #fdba74; }
+.dark .mc-tag--safety     { background: rgba(239,68,68,0.15);   color: #fca5a5; }
+.dark .mc-tag--navigation { background: rgba(99,102,241,0.15);  color: #a5b4fc; }
+.dark .mc-tag--electrical { background: rgba(234,179,8,0.15);   color: #fde047; }
+.dark .mc-tag--catering   { background: rgba(34,197,94,0.15);   color: #86efac; }
+
+/* ─── Force light theme for MyCourses ────────────────────────────────────── */
+.mc-root {
+  --background:        0 0% 100%;
+  --foreground:        222 47% 11%;
+  --card:              0 0% 100%;
+  --card-foreground:   222 47% 11%;
+  --border:            214 32% 91%;
+  --muted:             210 40% 96%;
+  --muted-foreground:  215 16% 47%;
+  --primary:           207 52% 40%;
+
+  background-color: hsl(214, 32%, 96%);
+  color: hsl(222, 47%, 11%);
+  border-radius: 0.75rem;
+}
+
+/* Cards get white background in light mode */
+.mc-root .mc-card {
+  background: #ffffff;
+  border-color: hsl(214, 32%, 88%);
+}
+
+.mc-root .mc-card:hover {
+  box-shadow: 0 10px 25px -5px rgba(0,0,0,0.10), 0 4px 10px -3px rgba(0,0,0,0.06);
+  border-color: hsl(207, 52%, 60%);
+}
+
+/* Title and meta text in light mode */
+.mc-root .mc-card__title {
+  color: hsl(222, 47%, 11%);
+}
+
+.mc-root .mc-card__desc,
+.mc-root .mc-card__meta {
+  color: hsl(215, 16%, 47%);
+}
+
+.mc-root .mc-card__footer {
+  border-top-color: hsl(214, 32%, 91%);
+}
+
+.mc-root .mc-title {
+  color: hsl(222, 47%, 11%);
+}
+
+.mc-root .mc-subtitle {
+  color: hsl(215, 16%, 47%);
+}
