@@ -1,0 +1,319 @@
+/* ================================================================
+   coursecatalog.css  —  Marine theme, no Tailwind
+   All class names prefixed "cc-" to avoid collisions.
+================================================================ */
+
+/* ── Design Tokens ──────────────────────────────────────────── */
+:root {
+  --cc-primary:       hsl(207, 52%, 40%);
+  --cc-primary-fg:    hsl(0, 0%, 100%);
+  --cc-secondary:     hsl(201, 53%, 56%);
+  --cc-bg:            hsl(210, 30%, 98%);
+  --cc-card:          hsl(0, 0%, 100%);
+  --cc-foreground:    hsl(207, 40%, 20%);
+  --cc-muted:         hsl(207, 30%, 94%);
+  --cc-muted-fg:      hsl(207, 15%, 50%);
+  --cc-border:        hsl(207, 25%, 88%);
+  --cc-accent:        hsl(201, 53%, 50%);
+  --cc-accent-fg:     hsl(0, 0%, 100%);
+  --cc-nav-start:     hsl(207, 52%, 40%);
+  --cc-nav-end:       hsl(201, 53%, 56%);
+  --cc-radius:        0.75rem;
+  --cc-font-head:     'Plus Jakarta Sans', sans-serif;
+  --cc-font-body:     'Inter', sans-serif;
+}
+
+/* ── Gradient utility ───────────────────────────────────────── */
+.cc-nav-gradient {
+  background: linear-gradient(135deg, var(--cc-nav-start), var(--cc-nav-end));
+}
+
+/* ── Icon wrappers ──────────────────────────────────────────── */
+.cc-icon-xs {
+  font-size: 0.875rem;
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+}
+
+.cc-icon-md {
+  font-size: 1.25rem;
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+}
+
+/* ================================================================
+   PAGE LAYOUT
+================================================================ */
+
+.cc-page {
+  min-height: 100vh;
+  background-color: var(--cc-bg);
+  font-family: var(--cc-font-body);
+  color: var(--cc-foreground);
+}
+
+/* ── Hero section ───────────────────────────────────────────── */
+/* pt-24 accounts for the fixed navbar height */
+.cc-hero {
+  padding: 6rem 0 3rem;
+}
+
+.cc-hero-inner {
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.cc-hero-content {
+  text-align: center;
+}
+
+.cc-hero-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.cc-hero-shield {
+  font-size: 2rem;
+  color: var(--cc-primary-fg);
+  display: inline-flex;
+  align-items: center;
+}
+
+.cc-hero-title {
+  font-family: var(--cc-font-head);
+  font-size: 1.875rem;
+  font-weight: 800;
+  color: var(--cc-primary-fg);
+  margin: 0;
+}
+
+@media (min-width: 768px) {
+  .cc-hero-title { font-size: 2.25rem; }
+}
+
+.cc-hero-subtitle {
+  color: rgba(255, 255, 255, 0.8);
+  max-width: 40rem;
+  margin: 0 auto;
+  font-size: 1.125rem;
+  line-height: 1.6;
+}
+
+/* ── Main content ───────────────────────────────────────────── */
+.cc-main {
+  max-width: 74rem;
+  margin: 0 auto;
+  padding: 3rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 4rem;
+}
+
+/* ================================================================
+   DEPARTMENT SECTION
+================================================================ */
+
+.cc-dept-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+}
+
+.cc-dept-title-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.cc-dept-icon {
+  font-size: 1.875rem;
+  line-height: 1;
+}
+
+.cc-dept-name {
+  font-family: var(--cc-font-head);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--cc-foreground);
+  margin: 0;
+}
+
+/* Badge */
+.cc-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background-color: hsl(207, 52%, 40%);
+  color: #fff;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  margin-left: 0.25rem;
+}
+
+/* Scroll control buttons */
+.cc-scroll-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.cc-scroll-btn {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  border: 1px solid var(--cc-border);
+  background-color: var(--cc-card);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  transition: background-color 0.15s, color 0.15s;
+  color: var(--cc-foreground);
+}
+
+.cc-scroll-btn:hover {
+  background-color: var(--cc-accent);
+  color: var(--cc-accent-fg);
+}
+
+/* ── Carousel strip ─────────────────────────────────────────── */
+.cc-carousel {
+  display: flex;
+  gap: 1rem;
+  overflow-x: auto;
+  padding-bottom: 1rem;
+  scroll-snap-type: x mandatory;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.cc-carousel::-webkit-scrollbar {
+  display: none;
+}
+
+/* ── Course card wrapper ────────────────────────────────────── */
+.cc-card-wrapper {
+  min-width: 260px;
+  max-width: 280px;
+  scroll-snap-align: start;
+  flex-shrink: 0;
+  /* equal height cards */
+  display: flex;
+  flex-direction: column;
+}
+
+.cc-card-link {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  text-decoration: none;
+  color: inherit;
+}
+
+/* ── Course card ────────────────────────────────────────────── */
+.cc-card {
+  height: 100%;
+  background-color: var(--cc-card);
+  border: 1px solid rgba(180, 197, 212, 0.6);
+  border-radius: var(--cc-radius);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+  transition: box-shadow 0.3s, transform 0.3s;
+  display: flex;
+  flex-direction: column;
+}
+
+.cc-card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  transform: translateY(-4px);
+}
+
+.cc-card:hover .cc-card-title {
+  color: var(--cc-primary);
+}
+
+/* ── Card content ───────────────────────────────────────────── */
+.cc-card-content {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  box-sizing: border-box;
+}
+
+/* ── Level badge ────────────────────────────────────────────── */
+.cc-level-badge {
+  align-self: flex-start;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  padding: 0.2rem 0.625rem;
+  border-radius: 9999px;
+  border: 1px solid;
+  margin-bottom: 0.75rem;
+  white-space: nowrap;
+}
+
+.cc-level-beginner {
+  background-color: #dcfce7;
+  color: #15803d;
+  border-color: #bbf7d0;
+}
+
+.cc-level-intermediate {
+  background-color: #fef3c7;
+  color: #b45309;
+  border-color: #fde68a;
+}
+
+.cc-level-advanced {
+  background-color: #fee2e2;
+  color: #b91c1c;
+  border-color: #fecaca;
+}
+
+/* ── Card title ─────────────────────────────────────────────── */
+.cc-card-title {
+  font-family: var(--cc-font-head);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--cc-foreground);
+  margin: 0 0 0.5rem;
+  line-height: 1.4;
+  transition: color 0.15s;
+}
+
+/* ── Card description ───────────────────────────────────────── */
+.cc-card-desc {
+  font-size: 0.8125rem;
+  color: var(--cc-muted-fg);
+  margin: 0 0 1rem;
+  flex: 1;
+  line-height: 1.6;
+}
+
+/* ── Card footer ────────────────────────────────────────────── */
+.cc-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--cc-muted-fg);
+  border-top: 1px solid rgba(180, 197, 212, 0.5);
+  padding-top: 0.75rem;
+  margin-top: auto;
+}
+
+.cc-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}

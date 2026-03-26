@@ -3,7 +3,7 @@ from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import sessionmaker
 
 # ⚠️ IMPORTANT: Replace 'YOUR_PASSWORD' with the actual password you just used to log into pgAdmin!
-SQLALCHEMY_DATABASE_URL = "postgresql://postgres:12345@localhost/marinelearn_db2"
+SQLALCHEMY_DATABASE_URL = "postgresql://postgres:12345@localhost/marinelearn_db3"
 
 # The engine is responsible for actually talking to the database
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
