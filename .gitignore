@@ -1,4 +1,24 @@
+<<<<<<< HEAD
 venv
 .venv
 *venv
 backend\venv
+=======
+# Python
+backend/venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Backup
+bk1/
+
+# Videos
+*.mp4
+
+# Environment variables
+.env
+
+# Claude
+.claude/
+>>>>>>> 19b5bf07f11786806172ad8135b001272c0bc8bf

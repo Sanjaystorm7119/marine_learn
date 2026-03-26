@@ -1,9 +1,12 @@
+import os
+from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-# ⚠️ IMPORTANT: Replace 'YOUR_PASSWORD' with the actual password you just used to log into pgAdmin!
-SQLALCHEMY_DATABASE_URL = "postgresql://postgres:Lachu%40123@localhost/marinelearn_db3"
+load_dotenv()
+
+SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL")
 
 # The engine is responsible for actually talking to the database
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
