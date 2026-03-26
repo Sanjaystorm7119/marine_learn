@@ -10,5 +10,8 @@ bk1/
 # Videos
 *.mp4
 
+# Environment variables
+.env
+
 # Claude
 .claude/
