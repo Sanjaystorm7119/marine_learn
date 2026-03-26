@@ -5,13 +5,13 @@ import { Anchor, Menu, X, BookOpen, GraduationCap, LayoutDashboard, Users, Phone
 import "../pages/nav.css";
 
 
-const navItems = [
-  { label: "Home", path: "/", icon: Anchor },
+ const navItems = [
+   { label: "Home", path: "/", icon: Anchor },
   { label: "Courses", path: "/coursepage", icon: BookOpen },
-  { label: "Departments", path: "/#departments", icon: LayoutDashboard },
-  { label: "About", path: "/#about", icon: Users },
+   { label: "Departments", path: "/#departments", icon: LayoutDashboard },
+   { label: "About", path: "/#about", icon: Users },
   { label: "Contact", path: "/#contact", icon: Phone },
-  { label: "Settings", path: "/settings", icon: Settings },
+   { label: "Settings", path: "/settings", icon: Settings },
 ];
 
 const Navbar = () => {

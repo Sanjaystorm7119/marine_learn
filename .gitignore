@@ -1,3 +1,8 @@
+backend\venv
+venv
+.venv
+*venv
+backend/venv/
 # Python
 backend/venv/
 __pycache__/
