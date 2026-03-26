@@ -2,3 +2,4 @@ backend\venv
 venv
 .venv
 *venv
+backend/venv/
