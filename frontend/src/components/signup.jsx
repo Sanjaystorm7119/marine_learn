@@ -39,8 +39,8 @@ const handleSubmit = async (e) => {
         alert("Account created successfully! Please log in.");
         navigate("/login"); // Send them to login page after success
       } else {
-        const errorData = await response.json();
-        alert(errorData.detail || "Signup failed"); // Show error if email exists
+        const errorData = await response.json().catch(() => null);
+        alert(errorData?.detail || "Signup failed");
       }
     } catch (error) {
       console.error("Error:", error);

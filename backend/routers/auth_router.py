@@ -10,6 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 import crud
+import models
 import schemas
 from auth import create_access_token
 from database import get_db
@@ -19,6 +20,9 @@ router = APIRouter(tags=["Auth"])
 
 @router.post("/signup", response_model=schemas.UserResponse)
 def signup(user: schemas.UserCreate, db: Session = Depends(get_db)):
+    existing = db.query(models.User).filter(models.User.email == user.email).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Email already registered")
     return crud.create_user(db, user)
 
 

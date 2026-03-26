@@ -14,3 +14,30 @@ The React Compiler is not enabled on this template because of its impact on dev 
 ## Expanding the ESLint configuration
 
 If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+
+```
+
+modules
+ ┌──────────────────────┬──────────┬────────┬─────────────┐
+ │        Module        │ Chapters │ Topics │   Quiz Qs   │
+ ├──────────────────────┼──────────┼────────┼─────────────┤
+ │ 1: Introduction &    │ Ch 1–3   │ 3      │ 5           │
+ │ Foundations          │          │        │             │
+ ├──────────────────────┼──────────┼────────┼─────────────┤
+ │ 2: Cyber Threats &   │ Ch 4–6   │ 3      │ 5           │
+ │ Vulnerable Systems   │          │        │             │
+ ├──────────────────────┼──────────┼────────┼─────────────┤
+ │ 3: Real Incidents &  │ Ch 7–10  │ 4      │ 5           │
+ │ Crew Best Practices  │          │        │             │
+ ├──────────────────────┼──────────┼────────┼─────────────┤
+ │ 4: Physical          │          │        │             │
+ │ Security, Incident   │ Ch 11–14 │ 4      │ 5           │
+ │ Response & IMO       │          │        │             │
+ ├──────────────────────┼──────────┼────────┼─────────────┤
+ │ 5: Standards,        │          │        │             │
+ │ Assessment & Summary │ Ch 15–17 │ 3      │ 5           │
+ │  (new)               │          │        │             │
+ ├──────────────────────┼──────────┼────────┼─────────────┤
+ │ Total                │ 17       │ 17     │ 25 quiz     │
+ │                      │ chapters │ topics │ questions   │      └──────────────────────┴──────────┴────────┴──────────
+```
