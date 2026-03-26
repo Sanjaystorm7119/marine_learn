@@ -1,9 +1,11 @@
 # Python
 backend/venv/
-bk1/backend/venv/
 __pycache__/
 *.pyc
 *.pyo
+
+# Backup
+bk1/
 
 # Videos
 *.mp4
