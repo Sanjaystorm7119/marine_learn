@@ -3,3 +3,20 @@ venv
 .venv
 *venv
 backend/venv/
+# Python
+backend/venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Backup
+bk1/
+
+# Videos
+*.mp4
+
+# Environment variables
+.env
+
+# Claude
+.claude/
