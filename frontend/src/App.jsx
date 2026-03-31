@@ -18,8 +18,9 @@ import AdminDashboard from "./components/AdminDashboard";
 import AdminUsers from "./components/AdminUsers";
 import AdminUserDetails from "./components/AdminUserDetails";
 import AdminLayout from "./components/AdminLayout";
-import MyCourses from "./components/mycourse";
+// import MyCourses from "./components/mycourse";
 import StudyMaterials from "./components/StudyMaterials";
+import AdminRole from "./components/AdminRole"; 
 
 import "./index.css";
 
@@ -73,7 +74,7 @@ function App() {
                   path="/course/:departmentId/:courseId"
                   element={<CoursePage />}
                 />
-                <Route path="/mycourses" element={<MyCourses />} />
+                {/* <Route path="/mycourses" element={<MyCourses />} /> */}
                 <Route path="/study-materials" element={<StudyMaterials />} />
               </Routes>
             </PublicLayout>
@@ -89,6 +90,7 @@ function App() {
                 <Route path="/" element={<AdminDashboard />} />
                 <Route path="/users" element={<AdminUsers />} />
                 <Route path="/users/:id" element={<AdminUserDetails />} />
+                <Route path="/roles" element={<AdminRole />} /> 
               </Routes>
             </AdminLayout>
           }

@@ -32,3 +32,34 @@ def get_user_by_email(db: Session, email: str):
 
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
+
+def get_roles(db: Session):
+    return db.query(models.Role).all()
+
+def create_role(db: Session, role: schemas.AdminRoleCreate):
+    db_role = models.Role(
+        name=role.name,
+        description=role.description,
+        lead=role.lead
+    )
+    db.add(db_role)
+    db.commit()
+    db.refresh(db_role)
+    return db_role
+
+def update_role(db: Session, role_id: int, role_update: schemas.AdminRoleUpdate):
+    db_role = db.query(models.Role).filter(models.Role.id == role_id).first()
+    if db_role:
+        db_role.name = role_update.name
+        db_role.description = role_update.description
+        db_role.lead = role_update.lead
+        db.commit()
+        db.refresh(db_role)
+    return db_role
+
+def delete_role(db: Session, role_id: int):
+    db_role = db.query(models.Role).filter(models.Role.id == role_id).first()
+    if db_role:
+        db.delete(db_role)
+        db.commit()
+    return db_role

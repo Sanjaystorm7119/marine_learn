@@ -1,0 +1,288 @@
+/* AdminRole.css — Role Management Page styles */
+/* Inherits all variables from admin.css */
+
+/* ── Header Button ──────────────────────────────────────────────────────────── */
+.role-header-btn {
+  padding: 0.55rem 1.1rem;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+  letter-spacing: 0.2px;
+}
+
+.role-header-btn--create {
+  background: var(--admin-primary);
+  color: #fff;
+}
+.role-header-btn--create:hover {
+  background: var(--admin-primary-hover);
+  transform: translateY(-1px);
+}
+
+.role-header-btn--cancel {
+  background: #ef4444;
+  color: #fff;
+}
+.role-header-btn--cancel:hover {
+  background: #dc2626;
+}
+
+/* ── Toast Notifications ────────────────────────────────────────────────────── */
+.role-toast {
+  padding: 0.9rem 1.2rem;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  border: 1px solid;
+}
+.role-toast--success {
+  background: rgba(76, 175, 80, 0.1);
+  color: #4caf50;
+  border-color: #4caf50;
+}
+.role-toast--error {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border-color: #ef4444;
+}
+
+/* ── Create / Edit Form Card ────────────────────────────────────────────────── */
+.role-form-card {
+  background: var(--admin-surface);
+  border: 1px solid var(--admin-border);
+  border-radius: 10px;
+  padding: 1.8rem;
+  margin-bottom: 1.8rem;
+  animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.role-form-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.4rem;
+}
+.role-form-card__header h3 {
+  margin: 0;
+  color: var(--admin-text-main);
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.role-form-card__close {
+  background: transparent;
+  border: none;
+  color: var(--admin-text-muted);
+  cursor: pointer;
+  padding: 0.3rem;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  transition: color 0.2s, background 0.2s;
+}
+.role-form-card__close:hover {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+}
+
+/* ── Form Grid ──────────────────────────────────────────────────────────────── */
+.role-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.1rem;
+}
+
+.role-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+.role-form-field--full {
+  grid-column: 1 / -1;
+}
+
+.role-form-field label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #cbd5e1;
+}
+
+.role-form-field input,
+.role-form-field select,
+.role-form-field textarea {
+  padding: 0.55rem 0.75rem;
+  border-radius: 6px;
+  border: 1px solid var(--admin-border);
+  background: var(--admin-bg);
+  color: var(--admin-text-main);
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  font-family: inherit;
+  resize: vertical;
+}
+.role-form-field input::placeholder,
+.role-form-field textarea::placeholder {
+  color: var(--admin-text-muted);
+  opacity: 0.6;
+}
+.role-form-field input:focus,
+.role-form-field select:focus,
+.role-form-field textarea:focus {
+  border-color: var(--admin-primary);
+  box-shadow: 0 0 0 3px rgba(49, 114, 156, 0.12);
+}
+
+/* Submit button row */
+.role-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.3rem;
+}
+.role-submit-btn {
+  background: var(--admin-primary);
+  color: #fff;
+  padding: 0.6rem 1.4rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+}
+.role-submit-btn:hover {
+  background: var(--admin-primary-hover);
+  transform: translateY(-1px);
+}
+
+/* ── Table Overrides ────────────────────────────────────────────────────────── */
+.role-table th,
+.role-table td {
+  vertical-align: middle;
+}
+
+/* Role ID badge */
+.role-id-badge {
+  display: inline-block;
+  font-family: 'Courier New', monospace;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--admin-text-muted);
+  background: rgba(148, 163, 184, 0.08);
+  border: 1px solid var(--admin-border);
+  border-radius: 5px;
+  padding: 3px 9px;
+  letter-spacing: 0.5px;
+}
+
+/* Role name pill */
+.role-name-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 11px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+}
+
+/* Description cell — muted, truncated on overflow */
+.role-desc-cell {
+  color: var(--admin-text-muted) !important;
+  font-size: 0.875rem;
+  max-width: 320px;
+  line-height: 1.5;
+}
+
+/* Lead pill */
+.role-lead-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.role-lead-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--admin-primary), hsl(207, 52%, 55%));
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.role-lead-pill span {
+  font-size: 0.875rem;
+  color: var(--admin-text-main);
+  text-transform: capitalize;
+}
+
+/* User count chip */
+.role-user-count {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.85rem;
+  color: var(--admin-text-muted);
+  font-weight: 500;
+}
+
+/* ── Action Buttons ─────────────────────────────────────────────────────────── */
+.role-actions-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.role-action-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0.35rem;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.18s, color 0.18s;
+}
+
+.role-action-btn--edit {
+  color: var(--admin-primary);
+}
+.role-action-btn--edit:hover {
+  background: rgba(49, 114, 156, 0.15);
+  color: #38bdf8;
+}
+
+.role-action-btn--delete {
+  color: #ef4444;
+}
+.role-action-btn--delete:hover {
+  background: rgba(239, 68, 68, 0.12);
+}
+
+/* ── Responsive ─────────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .role-form-grid {
+    grid-template-columns: 1fr;
+  }
+  .role-form-field--full {
+    grid-column: 1;
+  }
+  .role-desc-cell {
+    max-width: 160px;
+    font-size: 0.8rem;
+  }
+}

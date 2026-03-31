@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, Users, BookOpen, Settings, 
-  LogOut, Menu, X, Bell, Search, User as UserIcon, Shield
+  LogOut, Menu, X, Bell, Search, User as UserIcon, Shield,ShieldCheck 
 } from 'lucide-react';
 import '../pages/admin.css';
 
@@ -25,6 +25,7 @@ const AdminLayout = ({ children }) => {
   const navItems = [
     { name: 'Dashboard', path: '/admin', icon: LayoutDashboard },
     { name: 'User Management', path: '/admin/users', icon: Users },
+    { name: 'Role Management', path: '/admin/roles', icon: ShieldCheck }, 
     { name: 'Course Management', path: '/admin/courses', icon: BookOpen },
     { name: 'System Settings', path: '/admin/settings', icon: Settings },
   ];

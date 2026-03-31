@@ -41,3 +41,4 @@ modules
  │ Total                │ 17       │ 17     │ 25 quiz     │
  │                      │ chapters │ topics │ questions   │      └──────────────────────┴──────────┴────────┴──────────
 ```
+random

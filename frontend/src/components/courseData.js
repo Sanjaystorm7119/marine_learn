@@ -1,4 +1,4 @@
-import ecdisLesson1 from "../assets/GPS Spoofing Defense - Lesson 1 Summary_720p_caption.mp4";// courseData.js — Course data for all departments
+import ecdisLesson1 from "../assets/GPS Spoofing Defense - Lesson 1 Summary_720p_caption.mp4"; // courseData.js — Course data for all departments
 import ecdisLesson2 from "../assets/GNSS Vulnerability Analysis - Lesson 2 Summary_720p_caption.mp4";
 const coursesByDepartment = {
   deck: [

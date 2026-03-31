@@ -96,3 +96,25 @@ class QuizSubmit(BaseModel):
 class UserProgressResponse(BaseModel):
     completed_topic_ids: list[int]
     quiz_attempts: list[dict]
+
+
+# --- NEW: ROLE MANAGEMENT SCHEMAS ---
+class AdminRoleCreate(BaseModel):
+    name: str
+    description: str
+    lead: str = "Will be assigned by admin"
+
+class AdminRoleUpdate(BaseModel):
+    name: str
+    description: str
+    lead: str
+
+class AdminRoleResponse(BaseModel):
+    id: int
+    name: str
+    description: str
+    lead: str
+    userCount: int = 0 # We will calculate this in the router!
+
+    class Config:
+        from_attributes = True    

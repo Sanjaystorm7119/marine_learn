@@ -76,3 +76,11 @@ class UserQuizAttempt(Base):
     score = Column(Integer)
     total = Column(Integer)
     attempted_at = Column(DateTime, default=datetime.utcnow)
+
+class Role(Base):
+    __tablename__ = "roles"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, unique=True, index=True, nullable=False)
+    description = Column(String, nullable=False)
+    lead = Column(String, default="Will be assigned by admin")    

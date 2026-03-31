@@ -1,9 +1,17 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 venv
 .venv
 *venv
 backend\venv
 =======
+=======
+backend\venv
+venv
+.venv
+*venv
+backend/venv/
+>>>>>>> e94ecccbac5eca3e134db40faec1a698767196fe
 # Python
 backend/venv/
 __pycache__/
