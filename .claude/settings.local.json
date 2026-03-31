@@ -22,7 +22,8 @@
       "Bash(venv/Scripts/pip install:*)",
       "Bash(venv/Scripts/python -m ensurepip --upgrade)",
       "Bash(venv/Scripts/python -m pip install python-dotenv -q)",
-      "Bash(venv/Scripts/python migrate_courses.py)"
+      "Bash(venv/Scripts/python migrate_courses.py)",
+      "Bash(npm install:*)"
     ]
   }
 }
