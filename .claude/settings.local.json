@@ -16,7 +16,13 @@
       "Bash(tasklist)",
       "Bash(taskkill:*)",
       "Bash(source venv/Scripts/activate)",
-      "Bash(uvicorn main:app --reload --host 0.0.0.0 --port 8000)"
+      "Bash(uvicorn main:app --reload --host 0.0.0.0 --port 8000)",
+      "Bash(cat:*)",
+      "Bash(venv/Scripts/python seed_study.py)",
+      "Bash(venv/Scripts/pip install:*)",
+      "Bash(venv/Scripts/python -m ensurepip --upgrade)",
+      "Bash(venv/Scripts/python -m pip install python-dotenv -q)",
+      "Bash(venv/Scripts/python migrate_courses.py)"
     ]
   }
 }

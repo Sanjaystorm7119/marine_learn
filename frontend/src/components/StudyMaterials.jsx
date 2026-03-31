@@ -7,7 +7,7 @@ import {
   Search, Bell, Menu, Lock, Play, CheckCircle,
   ArrowLeft, ChevronRight, Trophy, AlertCircle,
   Anchor, Send, RotateCcw, CheckSquare, Clock,
-  ChevronLeft,
+  ChevronLeft, GraduationCap,
 } from "lucide-react";
 import Sidenav from "./sidenav";
 import "../pages/studymaterials.css";
@@ -37,7 +37,10 @@ const MODULE_THEMES = [
   { grad: "sm-grad--5", tag: "sm-tag--5" },
 ];
 
+const COURSE_GRADS = ["sm-cgrad--1", "sm-cgrad--2", "sm-cgrad--3", "sm-cgrad--4", "sm-cgrad--5"];
+
 const getTheme = (idx) => MODULE_THEMES[idx % MODULE_THEMES.length];
+const getCourseGrad = (idx) => COURSE_GRADS[idx % COURSE_GRADS.length];
 
 const getReadingMin = (content) => Math.max(3, Math.ceil((content || "").split(/\s+/).length / 200));
 
@@ -257,32 +260,36 @@ const StudyMaterials = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
-  const [modules, setModules] = useState([]);
+  const [courses, setCourses] = useState([]);
+  const [selectedCourse, setSelectedCourse] = useState(null);
   const [progress, setProgress] = useState({ completed_topic_ids: [], quiz_attempts: [] });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // null = grid, { type:"topic", moduleId, topicId, mIdx } or { type:"quiz", moduleId, mIdx }
+  // null = module grid, { type:"topic", moduleId, topicId, mIdx } or { type:"quiz", moduleId, mIdx }
   const [selected, setSelected] = useState(null);
 
   const token = localStorage.getItem("token");
+
+  // Modules derived from the selected course
+  const modules = selectedCourse?.modules ?? [];
 
   // ── Data fetching ────────────────────────────────────────────────────────
   const fetchData = useCallback(async () => {
     if (!token) { navigate("/login"); return; }
     try {
-      const [modsRes, progRes] = await Promise.all([
-        fetch(`${API}/study/modules`, { headers: { Authorization: `Bearer ${token}` } }),
+      const [coursesRes, progRes] = await Promise.all([
+        fetch(`${API}/study/courses`, { headers: { Authorization: `Bearer ${token}` } }),
         fetch(`${API}/study/my-progress`, { headers: { Authorization: `Bearer ${token}` } }),
       ]);
-      if (modsRes.status === 401 || progRes.status === 401) { navigate("/login"); return; }
-      if (!modsRes.ok) {
-        setError(`Server error: ${modsRes.status}. Make sure the backend is running.`);
+      if (coursesRes.status === 401 || progRes.status === 401) { navigate("/login"); return; }
+      if (!coursesRes.ok) {
+        setError(`Server error: ${coursesRes.status}. Make sure the backend is running.`);
         return;
       }
-      const mods = await modsRes.json();
+      const coursesData = await coursesRes.json();
       const prog = progRes.ok ? await progRes.json() : { completed_topic_ids: [], quiz_attempts: [] };
-      setModules(Array.isArray(mods) ? mods : []);
+      setCourses(Array.isArray(coursesData) ? coursesData : []);
       setProgress(prog);
     } catch {
       setError("Failed to load study materials. Please check your connection.");
@@ -346,8 +353,21 @@ const StudyMaterials = () => {
     return attempts.length ? Math.max(...attempts.map((a) => a.score)) : null;
   };
 
+  // Per-course progress helpers
+  const getCourseTotalTopics = (course) =>
+    course.modules.reduce((s, m) => s + m.topics.length, 0);
+
+  const getCourseDoneTopics = (course) => {
+    const allTopicIds = new Set(course.modules.flatMap((m) => m.topics.map((t) => t.id)));
+    return progress.completed_topic_ids.filter((id) => allTopicIds.has(id)).length;
+  };
+
+  // Module-view totals (for progress strip)
   const totalTopics = modules.reduce((s, m) => s + m.topics.length, 0);
-  const doneTopics = progress.completed_topic_ids.length;
+  const doneTopics = (() => {
+    const allTopicIds = new Set(modules.flatMap((m) => m.topics.map((t) => t.id)));
+    return progress.completed_topic_ids.filter((id) => allTopicIds.has(id)).length;
+  })();
   const overallPct = totalTopics ? Math.round((doneTopics / totalTopics) * 100) : 0;
 
   // ── Loading / Error ──────────────────────────────────────────────────────
@@ -460,10 +480,9 @@ const StudyMaterials = () => {
         <div className="dashboard-content">
           <div className="sm-root">
 
-            {/* ═══ GRID VIEW ═══ */}
-            {!selected && (
+            {/* ═══ COURSE GRID VIEW ═══ */}
+            {!selectedCourse && (
               <>
-                {/* Page header */}
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -471,7 +490,80 @@ const StudyMaterials = () => {
                   className="sm-header"
                 >
                   <h1 className="sm-title">Study Materials</h1>
-                  <p className="sm-subtitle">Maritime Cybersecurity Training — All Modules</p>
+                  <p className="sm-subtitle">Select a course to begin</p>
+                </motion.div>
+
+                <div className="sm-course-grid">
+                  {courses.map((course, cIdx) => {
+                    const total = getCourseTotalTopics(course);
+                    const done = getCourseDoneTopics(course);
+                    const pct = total ? Math.round((done / total) * 100) : 0;
+                    return (
+                      <motion.div
+                        key={course.id}
+                        initial={{ opacity: 0, y: 24 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.08 * cIdx, duration: 0.45 }}
+                        className="sm-course-card"
+                        onClick={() => setSelectedCourse(course)}
+                      >
+                        <div className={`sm-course-card__thumb ${getCourseGrad(cIdx)}`}>
+                          <div className="sm-course-card__thumb-icon">
+                            <GraduationCap size={28} />
+                          </div>
+                        </div>
+                        <div className="sm-course-card__body">
+                          <span className="sm-course-card__label">Course</span>
+                          <h3 className="sm-course-card__title">{course.title}</h3>
+                          <p className="sm-course-card__desc">{course.description}</p>
+                          <div className="sm-course-card__footer">
+                            <div className="sm-course-card__meta-row">
+                              <span className="sm-course-card__meta-item">
+                                <BookOpen size={13} />
+                                {course.modules.length} module{course.modules.length !== 1 ? "s" : ""}
+                              </span>
+                              <span className="sm-course-card__meta-item">
+                                <Trophy size={13} />
+                                {done}/{total} topics
+                              </span>
+                              <span className="sm-course-card__pct">{pct}%</span>
+                            </div>
+                            <div className="sm-course-card__prog-bar">
+                              <div className="sm-course-card__prog-fill" style={{ width: `${pct}%` }} />
+                            </div>
+                          </div>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+
+            {/* ═══ MODULE GRID VIEW (inside a course) ═══ */}
+            {selectedCourse && !selected && (
+              <>
+                {/* Breadcrumb back to courses */}
+                <div className="sm-course-breadcrumb">
+                  <button
+                    className="sm-course-breadcrumb__back"
+                    onClick={() => setSelectedCourse(null)}
+                  >
+                    <ChevronLeft size={16} /> Courses
+                  </button>
+                  <span className="sm-course-breadcrumb__sep">›</span>
+                  <span className="sm-course-breadcrumb__current">{selectedCourse.title}</span>
+                </div>
+
+                {/* Page header */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4 }}
+                  className="sm-header"
+                >
+                  <h1 className="sm-title">{selectedCourse.title}</h1>
+                  <p className="sm-subtitle">{selectedCourse.description}</p>
                 </motion.div>
 
                 {/* Overall progress strip */}
@@ -636,7 +728,7 @@ const StudyMaterials = () => {
             {/* ═══ QUIZ VIEW ═══ */}
             {selected?.type === "quiz" && selModule && (
               <QuizPanel
-                key={`quiz-${selModule.id}-${progress.quiz_attempts.filter((a) => a.module_id === selModule.id).length}`}
+                key={`quiz-${selModule.id}`}
                 module={selModule}
                 onQuizSubmit={handleQuizSubmit}
                 bestScore={getBestScore(selModule.id)}

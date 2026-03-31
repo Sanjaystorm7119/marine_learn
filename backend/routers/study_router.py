@@ -27,6 +27,14 @@ router = APIRouter(prefix="/study", tags=["Study"])
 
 # ── Public (authenticated) endpoints ──────────────────────────────────────────
 
+@router.get("/courses", response_model=list[schemas.CourseResponse])
+def get_courses(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    return db.query(models.Course).order_by(models.Course.order_num).all()
+
+
 @router.get("/modules", response_model=list[schemas.StudyModuleResponse])
 def get_modules(
     db: Session = Depends(get_db),
