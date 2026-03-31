@@ -336,7 +336,13 @@ const StudyMaterials = () => {
   const isModuleLocked = (mIdx) => {
     if (mIdx === 0) return false;
     const prev = modules[mIdx - 1];
-    return !prev.topics.every((t) => progress.completed_topic_ids.includes(t.id));
+    if (!prev.topics.every((t) => progress.completed_topic_ids.includes(t.id))) return true;
+    if (prev.quiz_questions?.length > 0) {
+      const best = getBestScore(prev.id);
+      if (best === null) return true;
+      if (Math.round((best / prev.quiz_questions.length) * 100) < 60) return true;
+    }
+    return false;
   };
 
   const isQuizLocked = (mod) =>
