@@ -4,7 +4,7 @@ Run once to populate study_modules, study_topics, and study_quiz_questions.
 """
 
 from database import SessionLocal
-from models import StudyModule, StudyTopic, StudyQuizQuestion
+from models import Course, StudyModule, StudyTopic, StudyQuizQuestion
 
 MODULES = [
     {
@@ -980,8 +980,23 @@ def seed():
             print(f"Database already has {existing} module(s). Skipping seed.")
             return
 
+        # Create the course first so modules can reference it
+        course = Course(
+            title="CyberSecurity Awareness",
+            description=(
+                "A comprehensive course covering maritime cybersecurity fundamentals, "
+                "threats, best practices, and regulatory requirements for seafarers and "
+                "maritime professionals."
+            ),
+            order_num=1,
+        )
+        db.add(course)
+        db.flush()  # get course.id
+        print(f"Created course: '{course.title}' (id={course.id})")
+
         for mod_data in MODULES:
             module = StudyModule(
+                course_id=course.id,
                 title=mod_data["title"],
                 description=mod_data["description"],
                 order_num=mod_data["order_num"],

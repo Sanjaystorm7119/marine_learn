@@ -83,6 +83,17 @@ class StudyModuleResponse(BaseModel):
         from_attributes = True
 
 
+class CourseResponse(BaseModel):
+    id: int
+    title: str
+    description: str
+    order_num: int
+    modules: list[StudyModuleResponse]
+
+    class Config:
+        from_attributes = True
+
+
 class TopicProgressCreate(BaseModel):
     topic_id: int
 

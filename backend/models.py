@@ -15,14 +15,27 @@ class User(Base):
     role = Column(String, default="crew")
 
 
-class StudyModule(Base):
-    __tablename__ = "study_modules"
+class Course(Base):
+    __tablename__ = "courses"
 
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, nullable=False)
     description = Column(Text)
     order_num = Column(Integer, default=0)
 
+    modules = relationship("StudyModule", back_populates="course", order_by="StudyModule.order_num")
+
+
+class StudyModule(Base):
+    __tablename__ = "study_modules"
+
+    id = Column(Integer, primary_key=True, index=True)
+    course_id = Column(Integer, ForeignKey("courses.id"), nullable=True)
+    title = Column(String, nullable=False)
+    description = Column(Text)
+    order_num = Column(Integer, default=0)
+
+    course = relationship("Course", back_populates="modules")
     topics = relationship("StudyTopic", back_populates="module", order_by="StudyTopic.order_num")
     quiz_questions = relationship("StudyQuizQuestion", back_populates="module", order_by="StudyQuizQuestion.order_num")
 
