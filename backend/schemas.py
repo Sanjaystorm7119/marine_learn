@@ -96,6 +96,7 @@ class CourseResponse(BaseModel):
 
 class TopicProgressCreate(BaseModel):
     topic_id: int
+    time_spent_seconds: int = 0
 
 
 class QuizSubmit(BaseModel):

@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   LayoutDashboard, BookOpen, Award, BarChart3,
@@ -197,66 +197,80 @@ const QuizPanel = ({ module, onQuizSubmit, bestScore, onBack, prevItem, nextItem
 };
 
 // ── Topic Detail View ────────────────────────────────────────────────────────
-const TopicDetail = ({ topic, module, mIdx, isCompleted, onMarkComplete, onBack, prevItem, nextItem, onNavigate }) => (
-  <div className="sm-detail">
-    <button className="sm-back-btn" onClick={onBack}>
-      <ArrowLeft size={16} /> Back to Study Materials
-    </button>
+const TopicDetail = ({ topic, module, mIdx, isCompleted, onMarkComplete, onBack, prevItem, nextItem, onNavigate }) => {
+  const entryTimeRef = useRef(Date.now());
 
-    <div className="sm-detail-breadcrumb">
-      <span>{module.title.split(":")[0]}</span>
-      <ChevronRight size={12} />
-      <span>{topic.title}</span>
-    </div>
+  useEffect(() => {
+    entryTimeRef.current = Date.now();
+  }, [topic.id]);
 
-    {/* Video placeholder */}
-    <div className="sm-video-wrap">
-      <div className={`sm-video-placeholder ${getTheme(mIdx).grad}`}>
-        <div className="sm-video-play-btn">
-          <Play size={32} />
-        </div>
-        <p className="sm-video-label">Video lesson coming soon</p>
+  const handleComplete = () => {
+    const seconds = Math.floor((Date.now() - entryTimeRef.current) / 1000);
+    onMarkComplete(topic.id, seconds);
+  };
+
+  return (
+    <div className="sm-detail">
+      <button className="sm-back-btn" onClick={onBack}>
+        <ArrowLeft size={16} /> Back to Study Materials
+      </button>
+
+      <div className="sm-detail-breadcrumb">
+        <span>{module.title.split(":")[0]}</span>
+        <ChevronRight size={12} />
+        <span>{topic.title}</span>
       </div>
-    </div>
 
-    <div className="sm-detail-meta">
-      <span className={`sm-tag ${getTheme(mIdx).tag}`}>
-        {module.title.split(":")[0]}
-      </span>
-      <span className="sm-detail-meta-badge">
-        <BookOpen size={12} /> Reading Material
-      </span>
-      <span className="sm-detail-meta-badge">
-        <Clock size={12} /> ~{getReadingMin(topic.content)} min read
-      </span>
-      {isCompleted && (
-        <span className="sm-detail-meta-badge sm-badge--done">
-          <CheckCircle size={12} /> Completed
+      {/* Video placeholder */}
+      <div className="sm-video-wrap">
+        <div className={`sm-video-placeholder ${getTheme(mIdx).grad}`}>
+          <div className="sm-video-play-btn">
+            <Play size={32} />
+          </div>
+          <p className="sm-video-label">Video lesson coming soon</p>
+        </div>
+      </div>
+
+      <div className="sm-detail-meta">
+        <span className={`sm-tag ${getTheme(mIdx).tag}`}>
+          {module.title.split(":")[0]}
         </span>
+        <span className="sm-detail-meta-badge">
+          <BookOpen size={12} /> Reading Material
+        </span>
+        <span className="sm-detail-meta-badge">
+          <Clock size={12} /> ~{getReadingMin(topic.content)} min read
+        </span>
+        {isCompleted && (
+          <span className="sm-detail-meta-badge sm-badge--done">
+            <CheckCircle size={12} /> Completed
+          </span>
+        )}
+      </div>
+
+      <h1 className="sm-detail-title">{topic.title}</h1>
+
+      <div className="sm-detail-body">{topic.content}</div>
+
+      {!isCompleted ? (
+        <button className="sm-complete-btn" onClick={handleComplete}>
+          <CheckSquare size={16} /> Mark as Complete
+        </button>
+      ) : (
+        <button className="sm-complete-btn sm-complete-btn--done" disabled>
+          <CheckCircle size={16} /> Completed
+        </button>
       )}
+
+      <NavBar prevItem={prevItem} nextItem={nextItem} onNavigate={onNavigate} />
     </div>
-
-    <h1 className="sm-detail-title">{topic.title}</h1>
-
-    <div className="sm-detail-body">{topic.content}</div>
-
-    {!isCompleted ? (
-      <button className="sm-complete-btn" onClick={() => onMarkComplete(topic.id)}>
-        <CheckSquare size={16} /> Mark as Complete
-      </button>
-    ) : (
-      <button className="sm-complete-btn sm-complete-btn--done" disabled>
-        <CheckCircle size={16} /> Completed
-      </button>
-    )}
-
-    <NavBar prevItem={prevItem} nextItem={nextItem} onNavigate={onNavigate} />
-  </div>
-);
+  );
+};
 
 // ── Main Component ───────────────────────────────────────────────────────────
 const StudyMaterials = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
@@ -300,13 +314,27 @@ const StudyMaterials = () => {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
+  // Auto-select a course once when arriving from the dashboard with ?courseId=<id>
+  const autoSelectedRef = useRef(false);
+  useEffect(() => {
+    if (autoSelectedRef.current) return;
+    const paramId = searchParams.get("courseId");
+    if (paramId && courses.length > 0) {
+      const match = courses.find((c) => String(c.id) === paramId);
+      if (match) {
+        setSelectedCourse(match);
+        autoSelectedRef.current = true;
+      }
+    }
+  }, [courses, searchParams]);
+
   // ── Actions ──────────────────────────────────────────────────────────────
-  const handleMarkComplete = async (topicId) => {
+  const handleMarkComplete = async (topicId, timeSpentSeconds = 0) => {
     try {
       await fetch(`${API}/study/progress`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ topic_id: topicId }),
+        body: JSON.stringify({ topic_id: topicId, time_spent_seconds: timeSpentSeconds }),
       });
       setProgress((prev) => ({
         ...prev,
