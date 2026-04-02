@@ -59,9 +59,16 @@ def mark_topic_complete(
         .first()
     )
     if not existing:
-        record = models.UserTopicProgress(user_id=current_user.id, topic_id=body.topic_id)
+        record = models.UserTopicProgress(
+            user_id=current_user.id,
+            topic_id=body.topic_id,
+            time_spent_seconds=body.time_spent_seconds,
+        )
         db.add(record)
-        db.commit()
+    else:
+        # Accumulate time for revisits
+        existing.time_spent_seconds = (existing.time_spent_seconds or 0) + body.time_spent_seconds
+    db.commit()
 
     return {"message": "Progress saved"}
 
@@ -114,6 +121,86 @@ def get_my_progress(
             }
             for a in attempts
         ],
+    }
+
+
+# ── Dashboard summary endpoint ────────────────────────────────────────────────
+
+@router.get("/dashboard")
+def get_dashboard_data(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    """
+    Returns per-user dashboard stats:
+      - role, enrolled_courses, completed_courses, certificates
+      - total_topics_completed, hours_logged
+      - in_progress_courses (list of courses with partial progress)
+    """
+    courses = db.query(models.Course).order_by(models.Course.order_num).all()
+
+    # Completed topic IDs for this user (set for O(1) lookup)
+    completed_set = {
+        r.topic_id
+        for r in db.query(models.UserTopicProgress)
+        .filter(models.UserTopicProgress.user_id == current_user.id)
+        .all()
+    }
+
+    total_topics_done = len(completed_set)
+    enrolled_count = len(courses)
+    completed_count = 0
+    in_progress = []
+
+    for course in courses:
+        topic_ids = [
+            topic.id
+            for module in course.modules
+            for topic in module.topics
+        ]
+        total = len(topic_ids)
+        if total == 0:
+            continue
+
+        done = sum(1 for tid in topic_ids if tid in completed_set)
+        pct = round(done / total * 100, 1)
+
+        if pct >= 100:
+            completed_count += 1
+        elif done > 0:
+            # First module that still has incomplete topics
+            next_module = None
+            for module in course.modules:
+                mod_topic_ids = [t.id for t in module.topics]
+                if mod_topic_ids and not all(tid in completed_set for tid in mod_topic_ids):
+                    next_module = module.title
+                    break
+
+            in_progress.append({
+                "course_id": course.id,
+                "course_title": course.title,
+                "progress_pct": pct,
+                "completed_topics": done,
+                "total_topics": total,
+                "next_module_title": next_module,
+            })
+
+    total_seconds = (
+        db.query(func.sum(models.UserTopicProgress.time_spent_seconds))
+        .filter(models.UserTopicProgress.user_id == current_user.id)
+        .scalar()
+        or 0
+    )
+    hours_logged = round(total_seconds / 3600, 1)
+
+    return {
+        "role": current_user.role,
+        "enrolled_courses": enrolled_count,
+        "completed_courses": completed_count,
+        "certificates": completed_count,
+        "total_topics_completed": total_topics_done,
+        "hours_logged": hours_logged,
+        "in_progress_courses": in_progress,
     }
 
 

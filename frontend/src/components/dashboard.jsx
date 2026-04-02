@@ -113,78 +113,14 @@ function runSearch(query) {
   return { courses, modules };
 }
 
-/* ── Mock Data ── */
-const stats = [
-  {
-    label: "Enrolled Courses",
-    value: "12",
-    icon: BookOpen,
-    change: "+2 this month",
-    colorClass: "stat-icon-blue",
-  },
-  {
-    label: "Completed",
-    value: "7",
-    icon: Award,
-    change: "58% completion",
-    colorClass: "stat-icon-green",
-  },
-  {
-    label: "Hours Logged",
-    value: "186",
-    icon: Clock,
-    change: "+24 this week",
-    colorClass: "stat-icon-amber",
-  },
-  {
-    label: "Certificates",
-    value: "5",
-    icon: GraduationCap,
-    change: "2 pending",
-    colorClass: "stat-icon-violet",
-  },
-];
-
-const continueLearning = [
-  {
-    id: 1,
-    title: "STCW Basic Safety Training",
-    dept: "Safety",
-    tag: "SAFETY",
-    tagColor: "cl-tag--safety",
-    icon: Shield,
-    progress: 85,
-    nextModule: "Fire Prevention Drills",
-    image: courseSafety,
-    departmentId: "safety",
-    courseId: "stcw-basic-safety",
-  },
-  {
-    id: 2,
-    title: "Marine Engine Operations",
-    dept: "Engine",
-    tag: "ENGINE",
-    tagColor: "cl-tag--engine",
-    icon: Flame,
-    progress: 62,
-    nextModule: "Diesel Propulsion Systems",
-    image: courseEngine,
-    departmentId: "engine",
-    courseId: "engine-scada-security",
-  },
-  {
-    id: 4,
-    title: "Deck Officer Certificate",
-    dept: "Deck",
-    tag: "DECK",
-    tagColor: "cl-tag--deck",
-    icon: Ship,
-    progress: 30,
-    nextModule: "Cargo Handling Procedures",
-    image: courseDeck,
-    departmentId: "deck",
-    courseId: "ecdis-cybersecurity",
-  },
+/* ── Theme cycling for backend-sourced Continue Learning cards ── */
+const CL_THEMES = [
+  { tagColor: "cl-tag--safety",     image: courseSafety },
+  { tagColor: "cl-tag--engine",     image: courseEngine },
+  { tagColor: "cl-tag--deck",       image: courseDeck },
+  { tagColor: "cl-tag--electrical", image: courseElectrical },
+  { tagColor: "cl-tag--navigation", image: courseNavigation },
+  { tagColor: "cl-tag--catering",   image: courseCatering },
 ];
 
 const forYouCourses = [
@@ -292,6 +228,8 @@ const Dashboard = () => {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   const [userName, setUserName] = useState("Loading...");
+  const [userRole, setUserRole] = useState("crew");
+  const [dashboardData, setDashboardData] = useState(null);
   const navigate = useNavigate();
 
   /* ── Search state ── */
@@ -334,29 +272,41 @@ const Dashboard = () => {
   }, []);
 
   useEffect(() => {
-    const fetchUserData = async () => {
+    const fetchData = async () => {
       const token = localStorage.getItem("token");
       if (!token) {
         navigate("/login");
         return;
       }
       try {
-        const response = await fetch("http://localhost:8000/users/me", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (response.ok) {
-          const userData = await response.json();
-          const firstName = userData.full_name.split(" ")[0];
-          setUserName(firstName);
-        } else {
+        const [userRes, dashRes] = await Promise.all([
+          fetch("http://localhost:8000/users/me", {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          fetch("http://localhost:8000/study/dashboard", {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+        ]);
+
+        if (!userRes.ok) {
           localStorage.removeItem("token");
           navigate("/login");
+          return;
+        }
+
+        const userData = await userRes.json();
+        setUserName(userData.full_name.split(" ")[0]);
+        setUserRole(userData.role);
+
+        if (dashRes.ok) {
+          const data = await dashRes.json();
+          setDashboardData(data);
         }
       } catch (error) {
-        console.error("Error:", error);
+        console.error("Dashboard fetch error:", error);
       }
     };
-    fetchUserData();
+    fetchData();
   }, [navigate]);
 
   return (
@@ -573,29 +523,76 @@ const Dashboard = () => {
           </motion.div>
 
           {/* Stats Grid */}
-          <div className="stats-grid">
-            {stats.map((stat, i) => (
-              <motion.div
-                key={stat.label}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 * i, duration: 0.4 }}
-              >
-                <div className="stat-card">
-                  <div className="stat-card-inner">
-                    <div>
-                      <p className="stat-label">{stat.label}</p>
-                      <p className="stat-value">{stat.value}</p>
-                      <p className="stat-change">{stat.change}</p>
+          {(() => {
+            const enrolled = dashboardData?.enrolled_courses ?? "—";
+            const completed = dashboardData?.completed_courses ?? "—";
+            const hours = dashboardData?.hours_logged ?? "—";
+            const certs = dashboardData?.certificates ?? "—";
+            const completionPct =
+              dashboardData && dashboardData.enrolled_courses > 0
+                ? Math.round((dashboardData.completed_courses / dashboardData.enrolled_courses) * 100)
+                : null;
+            const roleLabel = userRole
+              ? userRole.charAt(0).toUpperCase() + userRole.slice(1)
+              : "Crew";
+
+            const dynamicStats = [
+              {
+                label: "Enrolled Courses",
+                value: String(enrolled),
+                icon: BookOpen,
+                change: "course/s",
+                colorClass: "stat-icon-blue",
+              },
+              {
+                label: "Completed",
+                value: String(completed),
+                icon: Award,
+                change: completionPct !== null ? `${completionPct}% completion rate` : "No courses yet",
+                colorClass: "stat-icon-green",
+              },
+              {
+                label: "Hours Logged",
+                value: String(hours),
+                icon: Clock,
+                change: "Estimated from topics",
+                colorClass: "stat-icon-amber",
+              },
+              {
+                label: "Certificates",
+                value: String(certs),
+                icon: GraduationCap,
+                change: "From completed courses",
+                colorClass: "stat-icon-violet",
+              },
+            ];
+
+            return (
+              <div className="stats-grid">
+                {dynamicStats.map((stat, i) => (
+                  <motion.div
+                    key={stat.label}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 * i, duration: 0.4 }}
+                  >
+                    <div className="stat-card">
+                      <div className="stat-card-inner">
+                        <div>
+                          <p className="stat-label">{stat.label}</p>
+                          <p className="stat-value">{stat.value}</p>
+                          <p className="stat-change">{stat.change}</p>
+                        </div>
+                        <div className={`stat-icon-wrap ${stat.colorClass}`}>
+                          <stat.icon className="stat-icon" />
+                        </div>
+                      </div>
                     </div>
-                    <div className={`stat-icon-wrap ${stat.colorClass}`}>
-                      <stat.icon className="stat-icon" />
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
+                  </motion.div>
+                ))}
+              </div>
+            );
+          })()}
 
           {/* Course Cards + Right Sidebar */}
           <div className="main-grid">
@@ -611,48 +608,63 @@ const Dashboard = () => {
                 </div>
 
                 <div className="cl-list">
-                  {continueLearning.map((course, i) => (
-                    <motion.div
-                      key={course.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.05 * i, duration: 0.4 }}
-                    >
-                      <div className="cl-card">
-                        <div className="cl-card-body">
-                          <img
-                            src={course.image}
-                            alt={course.title}
-                            className="cl-thumb"
-                          />
-                          <div className="cl-info">
-                            <span className={`cl-tag ${course.tagColor}`}>
-                              {course.tag}
-                            </span>
-                            <h3 className="cl-title">{course.title}</h3>
-                            <p className="cl-next">
-                              Next Module:{" "}
-                              <span className="cl-next-name">
-                                {course.nextModule}
-                              </span>
-                            </p>
-                            <div className="cl-progress-track">
-                              <div
-                                className="cl-progress-fill"
-                                style={{ width: `${course.progress}%` }}
+                  {dashboardData?.in_progress_courses?.length > 0 ? (
+                    dashboardData.in_progress_courses.map((course, i) => {
+                      const theme = CL_THEMES[i % CL_THEMES.length];
+                      return (
+                        <motion.div
+                          key={course.course_id}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.05 * i, duration: 0.4 }}
+                        >
+                          <div className="cl-card">
+                            <div className="cl-card-body">
+                              <img
+                                src={theme.image}
+                                alt={course.course_title}
+                                className="cl-thumb"
                               />
+                              <div className="cl-info">
+                                <span className={`cl-tag ${theme.tagColor}`}>
+                                  {Math.round(course.progress_pct)}%
+                                </span>
+                                <h3 className="cl-title">{course.course_title}</h3>
+                                <p className="cl-next">
+                                  Next:{" "}
+                                  <span className="cl-next-name">
+                                    {course.next_module_title ?? "Continue where you left off"}
+                                  </span>
+                                </p>
+                                <div className="cl-progress-track">
+                                  <div
+                                    className="cl-progress-fill"
+                                    style={{ width: `${course.progress_pct}%` }}
+                                  />
+                                </div>
+                              </div>
+                              <Link
+                                to={`/study-materials?courseId=${course.course_id}`}
+                                className="cl-resume-btn"
+                              >
+                                Resume Course
+                              </Link>
                             </div>
                           </div>
-                          <Link
-                            to={`/course/${course.departmentId}/${course.courseId}`}
-                            className="cl-resume-btn"
-                          >
-                            Resume Course
-                          </Link>
-                        </div>
+                        </motion.div>
+                      );
+                    })
+                  ) : (
+                    <div className="cl-card">
+                      <div className="cl-card-body" style={{ justifyContent: "center", padding: "24px" }}>
+                        <p style={{ color: "var(--text-muted, #888)", fontSize: "0.9rem" }}>
+                          {dashboardData
+                            ? "No courses in progress. Head to Study Materials to get started!"
+                            : "Loading your courses..."}
+                        </p>
                       </div>
-                    </motion.div>
-                  ))}
+                    </div>
+                  )}
                 </div>
               </div>
 
