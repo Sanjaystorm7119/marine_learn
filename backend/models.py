@@ -73,7 +73,8 @@ class UserTopicProgress(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     topic_id = Column(Integer, ForeignKey("study_topics.id"), nullable=False)
-    completed_at = Column(DateTime, default=datetime.utcnow)
+    # completed_at = Column(DateTime, default=datetime.utcnow)
+    completed_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     time_spent_seconds = Column(Integer, default=0, server_default="0", nullable=False)
 
     topic = relationship("StudyTopic", back_populates="progress_records")
