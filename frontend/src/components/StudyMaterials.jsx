@@ -10,6 +10,8 @@ import {
   ChevronLeft, GraduationCap,
 } from "lucide-react";
 import Sidenav from "./sidenav";
+import CertificateTemplate from "./CertificateTemplate";
+import { downloadCertificatePDF } from "../lib/downloadCertificate";
 import "../pages/studymaterials.css";
 import "../pages/dashboard.css";
 
@@ -71,7 +73,7 @@ const NavBar = ({ prevItem, nextItem, onNavigate }) => (
 );
 
 // ── Quiz Panel ───────────────────────────────────────────────────────────────
-const QuizPanel = ({ module, onQuizSubmit, bestScore, onBack, prevItem, nextItem, onNavigate }) => {
+const QuizPanel = ({ module, onQuizSubmit, bestScore, onBack, prevItem, nextItem, onNavigate, certData, certLoading, certRef, onDownloadCert }) => {
   const [answers, setAnswers] = useState({});
   const [submitted, setSubmitted] = useState(false);
   const [score, setScore] = useState(0);
@@ -124,6 +126,33 @@ const QuizPanel = ({ module, onQuizSubmit, bestScore, onBack, prevItem, nextItem
                 <RotateCcw size={14} style={{ display: "inline", marginRight: 6 }} /> Retry Quiz
               </button>
             </div>
+
+            {/* Certificate section — shown only when passed */}
+            {passed && (
+              <div style={{ marginTop: 24 }}>
+                {certLoading && (
+                  <p style={{ textAlign: "center", color: "#3a7ca5", padding: "12px 0" }}>
+                    Issuing certificate…
+                  </p>
+                )}
+                {certData && (
+                  <>
+                    <CertificateTemplate
+                      ref={certRef}
+                      recipientName={certData.user_full_name}
+                      courseName={certData.course_title}
+                      issuedAt={certData.issued_at}
+                      certificateNumber={certData.certificate_number}
+                    />
+                    <div style={{ display: "flex", gap: 12, justifyContent: "center", marginTop: 16 }}>
+                      <button className="sm-quiz-submit" style={{ width: "auto", padding: "10px 24px" }} onClick={onDownloadCert}>
+                        <Award size={16} /> Download Certificate PDF
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
           </div>
           <div style={{ marginTop: 28 }}>
             {questions.map((q, i) => {
@@ -279,6 +308,9 @@ const StudyMaterials = () => {
   const [progress, setProgress] = useState({ completed_topic_ids: [], quiz_attempts: [] });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [certData, setCertData] = useState(null);
+  const [certLoading, setCertLoading] = useState(false);
+  const certRef = useRef(null);
 
   // null = module grid, { type:"topic", moduleId, topicId, mIdx } or { type:"quiz", moduleId, mIdx }
   const [selected, setSelected] = useState(null);
@@ -357,6 +389,20 @@ const StudyMaterials = () => {
           ...prev.quiz_attempts,
         ],
       }));
+
+      // Issue a certificate when the quiz is passed (≥ 60%)
+      if (selectedCourse && Math.round((score / total) * 100) >= 60) {
+        setCertLoading(true);
+        setCertData(null);
+        fetch(`${API}/study/certificates`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ course_title: selectedCourse.title }),
+        })
+          .then((r) => r.json())
+          .then((data) => { setCertData(data); setCertLoading(false); })
+          .catch(() => setCertLoading(false));
+      }
     } catch { /* silent */ }
   };
 
@@ -770,6 +816,16 @@ const StudyMaterials = () => {
                 prevItem={prevItem}
                 nextItem={nextItem}
                 onNavigate={handleNavigate}
+                certData={certData}
+                certLoading={certLoading}
+                certRef={certRef}
+                onDownloadCert={() =>
+                  certRef.current &&
+                  downloadCertificatePDF(
+                    certRef.current,
+                    `certificate-${certData?.certificate_number}.pdf`
+                  )
+                }
               />
             )}
           </div>

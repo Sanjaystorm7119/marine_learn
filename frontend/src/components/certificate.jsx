@@ -1,54 +1,19 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import {
-  Anchor, Award, BookOpen, LayoutDashboard, Clock, Calendar,
+  Award, BookOpen, LayoutDashboard, Clock, Calendar,
   Download, Eye, Share2, ExternalLink, CheckCircle2, Loader2,
-  Shield, Flame, Navigation, Ship, Zap, UtensilsCrossed,
+  Navigation,
   GraduationCap, FileText, BarChart3, Settings, HelpCircle,
-  Menu, User, LogOut, Search, Bell, BadgeCheck, TrendingUp,
+  Menu, Search, Bell, BadgeCheck, TrendingUp,
   Star, X
 } from "lucide-react";
-// import { Link } from "react-router-dom";
 import "../pages/certificate.css";
 import Sidenav from "./sidenav";
+import CertificateTemplate from "./CertificateTemplate";
+import { downloadCertificatePDF } from "../lib/downloadCertificate";
 
-/* ── Mock Data ── */
-const certStats = [
-  { label: "Earned", value: "12", icon: Award, color: "from-emerald-500 to-emerald-600" },
-  { label: "Pending", value: "3", icon: Loader2, color: "from-amber-500 to-amber-600" },
-  { label: "Completion Rate", value: "95%", icon: TrendingUp, color: "from-primary to-accent" },
-  { label: "Total Hours", value: "420", icon: Clock, color: "from-violet-500 to-violet-600" },
-];
-
-const completedCerts = [
-  { id: "MAR-00123", title: "STCW Able Seafarer Deck", dept: "Deck", icon: Ship, issued: "Feb 24, 2026", expires: "Feb 24, 2027", score: 92, status: "valid" },
-  { id: "MAR-00124", title: "STCW Firefighting & Fire Prevention", dept: "Safety", icon: Flame, issued: "Jan 15, 2026", expires: "Jan 15, 2027", score: 88, status: "valid" },
-  { id: "MAR-00125", title: "Bridge Watchkeeping Certificate", dept: "Navigation", icon: Navigation, issued: "Dec 10, 2025", expires: "Dec 10, 2026", score: 95, status: "valid" },
-  { id: "MAR-00126", title: "Basic Safety Training (BST)", dept: "Safety", icon: Shield, issued: "Nov 20, 2025", expires: "Nov 20, 2026", score: 90, status: "valid" },
-  { id: "MAR-00127", title: "Marine Electrical Fundamentals", dept: "Electrical", icon: Zap, issued: "Oct 05, 2025", expires: "Oct 05, 2026", score: 87, status: "valid" },
-  { id: "MAR-00128", title: "Ship Sanitation & Hygiene", dept: "Catering", icon: UtensilsCrossed, issued: "Sep 12, 2025", expires: "Sep 12, 2026", score: 91, status: "valid" },
-  { id: "MAR-00129", title: "Survival Craft & Rescue Boats", dept: "Safety", icon: Shield, issued: "Aug 01, 2025", expires: "Aug 01, 2026", score: 94, status: "valid" },
-  { id: "MAR-00130", title: "Personal Safety & Social Responsibilities", dept: "Safety", icon: Shield, issued: "Jul 18, 2025", expires: "Jul 18, 2026", score: 89, status: "valid" },
-  { id: "MAR-00131", title: "Advanced Fire Fighting", dept: "Safety", icon: Flame, issued: "Jun 05, 2025", expires: "Jun 05, 2026", score: 86, status: "valid" },
-  { id: "MAR-00132", title: "Medical First Aid on Board", dept: "Safety", icon: Shield, issued: "May 22, 2025", expires: "May 22, 2026", score: 93, status: "valid" },
-  { id: "MAR-00133", title: "Engine Room Simulator", dept: "Engine", icon: Flame, issued: "Apr 10, 2025", expires: "Apr 10, 2026", score: 85, status: "expiring" },
-  { id: "MAR-00134", title: "Proficiency in Security Awareness", dept: "Safety", icon: Shield, issued: "Mar 01, 2025", expires: "Mar 01, 2026", score: 96, status: "expiring" },
-];
-
-const pendingCerts = [
-  { id: "P-001", title: "Radar Observer (ARPA)", dept: "Navigation", icon: Navigation, progress: 85, lessonsLeft: 3 },
-  { id: "P-002", title: "GMDSS Radio Operator", dept: "Navigation", icon: Navigation, progress: 67, lessonsLeft: 8 },
-  { id: "P-003", title: "Tanker Familiarization", dept: "Deck", icon: Ship, progress: 42, lessonsLeft: 14 },
-];
-
-const certTimeline = [
-  { text: "Earned STCW Able Seafarer Deck", date: "Feb 24, 2026", icon: Award },
-  { text: "Completed Firefighting course", date: "Jan 15, 2026", icon: CheckCircle2 },
-  { text: "Earned Bridge Watchkeeping", date: "Dec 10, 2025", icon: Award },
-  { text: "Completed BST course", date: "Nov 20, 2025", icon: CheckCircle2 },
-  { text: "Joined MarineLearn", date: "Mar 01, 2025", icon: Star },
-];
-
+/* ── Static sidebar items ── */
 const sidebarItems = [
   { label: "Dashboard",       icon: LayoutDashboard, href: "/dashboard" },
   { label: "My Courses",      icon: BookOpen,        href: "/mycourses" },
@@ -60,15 +25,42 @@ const sidebarItems = [
   { label: "Help",            icon: HelpCircle,      href: "/help" },
 ];
 
+/* ── Static timeline (decorative) ── */
+const certTimeline = [
+  { text: "Joined MarineLearn", date: "", icon: Star },
+  { text: "First course completed", date: "", icon: CheckCircle2 },
+  { text: "Certificate earned", date: "", icon: Award },
+];
+
 const Certificates = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const [filter, setFilter] = useState("all");
   const [selectedCert, setSelectedCert] = useState(null);
+  const [certificates, setCertificates] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [previewCert, setPreviewCert] = useState(null);
+  const previewRef = useRef(null);
 
-  const filteredCerts = filter === "all"
-    ? completedCerts
-    : completedCerts.filter(c => c.status === filter);
+  useEffect(() => {
+    fetch("http://localhost:8000/study/certificates", {
+      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+    })
+      .then(r => r.json())
+      .then(data => {
+        setCertificates(Array.isArray(data) ? data : []);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
+  const formatDate = (iso) =>
+    new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+
+  const certStats = [
+    { label: "Earned",          value: String(certificates.length), icon: Award,     color: "from-emerald-500 to-emerald-600" },
+    { label: "Completion Rate", value: certificates.length > 0 ? "100%" : "—",       icon: TrendingUp, color: "from-primary to-accent" },
+    { label: "Total Hours",     value: "—",                                           icon: Clock,      color: "from-violet-500 to-violet-600" },
+  ];
 
   return (
     <div className="cert-root">
@@ -130,9 +122,7 @@ const Certificates = () => {
               <div>
                 <h1 className="cert-page-title">My Certificates</h1>
                 <p className="cert-page-subtitle">
-                  <span className="cert-count-earned">12</span> Earned •{" "}
-                  <span className="cert-count-pending">3</span> Pending •{" "}
-                  <span className="cert-count-rate">95%</span> Course Completion Rate
+                  <span className="cert-count-earned">{certificates.length}</span> Earned
                 </p>
               </div>
             </div>
@@ -181,21 +171,20 @@ const Certificates = () => {
                     <CheckCircle2 className="cert-section-title-icon cert-section-title-icon--green" />
                     <h2 className="cert-section-title">Completed Certificates</h2>
                   </div>
-                  <div className="cert-filter-wrap">
-                    {["all", "valid", "expiring"].map(f => (
-                      <button
-                        key={f}
-                        onClick={() => setFilter(f)}
-                        className={`cert-filter-btn${filter === f ? " cert-filter-btn--active" : ""}`}
-                      >
-                        {f === "all" ? "All" : f === "valid" ? "Valid" : "Expiring"}
-                      </button>
-                    ))}
-                  </div>
                 </div>
 
+                {loading && (
+                  <p style={{ color: "#3a7ca5", padding: "16px 0" }}>Loading certificates…</p>
+                )}
+
+                {!loading && certificates.length === 0 && (
+                  <p style={{ color: "#888", padding: "16px 0" }}>
+                    No certificates yet. Complete a course and pass the quiz to earn one!
+                  </p>
+                )}
+
                 <div className="cert-cards-grid">
-                  {filteredCerts.map((cert, i) => (
+                  {certificates.map((cert, i) => (
                     <motion.div
                       key={cert.id}
                       initial={{ opacity: 0, y: 20 }}
@@ -208,23 +197,19 @@ const Certificates = () => {
                         onClick={() => setSelectedCert(selectedCert === cert.id ? null : cert.id)}
                       >
                         <div className="cert-card-icon-wrap">
-                          <cert.icon className="cert-card-icon" />
+                          <Award className="cert-card-icon" />
                         </div>
                         <div className="cert-card-body">
                           <div className="cert-card-top-row">
-                            <h3 className="cert-card-title">{cert.title}</h3>
-                            <span className={`cert-status-badge cert-status-badge--${cert.status}`}>
-                              {cert.status === "valid" ? "VALID" : "EXPIRING"}
-                            </span>
+                            <h3 className="cert-card-title">{cert.course_title}</h3>
+                            <span className="cert-status-badge cert-status-badge--valid">EARNED</span>
                           </div>
-                          <p className="cert-card-dept">{cert.dept} Department</p>
                           <div className="cert-card-meta">
                             <span className="cert-card-meta-item">
-                              <Calendar className="cert-card-meta-icon" /> {cert.issued}
+                              <Calendar className="cert-card-meta-icon" /> {formatDate(cert.issued_at)}
                             </span>
-                            <span>Score: <strong className="cert-card-score">{cert.score}%</strong></span>
                           </div>
-                          <p className="cert-card-id">#{cert.id}</p>
+                          <p className="cert-card-id">#{cert.certificate_number}</p>
 
                           {selectedCert === cert.id && (
                             <motion.div
@@ -234,24 +219,25 @@ const Certificates = () => {
                               className="cert-card-expanded"
                             >
                               <div className="cert-card-expanded-row">
-                                <span className="cert-card-expanded-label">Expires</span>
-                                <span className="cert-card-expanded-value">{cert.expires}</span>
+                                <span className="cert-card-expanded-label">Awarded To</span>
+                                <span className="cert-card-expanded-value">{cert.user_full_name}</span>
                               </div>
                               <div className="cert-card-expanded-row">
-                                <span className="cert-card-expanded-label">Verification</span>
-                                <span className="cert-card-verified">
-                                  <BadgeCheck className="cert-card-verified-icon" /> Verified
-                                </span>
+                                <span className="cert-card-expanded-label">Issued</span>
+                                <span className="cert-card-expanded-value">{formatDate(cert.issued_at)}</span>
                               </div>
                               <div className="cert-card-action-row">
-                                <button className="cert-action-btn">
+                                <button
+                                  className="cert-action-btn"
+                                  onClick={(e) => { e.stopPropagation(); setPreviewCert(cert); }}
+                                >
                                   <Download className="cert-action-btn-icon" /> PDF
                                 </button>
-                                <button className="cert-action-btn">
+                                <button
+                                  className="cert-action-btn"
+                                  onClick={(e) => { e.stopPropagation(); setPreviewCert(cert); }}
+                                >
                                   <Eye className="cert-action-btn-icon" /> View
-                                </button>
-                                <button className="cert-action-btn">
-                                  <Share2 className="cert-action-btn-icon" /> Share
                                 </button>
                               </div>
                             </motion.div>
@@ -263,59 +249,6 @@ const Certificates = () => {
                 </div>
               </div>
 
-              {/* Pending Certificates */}
-              <div className="cert-section">
-                <div className="cert-section-title-wrap">
-                  <Loader2 className="cert-section-title-icon cert-section-title-icon--amber" />
-                  <h2 className="cert-section-title">Pending Certificates</h2>
-                </div>
-                <div className="cert-pending-grid">
-                  {pendingCerts.map((cert, i) => (
-                    <motion.div
-                      key={cert.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.1 * i, duration: 0.4 }}
-                    >
-                      <div className="cert-pending-card">
-                        <div className="cert-pending-icon-wrap">
-                          <cert.icon className="cert-pending-icon" />
-                        </div>
-                        <div className="cert-pending-body">
-                          <h3 className="cert-pending-title">{cert.title}</h3>
-                          <p className="cert-pending-dept">{cert.dept} Department</p>
-                          <div className="cert-pending-progress-area">
-                            <div className="cert-pending-progress-header">
-                              <span className="cert-pending-lessons">{cert.lessonsLeft} lessons remaining</span>
-                              <span className="cert-pending-percent">{cert.progress}%</span>
-                            </div>
-                            <div className="cert-progress-track">
-                              <div className="cert-progress-fill" style={{ width: `${cert.progress}%` }} />
-                            </div>
-                          </div>
-                          <button className="cert-continue-btn">
-                            Continue Course <ExternalLink className="cert-continue-icon" />
-                          </button>
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Expiring Banner */}
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}>
-                <div className="cert-expiring-banner">
-                  <div className="cert-expiring-icon-wrap">
-                    <Clock className="cert-expiring-icon" />
-                  </div>
-                  <div className="cert-expiring-text">
-                    <h3 className="cert-expiring-title">2 Certificates Expiring Soon</h3>
-                    <p className="cert-expiring-desc">Engine Room Simulator and Proficiency in Security Awareness expire within 30 days. Renew now to stay compliant.</p>
-                  </div>
-                  <button className="cert-btn cert-btn--outline cert-btn--amber">Renew</button>
-                </div>
-              </motion.div>
             </div>
 
             {/* Right Column */}
@@ -328,56 +261,43 @@ const Certificates = () => {
                   <p className="cert-widget-desc">Your certification journey</p>
                 </div>
                 <div className="cert-timeline">
-                  {certTimeline.map((item, i) => (
-                    <motion.div
-                      key={i}
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.1 * i }}
-                      className="cert-timeline-item"
-                    >
-                      {i < certTimeline.length - 1 && <div className="cert-timeline-line" />}
-                      <div className="cert-timeline-icon-wrap">
-                        <item.icon className="cert-timeline-icon" />
-                      </div>
-                      <div className="cert-timeline-text-wrap">
-                        <p className="cert-timeline-text">{item.text}</p>
-                        <p className="cert-timeline-date">{item.date}</p>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Skills Breakdown */}
-              <div className="cert-widget-card">
-                <div className="cert-widget-header">
-                  <h3 className="cert-widget-title">Skills Breakdown</h3>
-                  <p className="cert-widget-desc">Certifications by department</p>
-                </div>
-                <div className="cert-skills-list">
-                  {[
-                    { dept: "Safety", count: 6, total: 8, color: "bg-emerald-500" },
-                    { dept: "Navigation", count: 3, total: 5, color: "bg-primary" },
-                    { dept: "Deck", count: 1, total: 3, color: "bg-amber-500" },
-                    { dept: "Engine", count: 1, total: 4, color: "bg-violet-500" },
-                    { dept: "Electrical", count: 1, total: 2, color: "bg-cyan-500" },
-                  ].map((skill, i) => (
-                    <div key={skill.dept} className="cert-skill-item">
-                      <div className="cert-skill-header">
-                        <span className="cert-skill-dept">{skill.dept}</span>
-                        <span className="cert-skill-count">{skill.count}/{skill.total}</span>
-                      </div>
-                      <div className="cert-skill-track">
+                  {certificates.length > 0
+                    ? certificates.slice(0, 5).map((cert, i) => (
                         <motion.div
-                          initial={{ width: 0 }}
-                          animate={{ width: `${(skill.count / skill.total) * 100}%` }}
-                          transition={{ delay: 0.3 + i * 0.1, duration: 0.6 }}
-                          className={`cert-skill-fill ${skill.color}`}
-                        />
-                      </div>
-                    </div>
-                  ))}
+                          key={cert.id}
+                          initial={{ opacity: 0, x: 20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.1 * i }}
+                          className="cert-timeline-item"
+                        >
+                          {i < Math.min(certificates.length, 5) - 1 && <div className="cert-timeline-line" />}
+                          <div className="cert-timeline-icon-wrap">
+                            <Award className="cert-timeline-icon" />
+                          </div>
+                          <div className="cert-timeline-text-wrap">
+                            <p className="cert-timeline-text">Earned: {cert.course_title}</p>
+                            <p className="cert-timeline-date">{formatDate(cert.issued_at)}</p>
+                          </div>
+                        </motion.div>
+                      ))
+                    : certTimeline.map((item, i) => (
+                        <motion.div
+                          key={i}
+                          initial={{ opacity: 0, x: 20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.1 * i }}
+                          className="cert-timeline-item"
+                        >
+                          {i < certTimeline.length - 1 && <div className="cert-timeline-line" />}
+                          <div className="cert-timeline-icon-wrap">
+                            <item.icon className="cert-timeline-icon" />
+                          </div>
+                          <div className="cert-timeline-text-wrap">
+                            <p className="cert-timeline-text">{item.text}</p>
+                          </div>
+                        </motion.div>
+                      ))
+                  }
                 </div>
               </div>
 
@@ -388,7 +308,6 @@ const Certificates = () => {
                 </div>
                 <div className="cert-quick-actions">
                   {[
-                    { label: "Download All as ZIP", icon: Download },
                     { label: "Print Certificate Wall", icon: FileText },
                     { label: "Share LinkedIn Portfolio", icon: Share2 },
                     { label: "Request Verification Letter", icon: BadgeCheck },
@@ -405,6 +324,75 @@ const Certificates = () => {
           </div>
         </div>
       </main>
+
+      {/* Certificate Preview Modal */}
+      {previewCert && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.65)",
+            zIndex: 1000,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "16px",
+          }}
+          onClick={() => setPreviewCert(null)}
+        >
+          <div
+            style={{
+              background: "#fff",
+              borderRadius: "12px",
+              padding: "24px",
+              maxWidth: "900px",
+              width: "100%",
+              position: "relative",
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setPreviewCert(null)}
+              style={{
+                position: "absolute",
+                top: "12px",
+                right: "12px",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                color: "#555",
+              }}
+            >
+              <X size={20} />
+            </button>
+
+            <CertificateTemplate
+              ref={previewRef}
+              recipientName={previewCert.user_full_name}
+              courseName={previewCert.course_title}
+              issuedAt={previewCert.issued_at}
+              certificateNumber={previewCert.certificate_number}
+            />
+
+            <div style={{ marginTop: "16px", display: "flex", gap: "12px", justifyContent: "flex-end" }}>
+              <button
+                className="cert-btn cert-btn--solid"
+                onClick={() =>
+                  downloadCertificatePDF(
+                    previewRef.current,
+                    `certificate-${previewCert.certificate_number}.pdf`
+                  )
+                }
+              >
+                <Download className="cert-btn-icon" /> Download PDF
+              </button>
+              <button className="cert-btn cert-btn--outline" onClick={() => setPreviewCert(null)}>
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
