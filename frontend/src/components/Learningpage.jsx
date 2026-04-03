@@ -1,4 +1,6 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import CertificateTemplate from "./CertificateTemplate";
+import { downloadCertificatePDF } from "../lib/downloadCertificate";
 import { motion, AnimatePresence } from "framer-motion";
 import { useParams, useNavigate } from "react-router-dom";
 import { coursesByDepartment, getDepartmentTitle, getCourseData } from "./courseData";
@@ -142,6 +144,9 @@ const LearningPage = () => {
     new Set(course ? [course.chapters[0]?.id] : [])
   );
   const [certificateUnlocked, setCertificateUnlocked] = useState(false);
+  const [certData, setCertData] = useState(null);
+  const [certLoading, setCertLoading] = useState(false);
+  const certRef = useRef(null);
 
   // Quiz
   const [quizQuestions, setQuizQuestions]               = useState([]);
@@ -198,7 +203,21 @@ const LearningPage = () => {
     quizQuestions.forEach((q, i) => { if (selectedAnswers[i] === q.correctIndex) correct++; });
     setScore(correct);
     setStage("result");
-    if (correct >= 7) setCertificateUnlocked(true);
+    if (correct >= 7) {
+      setCertificateUnlocked(true);
+      setCertLoading(true);
+      fetch("http://localhost:8000/study/certificates", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({ course_title: course.title }),
+      })
+        .then(r => r.json())
+        .then(data => { setCertData(data); setCertLoading(false); })
+        .catch(() => setCertLoading(false));
+    }
   };
 
   const passed            = score >= 7;
@@ -670,19 +689,32 @@ const LearningPage = () => {
 
                     {passed ? (
                       <div className="lp-cert">
-                        {/* Card border-2 border-dashed border-primary/30 bg-primary/5 */}
-                        <div className="lp-cert__card">
-                          <div className="lp-cert__body">
-                            <span className="lp-cert__trophy lp-primary"><IconTrophy size={40} /></span>
-                            <h3 className="lp-cert__title">Certificate of Completion</h3>
-                            <p className="lp-cert__course">{course.title}</p>
-                            <p className="lp-cert__awardee">Awarded to <span className="lp-fw-semibold lp-fg">{localStorage.getItem("full_name") || "User"}</span></p>
-                            <p className="lp-cert__date">Date: {new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</p>
-                            <p className="lp-cert__id">Certificate #{`MAR-${String(Math.floor(Math.random() * 90000 + 10000))}`}</p>
-                          </div>
-                        </div>
+                        {certLoading && (
+                          <p style={{ textAlign: "center", color: "#3a7ca5", padding: "16px 0" }}>
+                            Issuing certificate…
+                          </p>
+                        )}
+                        {certData && (
+                          <CertificateTemplate
+                            ref={certRef}
+                            recipientName={certData.user_full_name}
+                            courseName={certData.course_title}
+                            issuedAt={certData.issued_at}
+                            certificateNumber={certData.certificate_number}
+                          />
+                        )}
                         <div className="lp-cert__actions">
-                          <Btn className="lp-btn--pill lp-btn--gap">
+                          <Btn
+                            className="lp-btn--pill lp-btn--gap"
+                            disabled={!certData}
+                            onClick={() =>
+                              certRef.current &&
+                              downloadCertificatePDF(
+                                certRef.current,
+                                `certificate-${certData.certificate_number}.pdf`
+                              )
+                            }
+                          >
                             <IconDownload size={16} /> Download PDF
                           </Btn>
                           <Btn variant="outline" className="lp-btn--pill lp-btn--gap" onClick={() => navigate("/certificates")}>

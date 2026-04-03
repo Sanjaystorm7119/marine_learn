@@ -91,6 +91,18 @@ class UserQuizAttempt(Base):
     total = Column(Integer)
     attempted_at = Column(DateTime, default=datetime.utcnow)
 
+class Certificate(Base):
+    __tablename__ = "certificates"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    course_title = Column(String, nullable=False)
+    issued_at = Column(DateTime, default=datetime.utcnow)
+    certificate_number = Column(String, unique=True, index=True)
+
+    __table_args__ = (UniqueConstraint("user_id", "course_title", name="uq_user_course_cert"),)
+
+
 class Role(Base):
     __tablename__ = "roles"
 

@@ -110,6 +110,23 @@ class UserProgressResponse(BaseModel):
     quiz_attempts: list[dict]
 
 
+# ── Certificates ──────────────────────────────────────────────────────────────
+
+class CertificateIssueRequest(BaseModel):
+    course_title: str
+
+
+class CertificateResponse(BaseModel):
+    id: int
+    user_full_name: str
+    course_title: str
+    issued_at: str
+    certificate_number: str
+
+    class Config:
+        from_attributes = True
+
+
 # --- NEW: ROLE MANAGEMENT SCHEMAS ---
 class AdminRoleCreate(BaseModel):
     name: str

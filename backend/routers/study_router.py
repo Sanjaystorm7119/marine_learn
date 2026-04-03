@@ -12,6 +12,8 @@ All routes require authentication. Admin gets extra stats endpoint.
     GET  /study/admin/stats          -> per-module completion stats (admin only)
 """
 
+import uuid
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import func
@@ -197,11 +199,67 @@ def get_dashboard_data(
         "role": current_user.role,
         "enrolled_courses": enrolled_count,
         "completed_courses": completed_count,
-        "certificates": completed_count,
+        "certificates": db.query(models.Certificate).filter_by(user_id=current_user.id).count(),
         "total_topics_completed": total_topics_done,
         "hours_logged": hours_logged,
         "in_progress_courses": in_progress,
     }
+
+
+# ── Certificate endpoints ──────────────────────────────────────────────────────
+
+@router.post("/certificates", response_model=schemas.CertificateResponse)
+def issue_certificate(
+    body: schemas.CertificateIssueRequest,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    existing = (
+        db.query(models.Certificate)
+        .filter_by(user_id=current_user.id, course_title=body.course_title)
+        .first()
+    )
+    if existing:
+        cert = existing
+    else:
+        cert = models.Certificate(
+            user_id=current_user.id,
+            course_title=body.course_title,
+            certificate_number=f"MAR-{str(uuid.uuid4())[:8].upper()}",
+        )
+        db.add(cert)
+        db.commit()
+        db.refresh(cert)
+    return schemas.CertificateResponse(
+        id=cert.id,
+        user_full_name=current_user.full_name,
+        course_title=cert.course_title,
+        issued_at=cert.issued_at.isoformat(),
+        certificate_number=cert.certificate_number,
+    )
+
+
+@router.get("/certificates", response_model=list[schemas.CertificateResponse])
+def get_certificates(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    certs = (
+        db.query(models.Certificate)
+        .filter_by(user_id=current_user.id)
+        .order_by(models.Certificate.issued_at.desc())
+        .all()
+    )
+    return [
+        schemas.CertificateResponse(
+            id=c.id,
+            user_full_name=current_user.full_name,
+            course_title=c.course_title,
+            issued_at=c.issued_at.isoformat(),
+            certificate_number=c.certificate_number,
+        )
+        for c in certs
+    ]
 
 
 # ── Admin endpoint ─────────────────────────────────────────────────────────────
