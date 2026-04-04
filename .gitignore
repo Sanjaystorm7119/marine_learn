@@ -29,4 +29,6 @@ bk1/
 
 # Claude
 .claude/
+CLAUDE.md
+.claude/settings.local.json
 >>>>>>> 19b5bf07f11786806172ad8135b001272c0bc8bf
