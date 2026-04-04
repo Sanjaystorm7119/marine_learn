@@ -26,6 +26,7 @@ class UserResponse(BaseModel):
     full_name: str
     email: EmailStr
     role: str
+    role_lead: str 
 
     class Config:
         from_attributes = True
@@ -44,7 +45,34 @@ class AdminUserCreate(BaseModel):
 class RoleUpdate(BaseModel):
     role: str
 
+class UserLeadUpdate(BaseModel):
+    lead: str
 
+
+class CourseAssignmentCreate(BaseModel):
+    user_ids: list[int]
+    module_ids: list[int]
+
+class UserCourseDetail(BaseModel):
+    courseId: int
+    courseTitle: str
+    completedModules: int
+    totalModules: int
+    completedLessons: int
+    totalLessons: int
+    progress: int
+    status: str
+    quizScore: int | None
+
+class UserCourseManagementResponse(BaseModel):
+    id: int
+    name: str
+    email: str
+    role: str
+    rank: str
+    overallProgress: int
+    streak: int
+    courses: list[UserCourseDetail]    
 # ── Study Materials ────────────────────────────────────────────────────────────
 
 class StudyTopicResponse(BaseModel):

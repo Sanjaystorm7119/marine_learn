@@ -18,7 +18,8 @@ def create_user(db: Session, user: schemas.UserCreate):
         full_name=user.full_name,
         email=user.email,
         hashed_password=hashed_password,
-        role="crew"
+        role="crew",
+        role_lead="Will be assigned by admin" # <-- ADDED THIS
     )
     db.add(db_user)
     db.commit()
@@ -40,7 +41,7 @@ def create_role(db: Session, role: schemas.AdminRoleCreate):
     db_role = models.Role(
         name=role.name,
         description=role.description,
-        lead=role.lead
+        
     )
     db.add(db_role)
     db.commit()
@@ -52,7 +53,7 @@ def update_role(db: Session, role_id: int, role_update: schemas.AdminRoleUpdate)
     if db_role:
         db_role.name = role_update.name
         db_role.description = role_update.description
-        db_role.lead = role_update.lead
+        
         db.commit()
         db.refresh(db_role)
     return db_role
@@ -63,3 +64,10 @@ def delete_role(db: Session, role_id: int):
         db.delete(db_role)
         db.commit()
     return db_role
+def update_user_lead(db: Session, user_id: int, new_lead: str):
+    db_user = db.query(models.User).filter(models.User.id == user_id).first()
+    if db_user:
+        db_user.role_lead = new_lead
+        db.commit()
+        db.refresh(db_user)
+    return db_user

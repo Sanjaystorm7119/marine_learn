@@ -21,7 +21,9 @@ import AdminLayout from "./components/AdminLayout";
 // import MyCourses from "./components/mycourse";
 import StudyMaterials from "./components/StudyMaterials";
 import AdminRole from "./components/AdminRole"; 
-
+import AdminCourse from "./components/AdminCourse";
+import { CourseForm as AdminCourseForm } from "./components/AdminCourse";
+import AdminUserCourse from "./components/AdminUserCourse";  // 👈 ADD THIS
 import "./index.css";
 
 // Wrapper to hide standard Navbar & Footer on auth pages AND admin pages
@@ -91,6 +93,11 @@ function App() {
                 <Route path="/users" element={<AdminUsers />} />
                 <Route path="/users/:id" element={<AdminUserDetails />} />
                 <Route path="/roles" element={<AdminRole />} /> 
+                <Route path="/courses" element={<AdminCourse />} /> 
+                <Route path="courses/new" element={<AdminCourseForm />} />
+                <Route path="courses/edit/:courseId" element={<AdminCourseForm />} />
+                <Route path="/user-courses" element={<AdminUserCourse />} />
+                
               </Routes>
             </AdminLayout>
           }
