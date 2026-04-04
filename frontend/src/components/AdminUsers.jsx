@@ -392,13 +392,13 @@ const AdminUsers = () => {
             {users.map((user) => (
               <tr key={user.id}>
                 <td>{user.id}</td>
-                <td
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "0.6rem",
-                  }}
-                >
+                <td>
+  <div style={{
+    display: "flex",
+    alignItems: "center",
+    gap: "0.6rem",
+  }}>
+                
                   <div
                     style={{
                       width: "10px",
@@ -412,6 +412,7 @@ const AdminUsers = () => {
                     title={user.is_online ? "Online" : "Offline"}
                   />
                   {user.full_name}
+                  </div>
                 </td>
                 <td>{user.email}</td>
                 <td>

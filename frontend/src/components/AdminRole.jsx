@@ -25,6 +25,10 @@ const AdminRole = () => {
   const [updateMessage, setUpdateMessage] = useState(null);
   const [error, setError] = useState(null);
   const navigate = useNavigate(); // <-- Start with empty array!
+  const [expandedRole, setExpandedRole] = useState(null);
+const [roleUsers, setRoleUsers] = useState([]);
+const [editingLead, setEditingLead] = useState({});
+const [userLeads, setUserLeads] = useState({});
   
   // --- NEW: Fetch Roles from Backend ---
   useEffect(() => {
@@ -45,10 +49,82 @@ const AdminRole = () => {
       console.error("Failed to fetch roles", err);
     }
   };
+  const fetchRoleUsers = async (roleId) => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`http://localhost:8000/admin/roles/${roleId}/users`, {
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+     if (response.ok) {
+        const data = await response.json();
+        setRoleUsers(data);
+        const leads = {};
+        // FIXED: Changed u.lead to u.role_lead to perfectly match your backend!
+        data.forEach(u => { leads[u.id] = u.role_lead || "Will be assigned by admin"; }); 
+        setUserLeads(leads);
+      }
+    } catch (err) {
+      console.error("Failed to fetch role users", err);
+    }
+  };
+
+  const handleUserCountClick = (role) => {
+    if (expandedRole?.id === role.id) {
+      setExpandedRole(null);
+      setRoleUsers([]);
+    } else {
+      setExpandedRole(role);
+      fetchRoleUsers(role.id);
+      
+    }
+  };
+
+  const handleLeadSave = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`http://localhost:8000/admin/roles/${editingLead.roleId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+        body: JSON.stringify({ ...roles.find(r => r.id === editingLead.roleId), lead: editingLead.value })
+      });
+      if (response.ok) {
+        showSuccess("Role lead updated!");
+        fetchRoles();
+        setExpandedRole(prev => ({ ...prev, lead: editingLead.value }));
+      }
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+ const handleUserLeadSave = async (userId) => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`http://localhost:8000/admin/users/${userId}/lead`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+        body: JSON.stringify({ lead: userLeads[userId] })
+      });
+      if (response.ok) {
+        showSuccess("Role lead updated for user!");
+        fetchRoles(); 
+        fetchRoleUsers(expandedRole.id); // <-- NEW: Refreshes the bottom table!
+      } else {
+        const errData = await response.json();
+        throw new Error(errData.detail || "Failed to update user lead");
+      }
+    } catch (err) {
+      setError(err.message);
+      window.scrollTo({ top: 0, behavior: 'smooth' }); // <-- Scrolls up to show the error!
+    }
+  };
+
+  // ── Helpers ──────────────────────────────────────────────────────────────────
 
   // ── Helpers ──────────────────────────────────────────────────────────────────
   const showSuccess = (msg) => {
     setUpdateMessage(msg);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     setTimeout(() => setUpdateMessage(null), 3000);
   };
 
@@ -186,9 +262,9 @@ const handleDelete = async (role) => {
               <label>Assign Role Lead</label>
               <input
                 type="text"
-                disabled
+                placeholder="E.g. Capt. John"
                 value={formData.lead}
-                style={{ opacity: 0.7, cursor: "not-allowed" }}
+                onChange={(e) => setFormData({ ...formData, lead: e.target.value })}
               />
             </div>
 
@@ -261,11 +337,16 @@ const handleDelete = async (role) => {
                   </td>
 
                   {/* User Count */}
+                 {/* User Count */}
                   <td>
-                    <span className="role-user-count">
+                    <button
+                      className="role-user-count-btn"
+                      onClick={() => handleUserCountClick(role)}
+                      title="View users in this role"
+                    >
                       <Users size={13} style={{ marginRight: "5px" }} />
                       {role.userCount}
-                    </span>
+                    </button>
                   </td>
 
                   {/* Actions */}
@@ -300,6 +381,97 @@ const handleDelete = async (role) => {
           </div>
         )}
       </div>
+      {/* ── Users in Role Panel ────────────────────────────────────────── */}
+      {expandedRole && (
+        <div className="admin-table-container" style={{ marginTop: "1.8rem" }}>
+          {/* Panel Header */}
+          <div style={{ padding: "1rem 1.4rem", borderBottom: "1px solid var(--admin-border)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.8rem" }}>
+              <span className="role-name-badge" style={{
+                backgroundColor: getBadgeStyle(expandedRole.name).bg,
+                color: getBadgeStyle(expandedRole.name).text,
+                border: `1px solid ${getBadgeStyle(expandedRole.name).border}`
+              }}>
+                <ShieldCheck size={13} style={{ marginRight: "5px" }} />
+                {expandedRole.name}
+              </span>
+              <span style={{ color: "var(--admin-text-muted)", fontSize: "0.875rem" }}>
+                — {roleUsers.length} user(s)
+              </span>
+            </div>
+            {/* Editable Role Lead */}
+            
+          </div>
+
+          <table className="admin-users-table role-table">
+            <thead>
+              <tr>
+                <th>Role ID</th>
+                <th>Role Name</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role Lead</th>
+              </tr>
+            </thead>
+            <tbody>
+              {roleUsers.map((user) => (
+                <tr key={user.id}>
+                  <td><span className="role-id-badge">{expandedRole.id}</span></td>
+                  <td>
+                    <span className="role-name-badge" style={{
+                      backgroundColor: getBadgeStyle(expandedRole.name).bg,
+                      color: getBadgeStyle(expandedRole.name).text,
+                      border: `1px solid ${getBadgeStyle(expandedRole.name).border}`
+                    }}>
+                      <ShieldCheck size={13} style={{ marginRight: "5px" }} />
+                      {expandedRole.name}
+                    </span>
+                  </td>
+                  {/* CHANGED user.name TO user.full_name BELOW! */}
+                  <td style={{ color: "var(--admin-text-main)", fontWeight: 500 }}>{user.full_name}</td>
+<td style={{ color: "var(--admin-text-muted)", fontSize: "0.875rem" }}>{user.email}</td>
+<td>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                      <div className="role-lead-avatar">
+                        {(userLeads[user.id] || "W").charAt(0).toUpperCase()}
+                      </div>
+                      <input
+                        type="text"
+                        value={userLeads[user.id] || ""}
+                        onChange={(e) => setUserLeads(prev => ({ ...prev, [user.id]: e.target.value }))}
+                        style={{
+                          padding: "0.3rem 0.6rem",
+                          borderRadius: "6px",
+                          border: "1px solid var(--admin-border)",
+                          background: "var(--admin-bg)",
+                          color: "var(--admin-text-main)",
+                          fontSize: "0.82rem",
+                          outline: "none",
+                          width: "130px"
+                        }}
+                      />
+                      <button
+                        onClick={() => handleUserLeadSave(user.id)}
+                        className="role-submit-btn"
+                        style={{ padding: "0.28rem 0.7rem", fontSize: "0.78rem" }}
+                      >
+                        Save
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {roleUsers.length === 0 && (
+                <tr>
+                  <td colSpan={5} style={{ textAlign: "center", color: "var(--admin-text-muted)", padding: "1.5rem" }}>
+                    No users assigned to this role yet.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 };

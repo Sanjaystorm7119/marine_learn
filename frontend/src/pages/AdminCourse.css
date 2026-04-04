@@ -1,0 +1,871 @@
+/* ============================================================
+   AdminCourse.css
+   Replaces all shadcn/ui components with plain CSS.
+   Design, colours, animations and layout are preserved.
+   ============================================================ */
+
+/* ── CSS variable aliases (mirrors index.css tokens) ─────── */
+:root {
+  --ac-primary-start : hsl(207, 52%, 40%);
+  --ac-primary-end   : hsl(201, 53%, 56%);
+  --ac-ocean-dark    : hsl(207, 72%, 18%);
+  --ac-card-bg       : rgba(255,255,255,0.05);
+  --ac-border        : rgba(255,255,255,0.10);
+  --ac-border-subtle : rgba(255,255,255,0.05);
+  --ac-text-white    : #ffffff;
+  --ac-text-50       : rgba(255,255,255,0.50);
+  --ac-text-40       : rgba(255,255,255,0.40);
+  --ac-text-30       : rgba(255,255,255,0.30);
+  --ac-text-20       : rgba(255,255,255,0.20);
+  --ac-hover-bg      : rgba(255,255,255,0.10);
+  --ac-emerald       : #34d399;
+  --ac-red           : #f87171;
+  --ac-secondary     : hsl(201, 53%, 56%);
+  --ac-radius        : 0.75rem;
+  --ac-radius-sm     : 0.5rem;
+  --ac-radius-lg     : 1rem;
+}
+
+/* ── Page wrapper ───────────────────────────────────────── */
+.ac-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.ac-form-page {
+  max-width: 56rem;
+}
+
+/* ── Generic card ───────────────────────────────────────── */
+.ac-card {
+  background: var(--ac-card-bg);
+  border: 1px solid var(--ac-border);
+  border-radius: var(--ac-radius);
+  overflow: hidden;
+}
+
+/* ── Buttons ────────────────────────────────────────────── */
+.ac-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: var(--ac-radius-sm);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: opacity 0.2s, background 0.2s;
+}
+
+.ac-btn-primary {
+  background: linear-gradient(135deg, var(--ac-primary-start), var(--ac-primary-end));
+  color: var(--ac-text-white);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+.ac-btn-primary:hover { opacity: 0.9; }
+
+.ac-btn-danger {
+  background: transparent;
+  border: 1px solid rgba(239,68,68,0.3);
+  color: var(--ac-red);
+}
+.ac-btn-danger:hover { background: rgba(239,68,68,0.1); }
+
+.ac-btn-dashed {
+  background: transparent;
+  border: 2px dashed rgba(255,255,255,0.15);
+  color: var(--ac-text-50);
+}
+.ac-btn-dashed:hover {
+  background: rgba(255,255,255,0.05);
+  color: var(--ac-text-white);
+}
+
+.ac-btn-full { width: 100%; justify-content: center; }
+
+.ac-btn-lg { height: 3.5rem; font-size: 1rem; }
+
+.ac-btn-flex { flex: 1; justify-content: center; }
+
+/* ── Icon buttons ───────────────────────────────────────── */
+.ac-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  border-radius: var(--ac-radius-sm);
+  border: none;
+  background: transparent;
+  color: var(--ac-text-40);
+  cursor: pointer;
+  transition: color 0.2s, background 0.2s;
+}
+.ac-icon-btn:hover {
+  color: var(--ac-text-white);
+  background: var(--ac-hover-bg);
+}
+.ac-icon-btn-edit:hover { color: var(--ac-secondary); }
+.ac-icon-btn-del:hover  { color: var(--ac-red); }
+
+/* ── Inputs ─────────────────────────────────────────────── */
+.ac-input {
+  width: 100%;
+  background: rgba(255,255,255,0.10);
+  border: 1px solid var(--ac-border);
+  border-radius: var(--ac-radius-sm);
+  color: var(--ac-text-white);
+  font-size: 0.875rem;
+  padding: 0.5rem 0.75rem;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+}
+.ac-input::placeholder { color: var(--ac-text-30); }
+.ac-input:focus {
+  border-color: var(--ac-primary-start);
+  box-shadow: 0 0 0 2px rgba(74, 130, 163, 0.25);
+}
+
+.ac-textarea {
+  width: 100%;
+  background: rgba(255,255,255,0.10);
+  border: 1px solid var(--ac-border);
+  border-radius: var(--ac-radius-sm);
+  color: var(--ac-text-white);
+  font-size: 0.875rem;
+  padding: 0.625rem 0.75rem;
+  outline: none;
+  resize: vertical;
+  min-height: 100px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+.ac-textarea::placeholder { color: var(--ac-text-30); }
+.ac-textarea:focus {
+  border-color: var(--ac-primary-start);
+  box-shadow: 0 0 0 2px rgba(74, 130, 163, 0.25);
+}
+
+.ac-label {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--ac-text-50);
+  margin-bottom: 0.375rem;
+}
+
+/* ── Page header row ────────────────────────────────────── */
+.ac-header-row {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+@media (min-width: 640px) {
+  .ac-header-row {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.ac-page-title {
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: var(--ac-text-white);
+  margin: 0;
+}
+
+.ac-breadcrumb {
+  color: var(--ac-text-50);
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+.ac-breadcrumb-link {
+  color: var(--ac-secondary);
+  cursor: pointer;
+}
+.ac-breadcrumb-link:hover { text-decoration: underline; }
+
+/* ── Stats grid ─────────────────────────────────────────── */
+.ac-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+@media (min-width: 1024px) {
+  .ac-stats-grid { grid-template-columns: repeat(4, 1fr); }
+}
+
+.ac-stat-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+}
+
+.ac-stat-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--ac-radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--ac-text-white);
+}
+.stat-blue   { background: linear-gradient(135deg, #3b82f6, #22d3ee); }
+.stat-green  { background: linear-gradient(135deg, #10b981, #2dd4bf); }
+.stat-amber  { background: linear-gradient(135deg, #f59e0b, #fb923c); }
+.stat-violet { background: linear-gradient(135deg, #8b5cf6, #a855f7); }
+
+.ac-stat-label {
+  font-size: 0.75rem;
+  color: var(--ac-text-50);
+  margin: 0;
+}
+.ac-stat-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--ac-text-white);
+  margin: 0;
+}
+
+/* ── Search bar card ────────────────────────────────────── */
+.ac-search-bar { padding: 1rem; }
+
+.ac-search-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+@media (min-width: 640px) {
+  .ac-search-inner { flex-direction: row; }
+}
+
+.ac-search-input-wrap {
+  position: relative;
+  flex: 1;
+}
+.ac-search-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--ac-text-40);
+  pointer-events: none;
+}
+.ac-search-input { padding-left: 2.25rem; }
+
+/* ── View toggle ────────────────────────────────────────── */
+.ac-view-toggle {
+  display: flex;
+  gap: 0.25rem;
+  background: rgba(255,255,255,0.10);
+  border-radius: var(--ac-radius-sm);
+  padding: 0.25rem;
+}
+.ac-toggle-btn {
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border: none;
+  background: transparent;
+  color: var(--ac-text-50);
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.ac-toggle-btn.active {
+  background: rgba(255,255,255,0.20);
+  color: var(--ac-text-white);
+}
+
+/* ── Table ──────────────────────────────────────────────── */
+.ac-table-wrap { overflow: hidden; }
+
+.ac-table-scroll { overflow-x: auto; }
+
+.ac-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.ac-thead-row {
+  border-bottom: 1px solid var(--ac-border);
+}
+.ac-thead-row:hover { background: transparent; }
+
+.ac-th {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--ac-text-50);
+  white-space: nowrap;
+}
+.ac-th-right { text-align: right; }
+
+.ac-tbody-row {
+  border-bottom: 1px solid var(--ac-border-subtle);
+  transition: background 0.15s;
+}
+.ac-tbody-row:hover { background: rgba(255,255,255,0.05); }
+
+.ac-td { padding: 0.875rem 1rem; vertical-align: middle; }
+.ac-td-muted { color: rgba(255,255,255,0.70); font-size: 0.875rem; }
+
+.ac-course-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.ac-course-icon { font-size: 1.5rem; }
+.ac-course-title {
+  color: var(--ac-text-white);
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin: 0;
+}
+.ac-course-desc {
+  color: var(--ac-text-40);
+  font-size: 0.75rem;
+  margin: 0;
+  max-width: 18rem;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.ac-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+.ac-check-icon { color: var(--ac-emerald); }
+.ac-published  { color: var(--ac-emerald); font-size: 0.75rem; font-weight: 500; }
+
+.ac-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  justify-content: flex-end;
+}
+
+.ac-table-footer {
+  border-top: 1px solid var(--ac-border);
+  padding: 0.75rem 1rem;
+}
+.ac-table-count { font-size: 0.75rem; color: var(--ac-text-40); }
+
+/* ── Grid view ──────────────────────────────────────────── */
+.ac-grid-view {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+@media (min-width: 640px)  { .ac-grid-view { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1024px) { .ac-grid-view { grid-template-columns: repeat(3, 1fr); } }
+
+.ac-grid-card { cursor: pointer; transition: background 0.2s; }
+.ac-grid-card:hover { background: rgba(255,255,255,0.08); }
+
+.ac-grid-card-bar {
+  height: 0.5rem;
+  background: linear-gradient(90deg, var(--ac-primary-start), var(--ac-primary-end));
+}
+.ac-grid-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.25rem;
+}
+.ac-grid-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+.ac-grid-card-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.ac-grid-course-icon { font-size: 1.875rem; }
+.ac-grid-course-title {
+  color: var(--ac-text-white);
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.ac-grid-course-meta {
+  color: var(--ac-text-40);
+  font-size: 0.625rem;
+  margin: 0.25rem 0 0;
+}
+.ac-grid-edit-btn { opacity: 0; }
+.ac-grid-card-group:hover .ac-grid-edit-btn { opacity: 1; }
+
+.ac-grid-course-desc {
+  color: var(--ac-text-40);
+  font-size: 0.75rem;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.ac-grid-course-stats {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-size: 0.75rem;
+  color: var(--ac-text-50);
+}
+.ac-grid-stat {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+.ac-grid-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--ac-border-subtle);
+}
+.ac-grid-quiz-count { color: var(--ac-text-40); font-size: 0.75rem; }
+
+/* ── Modal ──────────────────────────────────────────────── */
+.ac-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.60);
+  backdrop-filter: blur(4px);
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.ac-modal {
+  width: 100%;
+  max-width: 42rem;
+  background: var(--ac-ocean-dark);
+  border: 1px solid var(--ac-border);
+  border-radius: 1rem;
+  box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+  overflow: hidden;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.ac-modal-bar {
+  height: 0.5rem;
+  background: linear-gradient(90deg, var(--ac-primary-start), var(--ac-primary-end));
+}
+.ac-modal-body {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+.ac-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+.ac-modal-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.ac-modal-course-icon { font-size: 2.5rem; }
+.ac-modal-course-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--ac-text-white);
+  margin: 0;
+}
+.ac-modal-course-duration {
+  color: var(--ac-text-50);
+  font-size: 0.75rem;
+  margin: 0.25rem 0 0;
+}
+.ac-modal-desc { color: rgba(255,255,255,0.60); font-size: 0.875rem; margin: 0; }
+
+.ac-modal-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+}
+.ac-modal-stat-box {
+  background: rgba(255,255,255,0.05);
+  border-radius: var(--ac-radius);
+  padding: 0.75rem;
+  text-align: center;
+}
+.ac-modal-stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--ac-text-white);
+  margin: 0;
+}
+.ac-modal-stat-label {
+  font-size: 0.75rem;
+  color: var(--ac-text-50);
+  margin: 0;
+}
+
+.ac-modal-modules { display: flex; flex-direction: column; gap: 0.75rem; }
+.ac-modal-section-title {
+  color: var(--ac-text-white);
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.ac-module-item {
+  background: rgba(255,255,255,0.05);
+  border-radius: var(--ac-radius);
+  overflow: hidden;
+}
+.ac-module-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  text-align: left;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.ac-module-header:hover { background: rgba(255,255,255,0.05); }
+
+.ac-module-num {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: var(--ac-radius-sm);
+  background: linear-gradient(135deg, var(--ac-primary-start), var(--ac-primary-end));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ac-text-white);
+  font-size: 0.75rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.ac-module-info { flex: 1; }
+.ac-module-title {
+  color: var(--ac-text-white);
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin: 0;
+}
+.ac-module-lesson-count {
+  color: var(--ac-text-40);
+  font-size: 0.75rem;
+  margin: 0;
+}
+.ac-chevron { color: var(--ac-text-40); flex-shrink: 0; }
+
+.ac-module-lessons-wrap { overflow: hidden; }
+.ac-module-lessons {
+  padding: 0.75rem 1rem 1rem;
+  border-top: 1px solid var(--ac-border-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+.ac-lesson-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  background: rgba(255,255,255,0.05);
+  border-radius: var(--ac-radius-sm);
+  padding: 0.5rem 0.75rem;
+}
+.ac-lesson-title {
+  color: rgba(255,255,255,0.60);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.ac-lesson-icon { color: var(--ac-secondary); }
+.ac-lesson-duration { color: var(--ac-text-40); }
+
+.ac-modal-actions {
+  display: flex;
+  gap: 0.75rem;
+  padding-top: 0.5rem;
+}
+
+/* ── Course Form ────────────────────────────────────────── */
+.ac-form-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.ac-form-header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.ac-back-btn {
+  padding: 0.5rem;
+  border-radius: var(--ac-radius);
+  border: none;
+  background: transparent;
+  color: rgba(255,255,255,0.60);
+  cursor: pointer;
+  transition: color 0.2s, background 0.2s;
+  display: flex;
+  align-items: center;
+}
+.ac-back-btn:hover {
+  color: var(--ac-text-white);
+  background: var(--ac-hover-bg);
+}
+.ac-form-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--ac-text-white);
+  margin: 0;
+}
+.ac-form-subtitle {
+  color: var(--ac-text-50);
+  font-size: 0.875rem;
+  margin: 0.125rem 0 0;
+}
+
+/* ── Tabs ───────────────────────────────────────────────── */
+.ac-tabs {
+  display: flex;
+  gap: 0.25rem;
+  background: rgba(255,255,255,0.05);
+  border-radius: var(--ac-radius);
+  padding: 0.25rem;
+  border: 1px solid var(--ac-border);
+}
+.ac-tab-btn {
+  flex: 1;
+  padding: 0.625rem 1rem;
+  border-radius: var(--ac-radius-sm);
+  font-size: 0.875rem;
+  font-weight: 500;
+  border: none;
+  background: transparent;
+  color: var(--ac-text-50);
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+  text-transform: capitalize;
+}
+.ac-tab-btn.active {
+  background: linear-gradient(135deg, var(--ac-primary-start), var(--ac-primary-end));
+  color: var(--ac-text-white);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+}
+.ac-tab-btn:not(.active):hover {
+  color: var(--ac-text-white);
+  background: var(--ac-hover-bg);
+}
+
+.ac-tab-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* ── Form card ──────────────────────────────────────────── */
+.ac-form-card {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.ac-form-icon-title {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  gap: 1.25rem;
+  align-items: start;
+}
+.ac-icon-input {
+  text-align: center;
+  font-size: 1.5rem;
+  height: 4rem;
+  padding: 0;
+}
+.ac-form-title-field { flex: 1; }
+
+.ac-form-two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+@media (max-width: 480px) { .ac-form-two-col { grid-template-columns: 1fr; } }
+
+.ac-summary-box {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--ac-border);
+  border-radius: var(--ac-radius-sm);
+  padding: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  min-height: 2.5rem;
+}
+.ac-summary-stat {
+  font-size: 0.75rem;
+  color: var(--ac-text-50);
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* ── Module card ────────────────────────────────────────── */
+.ac-module-card { overflow: hidden; }
+
+.ac-module-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.ac-module-row:hover { background: rgba(255,255,255,0.05); }
+
+.ac-grip { color: rgba(255,255,255,0.20); flex-shrink: 0; }
+
+.ac-module-badge {
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--ac-radius-sm);
+  background: linear-gradient(135deg, var(--ac-primary-start), var(--ac-primary-end));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ac-text-white);
+  font-size: 0.875rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.ac-module-title-input {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  font-weight: 600;
+  padding-left: 0;
+  padding-right: 0;
+}
+.ac-module-title-input:focus { box-shadow: none !important; }
+
+.ac-module-count {
+  font-size: 0.75rem;
+  color: var(--ac-text-40);
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+/* ── Lessons ────────────────────────────────────────────── */
+.ac-lessons-wrap { overflow: hidden; }
+.ac-lessons-inner {
+  padding: 1rem 1.25rem 1.25rem;
+  border-top: 1px solid var(--ac-border-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.ac-lesson-card {
+  background: rgba(255,255,255,0.05);
+  border-radius: var(--ac-radius);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.ac-lesson-top {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.ac-video-icon { color: var(--ac-secondary); flex-shrink: 0; }
+
+.ac-lesson-title-input { flex: 1; }
+.ac-duration-input { width: 5rem; flex-shrink: 0; }
+.ac-url-input { font-size: 0.75rem; }
+
+/* ── Quiz ───────────────────────────────────────────────── */
+.ac-quiz-card { padding: 1.25rem; }
+.ac-quiz-inner {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+.ac-quiz-num {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: var(--ac-radius-sm);
+  background: rgba(255,255,255,0.10);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ac-text-white);
+  font-size: 0.75rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  margin-top: 0.25rem;
+}
+.ac-quiz-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.ac-options-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+.ac-option-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.ac-radio-btn {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.20);
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+.ac-radio-btn:hover { border-color: rgba(255,255,255,0.40); }
+.ac-radio-btn.correct {
+  border-color: var(--ac-emerald);
+  background: rgba(52, 211, 153, 0.20);
+}
+.ac-radio-dot {
+  width: 0.625rem;
+  height: 0.625rem;
+  border-radius: 50%;
+  background: var(--ac-emerald);
+}
+.ac-option-input { flex: 1; }
+.ac-quiz-del { margin-top: 0.25rem; }

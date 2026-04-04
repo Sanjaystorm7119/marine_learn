@@ -13,6 +13,7 @@ class User(Base):
     email = Column(String, unique=True, index=True)
     hashed_password = Column(String)
     role = Column(String, default="crew")
+    role_lead = Column(String, default="Will be assigned by admin") # <-- ADDED THIS
 
 
 class StudyModule(Base):
@@ -83,4 +84,13 @@ class Role(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=True, index=True, nullable=False)
     description = Column(String, nullable=False)
-    lead = Column(String, default="Will be assigned by admin")    
+
+class UserCourseAssignment(Base):
+    __tablename__ = "user_course_assignments"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    module_id = Column(Integer, ForeignKey("study_modules.id"), nullable=False)
+    assigned_at = Column(DateTime, default=datetime.utcnow)
+
+    __table_args__ = (UniqueConstraint("user_id", "module_id", name="uq_user_module_assign"),)       
