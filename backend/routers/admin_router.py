@@ -40,39 +40,31 @@ def get_stats(
 @router.get("/roles", response_model=list[schemas.AdminRoleResponse])
 def get_all_roles(db: Session = Depends(get_db), _: models.User = Depends(require_admin)):
     roles = crud.get_roles(db)
-    result =[]
+    result = []
     for r in roles:
-        # 1. Find all users with this role
-        users_with_role = db.query(models.User).filter(func.lower(models.User.role) == func.lower(r.name)).all()
-        
-        # 2. Grab the lead from the first user (or use default if no users exist)
-        current_lead = "Will be assigned by admin"
-        if len(users_with_role) > 0 and users_with_role[0].role_lead:
-            current_lead = users_with_role[0].role_lead
-
+        user_count = db.query(models.User).filter(func.lower(models.User.role) == func.lower(r.name)).count()
         result.append({
             "id": r.id,
             "name": r.name,
             "description": r.description,
-            "lead": current_lead, # <-- FIXED: Now pulls from the User table!
-            "userCount": len(users_with_role)
+            "lead": r.lead or "Will be assigned by admin",
+            "userCount": user_count,
         })
     return result
 
 @router.post("/roles", response_model=schemas.AdminRoleResponse)
 def create_new_role(role: schemas.AdminRoleCreate, db: Session = Depends(get_db), _: models.User = Depends(require_admin)):
-    # Check if role name already exists
     existing = db.query(models.Role).filter(func.lower(models.Role.name) == func.lower(role.name)).first()
     if existing:
         raise HTTPException(status_code=400, detail="Role name already exists")
-    
+
     new_role = crud.create_role(db, role)
     return {
         "id": new_role.id,
         "name": new_role.name,
         "description": new_role.description,
-        "lead": role.lead, 
-        "userCount": 0
+        "lead": new_role.lead or "Will be assigned by admin",
+        "userCount": 0,
     }
 
 @router.put("/roles/{role_id}", response_model=schemas.AdminRoleResponse)
@@ -80,20 +72,19 @@ def update_existing_role(role_id: int, role_update: schemas.AdminRoleUpdate, db:
     updated_role = crud.update_role(db, role_id, role_update)
     if not updated_role:
         raise HTTPException(status_code=404, detail="Role not found")
-    
-    # --- MAGIC: Sync the new lead to all users with this role! ---
+
+    # Sync the new lead to all users with this role
     users_with_role = db.query(models.User).filter(func.lower(models.User.role) == func.lower(updated_role.name)).all()
     for u in users_with_role:
         u.role_lead = role_update.lead
     db.commit()
-    # -------------------------------------------------------------
 
     return {
         "id": updated_role.id,
         "name": updated_role.name,
         "description": updated_role.description,
-        "lead": role_update.lead,
-        "userCount": len(users_with_role)
+        "lead": updated_role.lead or "Will be assigned by admin",
+        "userCount": len(users_with_role),
     }
 
 @router.delete("/roles/{role_id}")
@@ -134,48 +125,119 @@ def update_user_lead_endpoint(user_id: int, lead_update: schemas.UserLeadUpdate,
 # (Add this to the very bottom of routers/admin_router.py)
 
 @router.get("/user-courses", response_model=list[schemas.UserCourseManagementResponse])
-def get_user_course_management_data(db: Session = Depends(get_db)):
+def get_user_course_management_data(db: Session = Depends(get_db), _: models.User = Depends(require_admin)):
     users = db.query(models.User).all()
-    result =[]
+    result = []
 
     for user in users:
-        assignments = db.query(models.UserCourseAssignment).filter(models.UserCourseAssignment.user_id == user.id).all()
-        courses_data =[]
+        assignments = db.query(models.UserCourseAssignment).filter(
+            models.UserCourseAssignment.user_id == user.id
+        ).all()
+
+        assigned_module_ids = {a.module_id for a in assignments}
+
+        # Fetch all assigned modules in a single query
+        assigned_modules = (
+            db.query(models.StudyModule)
+            .filter(models.StudyModule.id.in_(assigned_module_ids))
+            .all()
+        ) if assigned_module_ids else []
+
+        # Group modules by their parent course_id.
+        # Modules with NULL course_id are grouped under 0 (displayed as "Unassigned").
+        course_module_map: dict[int, list] = {}
+        for module in assigned_modules:
+            cid = module.course_id if module.course_id else 0
+            course_module_map.setdefault(cid, []).append(module)
+
+        courses_data = []
         total_progress_sum = 0
 
-        for assign in assignments:
-            module = db.query(models.StudyModule).filter(models.StudyModule.id == assign.module_id).first()
-            if not module:
-                continue
-                
-            total_topics = db.query(models.StudyTopic).filter(models.StudyTopic.module_id == module.id).count()
-            
-            completed_topics = db.query(models.UserTopicProgress).join(models.StudyTopic).filter(
-                models.UserTopicProgress.user_id == user.id,
-                models.StudyTopic.module_id == module.id
-            ).count()
+        for course_id, modules in course_module_map.items():
+            course = db.query(models.Course).filter(models.Course.id == course_id).first()
+            course_title = course.title if course else "Unassigned Modules"
 
-            progress = int((completed_topics / total_topics * 100)) if total_topics > 0 else 0
+            total_lessons = 0
+            completed_lessons = 0
+            completed_modules = 0
+            quiz_scores = []
+            modules_data = []
+
+            for module in modules:
+                module_total = db.query(models.StudyTopic).filter(
+                    models.StudyTopic.module_id == module.id
+                ).count()
+
+                module_completed = (
+                    db.query(models.UserTopicProgress)
+                    .join(models.StudyTopic)
+                    .filter(
+                        models.UserTopicProgress.user_id == user.id,
+                        models.StudyTopic.module_id == module.id,
+                    )
+                    .count()
+                )
+
+                total_quiz_questions = db.query(models.StudyQuizQuestion).filter(
+                    models.StudyQuizQuestion.module_id == module.id
+                ).count()
+
+                total_lessons += module_total
+                completed_lessons += module_completed
+
+                if module_total > 0 and module_completed == module_total:
+                    completed_modules += 1
+
+                quiz = (
+                    db.query(models.UserQuizAttempt)
+                    .filter(
+                        models.UserQuizAttempt.user_id == user.id,
+                        models.UserQuizAttempt.module_id == module.id,
+                    )
+                    .order_by(models.UserQuizAttempt.attempted_at.desc())
+                    .first()
+                )
+
+                mod_quiz = int(quiz.score / quiz.total * 100) if quiz and quiz.total > 0 else None
+                if mod_quiz is not None:
+                    quiz_scores.append(mod_quiz)
+
+                mod_progress = int(module_completed / module_total * 100) if module_total > 0 else 0
+                mod_status = (
+                    "completed" if mod_progress == 100
+                    else ("in-progress" if mod_progress > 0 else "not-started")
+                )
+
+                modules_data.append({
+                    "moduleId": module.id,
+                    "moduleTitle": module.title,
+                    "completedLessons": module_completed,
+                    "totalLessons": module_total,
+                    "totalQuizQuestions": total_quiz_questions,
+                    "progress": mod_progress,
+                    "status": mod_status,
+                    "quizScore": mod_quiz,
+                })
+
+            progress = int(completed_lessons / total_lessons * 100) if total_lessons > 0 else 0
             total_progress_sum += progress
-            status = "completed" if progress == 100 else ("in-progress" if progress > 0 else "not-started")
-
-            quiz = db.query(models.UserQuizAttempt).filter(
-                models.UserQuizAttempt.user_id == user.id, 
-                models.UserQuizAttempt.module_id == module.id
-            ).order_by(models.UserQuizAttempt.attempted_at.desc()).first()
-
-            quiz_score = int((quiz.score / quiz.total * 100)) if quiz and quiz.total > 0 else None
+            status = (
+                "completed" if progress == 100
+                else ("in-progress" if progress > 0 else "not-started")
+            )
+            avg_quiz = int(sum(quiz_scores) / len(quiz_scores)) if quiz_scores else None
 
             courses_data.append({
-                "courseId": module.id,
-                "courseTitle": module.title,
-                "completedModules": completed_topics,
-                "totalModules": total_topics,
-                "completedLessons": completed_topics,
-                "totalLessons": total_topics,
+                "courseId": course_id,
+                "courseTitle": course_title,
+                "completedModules": completed_modules,
+                "totalModules": len(modules),
+                "completedLessons": completed_lessons,
+                "totalLessons": total_lessons,
                 "progress": progress,
                 "status": status,
-                "quizScore": quiz_score
+                "quizScore": avg_quiz,
+                "modules": modules_data,
             })
 
         overall_progress = int(total_progress_sum / len(courses_data)) if courses_data else 0
@@ -188,25 +250,68 @@ def get_user_course_management_data(db: Session = Depends(get_db)):
             "rank": user.role_lead,
             "overallProgress": overall_progress,
             "streak": 0,
-            "courses": courses_data
+            "courses": courses_data,
         })
 
     return result
 
+@router.post("/repair-module-links")
+def repair_module_links(db: Session = Depends(get_db), _: models.User = Depends(require_admin)):
+    """
+    One-time repair: link all StudyModules that have course_id=NULL to the
+    course they logically belong to.  Works by scanning every Course and
+    claiming all un-linked modules (course_id IS NULL).  Safe when there is
+    only one course; when multiple courses exist it only links to a course
+    that currently has NO linked modules (so it won't steal another course's
+    modules).
+    """
+    courses = db.query(models.Course).all()
+    total_fixed = 0
+    report = []
+
+    for course in courses:
+        if course.modules:          # already has linked modules — skip
+            continue
+        orphaned = (
+            db.query(models.StudyModule)
+            .filter(models.StudyModule.course_id.is_(None))
+            .all()
+        )
+        if not orphaned:
+            continue
+        for m in orphaned:
+            m.course_id = course.id
+        total_fixed += len(orphaned)
+        report.append({"course": course.title, "modules_linked": len(orphaned)})
+
+    db.commit()
+    return {"total_fixed": total_fixed, "details": report}
+
+
 @router.post("/assign-courses")
-def assign_courses_to_users(payload: schemas.CourseAssignmentCreate, db: Session = Depends(get_db)):
+def assign_courses_to_users(
+    payload: schemas.CourseAssignmentCreate,
+    db: Session = Depends(get_db),
+    _: models.User = Depends(require_admin),
+):
     assigned_count = 0
-    for uid in payload.user_ids:
-        for mid in payload.module_ids:
+
+    for module_id in payload.module_ids:
+        module = db.query(models.StudyModule).filter(models.StudyModule.id == module_id).first()
+        if not module:
+            continue
+        for uid in payload.user_ids:
             existing = db.query(models.UserCourseAssignment).filter(
                 models.UserCourseAssignment.user_id == uid,
-                models.UserCourseAssignment.module_id == mid
+                models.UserCourseAssignment.module_id == module_id,
             ).first()
-            
             if not existing:
-                new_assign = models.UserCourseAssignment(user_id=uid, module_id=mid)
-                db.add(new_assign)
+                db.add(models.UserCourseAssignment(user_id=uid, module_id=module_id))
                 assigned_count += 1
-                
+
     db.commit()
-    return {"message": f"Successfully assigned {assigned_count} new course records."}
+    return {
+        "message": f"Successfully assigned {assigned_count} new course records.",
+        "assigned_count": assigned_count,
+        "skipped_courses": [],
+    }

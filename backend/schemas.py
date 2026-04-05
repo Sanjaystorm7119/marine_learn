@@ -26,7 +26,7 @@ class UserResponse(BaseModel):
     full_name: str
     email: EmailStr
     role: str
-    role_lead: str 
+    role_lead: str = "Will be assigned by admin"
 
     class Config:
         from_attributes = True
@@ -53,6 +53,16 @@ class CourseAssignmentCreate(BaseModel):
     user_ids: list[int]
     module_ids: list[int]
 
+class ModuleProgressDetail(BaseModel):
+    moduleId: int
+    moduleTitle: str
+    completedLessons: int
+    totalLessons: int
+    totalQuizQuestions: int = 0
+    progress: int
+    status: str
+    quizScore: int | None
+
 class UserCourseDetail(BaseModel):
     courseId: int
     courseTitle: str
@@ -63,13 +73,14 @@ class UserCourseDetail(BaseModel):
     progress: int
     status: str
     quizScore: int | None
+    modules: list[ModuleProgressDetail]
 
 class UserCourseManagementResponse(BaseModel):
     id: int
     name: str
     email: str
     role: str
-    rank: str
+    rank: str | None
     overallProgress: int
     streak: int
     courses: list[UserCourseDetail]    
@@ -79,7 +90,7 @@ class StudyTopicResponse(BaseModel):
     id: int
     module_id: int
     title: str
-    content: str
+    content: str | None = None
     order_num: int
 
     class Config:
@@ -92,7 +103,7 @@ class StudyQuizQuestionResponse(BaseModel):
     question: str
     options: list
     correct_answer: int
-    explanation: str
+    explanation: str | None = None
     order_num: int
 
     class Config:
@@ -102,7 +113,7 @@ class StudyQuizQuestionResponse(BaseModel):
 class StudyModuleResponse(BaseModel):
     id: int
     title: str
-    description: str
+    description: str | None = None
     order_num: int
     topics: list[StudyTopicResponse]
     quiz_questions: list[StudyQuizQuestionResponse]
@@ -114,7 +125,7 @@ class StudyModuleResponse(BaseModel):
 class CourseResponse(BaseModel):
     id: int
     title: str
-    description: str
+    description: str | None = None
     order_num: int
     modules: list[StudyModuleResponse]
 

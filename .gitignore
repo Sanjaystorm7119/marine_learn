@@ -1,22 +1,12 @@
-<<<<<<< HEAD
-<<<<<<< HEAD
-venv
-.venv
+# Python / Virtual env
+venv/
+.venv/
 *venv
-backend\venv
-=======
-=======
-backend\venv
-venv
-.venv
-*venv
-backend/venv/
->>>>>>> e94ecccbac5eca3e134db40faec1a698767196fe
-# Python
 backend/venv/
 __pycache__/
 *.pyc
 *.pyo
+.pytest_cache/
 
 # Backup
 bk1/
@@ -30,5 +20,3 @@ bk1/
 # Claude
 .claude/
 CLAUDE.md
-.claude/settings.local.json
->>>>>>> 19b5bf07f11786806172ad8135b001272c0bc8bf

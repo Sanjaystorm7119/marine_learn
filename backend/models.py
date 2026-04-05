@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String, Text, ForeignKey, DateTime, UniqueConstraint
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import JSONB
-from datetime import datetime
+from datetime import datetime, timezone
 from database import Base
 
 
@@ -91,7 +91,7 @@ class UserQuizAttempt(Base):
     module_id = Column(Integer, ForeignKey("study_modules.id"), nullable=False)
     score = Column(Integer)
     total = Column(Integer)
-    attempted_at = Column(DateTime, default=datetime.utcnow)
+    attempted_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
 class Certificate(Base):
     __tablename__ = "certificates"
@@ -99,7 +99,7 @@ class Certificate(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     course_title = Column(String, nullable=False)
-    issued_at = Column(DateTime, default=datetime.utcnow)
+    issued_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     certificate_number = Column(String, unique=True, index=True)
 
     __table_args__ = (UniqueConstraint("user_id", "course_title", name="uq_user_course_cert"),)
@@ -111,6 +111,7 @@ class Role(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=True, index=True, nullable=False)
     description = Column(String, nullable=False)
+    lead = Column(String, default="Will be assigned by admin")
 
 class UserCourseAssignment(Base):
     __tablename__ = "user_course_assignments"
@@ -118,6 +119,6 @@ class UserCourseAssignment(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     module_id = Column(Integer, ForeignKey("study_modules.id"), nullable=False)
-    assigned_at = Column(DateTime, default=datetime.utcnow)
+    assigned_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     __table_args__ = (UniqueConstraint("user_id", "module_id", name="uq_user_module_assign"),)       
