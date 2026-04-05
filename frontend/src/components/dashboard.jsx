@@ -230,6 +230,7 @@ const Dashboard = () => {
   const [userName, setUserName] = useState("Loading...");
   const [userRole, setUserRole] = useState("crew");
   const [dashboardData, setDashboardData] = useState(null);
+  const [assignedCourses, setAssignedCourses] = useState(null);
   const navigate = useNavigate();
 
   /* ── Search state ── */
@@ -301,6 +302,23 @@ const Dashboard = () => {
         if (dashRes.ok) {
           const data = await dashRes.json();
           setDashboardData(data);
+        }
+
+        // Try the new assignment-aware endpoint; fall back to all courses
+        // (old server returns 404 for the new endpoint)
+        const assignedRes = await fetch(
+          "http://localhost:8000/study/my-assigned-courses",
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (assignedRes.ok) {
+          setAssignedCourses(await assignedRes.json());
+        } else {
+          // Old server: fall back to full course list
+          const allCoursesRes = await fetch(
+            "http://localhost:8000/study/courses",
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          if (allCoursesRes.ok) setAssignedCourses(await allCoursesRes.json());
         }
       } catch (error) {
         console.error("Dashboard fetch error:", error);
@@ -598,75 +616,105 @@ const Dashboard = () => {
           <div className="main-grid">
             {/* Left Column: Continue Learning + For You */}
             <div className="courses-section">
-              {/* Continue Learning */}
-              <div>
-                <div className="section-header">
-                  <h2 className="section-title">Continue Learning</h2>
-                  <Link to="/coursepage" className="view-all-btn">
-                    See All <ChevronRight className="view-all-icon" />
-                  </Link>
-                </div>
+              {/* My Courses */}
+              {(() => {
+                // Prefer the dedicated assigned-courses list; fall back to
+                // dashboard in_progress_courses for when the new endpoint
+                // isn't available yet.
+                const inProgress = dashboardData?.in_progress_courses ?? [];
+                const progressMap = Object.fromEntries(
+                  inProgress.map((c) => [c.course_id, c])
+                );
 
-                <div className="cl-list">
-                  {dashboardData?.in_progress_courses?.length > 0 ? (
-                    dashboardData.in_progress_courses.map((course, i) => {
-                      const theme = CL_THEMES[i % CL_THEMES.length];
-                      return (
-                        <motion.div
-                          key={course.course_id}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 0.05 * i, duration: 0.4 }}
-                        >
-                          <div className="cl-card">
-                            <div className="cl-card-body">
-                              <img
-                                src={theme.image}
-                                alt={course.course_title}
-                                className="cl-thumb"
-                              />
-                              <div className="cl-info">
-                                <span className={`cl-tag ${theme.tagColor}`}>
-                                  {Math.round(course.progress_pct)}%
-                                </span>
-                                <h3 className="cl-title">{course.course_title}</h3>
-                                <p className="cl-next">
-                                  Next:{" "}
-                                  <span className="cl-next-name">
-                                    {course.next_module_title ?? "Continue where you left off"}
-                                  </span>
-                                </p>
-                                <div className="cl-progress-track">
-                                  <div
-                                    className="cl-progress-fill"
-                                    style={{ width: `${course.progress_pct}%` }}
+                // Build display list from assignedCourses (authoritative) or
+                // fall back to inProgress if the new endpoint isn't up yet.
+                const displayList =
+                  assignedCourses !== null
+                    ? assignedCourses.map((c, i) => {
+                        const prog = progressMap[c.id];
+                        return {
+                          course_id: c.id,
+                          course_title: c.title,
+                          progress_pct: prog?.progress_pct ?? 0,
+                          next_module_title:
+                            prog?.next_module_title ??
+                            c.modules?.[0]?.title ??
+                            "Module 1",
+                        };
+                      })
+                    : inProgress;
+
+                return (
+                  <div>
+                    <div className="section-header">
+                      <h2 className="section-title">My Courses</h2>
+                      <Link to="/study-materials" className="view-all-btn">
+                        See All <ChevronRight className="view-all-icon" />
+                      </Link>
+                    </div>
+                    <div className="cl-list">
+                      {displayList.length > 0 ? (
+                        displayList.map((course, i) => {
+                          const theme = CL_THEMES[i % CL_THEMES.length];
+                          const started = course.progress_pct > 0;
+                          return (
+                            <motion.div
+                              key={course.course_id}
+                              initial={{ opacity: 0, y: 20 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ delay: 0.05 * i, duration: 0.4 }}
+                            >
+                              <div className="cl-card">
+                                <div className="cl-card-body">
+                                  <img
+                                    src={theme.image}
+                                    alt={course.course_title}
+                                    className="cl-thumb"
                                   />
+                                  <div className="cl-info">
+                                    <span className={`cl-tag ${theme.tagColor}`}>
+                                      {Math.round(course.progress_pct)}%
+                                    </span>
+                                    <h3 className="cl-title">{course.course_title}</h3>
+                                    <p className="cl-next">
+                                      {started ? "Next: " : "Start with: "}
+                                      <span className="cl-next-name">
+                                        {course.next_module_title}
+                                      </span>
+                                    </p>
+                                    <div className="cl-progress-track">
+                                      <div
+                                        className="cl-progress-fill"
+                                        style={{ width: `${course.progress_pct}%` }}
+                                      />
+                                    </div>
+                                  </div>
+                                  <Link
+                                    to={`/study-materials?courseId=${course.course_id}`}
+                                    className="cl-resume-btn"
+                                  >
+                                    {started ? "Resume" : "Start Course"}
+                                  </Link>
                                 </div>
                               </div>
-                              <Link
-                                to={`/study-materials?courseId=${course.course_id}`}
-                                className="cl-resume-btn"
-                              >
-                                Resume Course
-                              </Link>
-                            </div>
+                            </motion.div>
+                          );
+                        })
+                      ) : (
+                        <div className="cl-card">
+                          <div className="cl-card-body" style={{ justifyContent: "center", padding: "24px" }}>
+                            <p style={{ color: "var(--text-muted, #888)", fontSize: "0.9rem" }}>
+                              {assignedCourses !== null || dashboardData
+                                ? "No courses assigned yet. Contact your admin to get started!"
+                                : "Loading your courses..."}
+                            </p>
                           </div>
-                        </motion.div>
-                      );
-                    })
-                  ) : (
-                    <div className="cl-card">
-                      <div className="cl-card-body" style={{ justifyContent: "center", padding: "24px" }}>
-                        <p style={{ color: "var(--text-muted, #888)", fontSize: "0.9rem" }}>
-                          {dashboardData
-                            ? "No courses in progress. Head to Study Materials to get started!"
-                            : "Loading your courses..."}
-                        </p>
-                      </div>
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-              </div>
+                  </div>
+                );
+              })()}
 
               {/* For You */}
               <div style={{ marginTop: "24px" }}>

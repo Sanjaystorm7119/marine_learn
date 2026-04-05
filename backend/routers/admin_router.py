@@ -155,7 +155,7 @@ def get_user_course_management_data(db: Session = Depends(get_db), _: models.Use
 
         for course_id, modules in course_module_map.items():
             course = db.query(models.Course).filter(models.Course.id == course_id).first()
-            course_title = course.title if course else "Unassigned Modules"
+            course_title = course.title if course else "Assigned Modules"
 
             total_lessons = 0
             completed_lessons = 0
