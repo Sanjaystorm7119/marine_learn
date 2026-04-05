@@ -41,7 +41,7 @@ def create_role(db: Session, role: schemas.AdminRoleCreate):
     db_role = models.Role(
         name=role.name,
         description=role.description,
-        
+        lead=role.lead,
     )
     db.add(db_role)
     db.commit()
@@ -53,7 +53,7 @@ def update_role(db: Session, role_id: int, role_update: schemas.AdminRoleUpdate)
     if db_role:
         db_role.name = role_update.name
         db_role.description = role_update.description
-        
+        db_role.lead = role_update.lead
         db.commit()
         db.refresh(db_role)
     return db_role

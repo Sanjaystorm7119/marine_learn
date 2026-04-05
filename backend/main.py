@@ -1,5 +1,7 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 import models
 from database import engine
@@ -8,6 +10,15 @@ from routers import auth_router, user_router, admin_router, study_router
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="MarineLearn API")
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    body = await request.body()
+    print(f"\n[422] {request.method} {request.url}")
+    print(f"  raw body : {body!r}")
+    print(f"  errors   : {exc.errors()}")
+    return JSONResponse(status_code=422, content={"detail": exc.errors()})
 
 app.add_middleware(
     CORSMiddleware,

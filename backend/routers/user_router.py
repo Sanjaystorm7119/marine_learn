@@ -58,6 +58,7 @@ def create_user(
         email=user_data.email,
         hashed_password=crud.hash_password(user_data.password),
         role=user_data.role,
+        role_lead="Will be assigned by admin",
     )
     db.add(new_user)
     db.commit()
