@@ -131,30 +131,30 @@
   color: #fff !important;
 }
 
-/* ─── Stats Grid ─────────────────────────────────────── */
-.stats-grid {
+/* ─── Stats Grid (scoped to avoid leaking into student dashboard) ── */
+.ucm-root .stats-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 1rem;
 }
 
 @media (min-width: 768px) {
-  .stats-grid {
+  .ucm-root .stats-grid {
     grid-template-columns: repeat(5, 1fr);
   }
 }
 
-.stat-card {
+.ucm-root .stat-card {
   padding: 1rem;
 }
 
-.stat-inner {
+.ucm-root .stat-inner {
   display: flex;
   align-items: center;
   gap: 0.75rem;
 }
 
-.stat-icon-wrap {
+.ucm-root .stat-icon-wrap {
   width: 2.5rem;
   height: 2.5rem;
   border-radius: 0.625rem;
@@ -165,13 +165,13 @@
   flex-shrink: 0;
 }
 
-.stat-label {
+.ucm-root .stat-label {
   color: rgba(255, 255, 255, 0.5);
   font-size: 0.75rem;
   margin: 0 0 0.1rem;
 }
 
-.stat-value {
+.ucm-root .stat-value {
   color: #fff;
   font-size: 1.25rem;
   font-weight: 700;
@@ -179,11 +179,11 @@
 }
 
 /* stat color gradients */
-.stat-cyan  { background: linear-gradient(135deg, rgba(6,182,212,0.2), rgba(59,130,246,0.2)); }
-.stat-emerald { background: linear-gradient(135deg, rgba(16,185,129,0.2), rgba(34,197,94,0.2)); }
-.stat-amber { background: linear-gradient(135deg, rgba(245,158,11,0.2), rgba(234,179,8,0.2)); }
-.stat-purple { background: linear-gradient(135deg, rgba(168,85,247,0.2), rgba(139,92,246,0.2)); }
-.stat-pink  { background: linear-gradient(135deg, rgba(236,72,153,0.2), rgba(244,63,94,0.2)); }
+.ucm-root .stat-cyan  { background: linear-gradient(135deg, rgba(6,182,212,0.2), rgba(59,130,246,0.2)); }
+.ucm-root .stat-emerald { background: linear-gradient(135deg, rgba(16,185,129,0.2), rgba(34,197,94,0.2)); }
+.ucm-root .stat-amber { background: linear-gradient(135deg, rgba(245,158,11,0.2), rgba(234,179,8,0.2)); }
+.ucm-root .stat-purple { background: linear-gradient(135deg, rgba(168,85,247,0.2), rgba(139,92,246,0.2)); }
+.ucm-root .stat-pink  { background: linear-gradient(135deg, rgba(236,72,153,0.2), rgba(244,63,94,0.2)); }
 
 /* ─── Filters ────────────────────────────────────────── */
 .filter-row {

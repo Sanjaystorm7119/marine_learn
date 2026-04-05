@@ -80,6 +80,15 @@ const QuizPanel = ({ module, onQuizSubmit, bestScore, onBack, prevItem, nextItem
 
   const questions = module.quiz_questions;
 
+  // Auto-navigate to next module after passing — fires when nextItem becomes available
+  useEffect(() => {
+    if (!submitted || !nextItem) return;
+    const pct = Math.round((score / questions.length) * 100);
+    if (pct < 60) return;
+    const timer = setTimeout(() => onNavigate(nextItem), 1800);
+    return () => clearTimeout(timer);
+  }, [submitted, score, nextItem]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleSelect = (qIdx, optIdx) => {
     if (submitted) return;
     setAnswers((prev) => ({ ...prev, [qIdx]: optIdx }));
@@ -121,6 +130,11 @@ const QuizPanel = ({ module, onQuizSubmit, bestScore, onBack, prevItem, nextItem
                 ? "You passed this module quiz. Your score has been recorded."
                 : "You need 60% to pass. Review the topics and try again."}
             </p>
+            {passed && nextItem && (
+              <p style={{ textAlign: "center", color: "#6b7280", fontSize: "0.82rem", marginTop: 4 }}>
+                Continuing to next module…
+              </p>
+            )}
             <div className="sm-result-actions">
               <button className="sm-btn-retry" onClick={handleRetry}>
                 <RotateCcw size={14} style={{ display: "inline", marginRight: 6 }} /> Retry Quiz
@@ -363,16 +377,46 @@ const StudyMaterials = () => {
   // ── Actions ──────────────────────────────────────────────────────────────
   const handleMarkComplete = async (topicId, timeSpentSeconds = 0) => {
     try {
-      await fetch(`${API}/study/progress`, {
+      const res = await fetch(`${API}/study/progress`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
         body: JSON.stringify({ topic_id: topicId, time_spent_seconds: timeSpentSeconds }),
       });
+      if (!res.ok) {
+        console.error("Failed to save progress:", res.status, await res.text());
+        return;
+      }
+
+      const newCompletedIds = new Set([...progress.completed_topic_ids, topicId]);
       setProgress((prev) => ({
         ...prev,
-        completed_topic_ids: [...new Set([...prev.completed_topic_ids, topicId])],
+        completed_topic_ids: [...newCompletedIds],
       }));
-    } catch { /* silent */ }
+
+      // Auto-navigate when all topics in the current module are done
+      if (selected?.type === "topic") {
+        const { moduleId, mIdx } = selected;
+        const currentMod = modules.find((m) => m.id === moduleId);
+        if (currentMod) {
+          const allDone = currentMod.topics.every((t) => newCompletedIds.has(t.id));
+          if (allDone) {
+            if (currentMod.quiz_questions?.length > 0) {
+              setTimeout(() => setSelected({ type: "quiz", moduleId, mIdx }), 600);
+            } else {
+              const nextMod = modules[mIdx + 1];
+              if (nextMod?.topics.length > 0) {
+                setTimeout(
+                  () => setSelected({ type: "topic", moduleId: nextMod.id, topicId: nextMod.topics[0].id, mIdx: mIdx + 1 }),
+                  600
+                );
+              }
+            }
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Network error saving progress:", err);
+    }
   };
 
   const handleQuizSubmit = async (moduleId, score, total) => {
@@ -382,26 +426,37 @@ const StudyMaterials = () => {
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
         body: JSON.stringify({ module_id: moduleId, score, total }),
       });
-      setProgress((prev) => ({
-        ...prev,
-        quiz_attempts: [
-          { module_id: moduleId, score, total, attempted_at: new Date().toISOString() },
-          ...prev.quiz_attempts,
-        ],
-      }));
 
-      // Issue a certificate when the quiz is passed (≥ 60%)
+      // Build updated attempts list synchronously so we can check completion below
+      const updatedAttempts = [
+        { module_id: moduleId, score, total, attempted_at: new Date().toISOString() },
+        ...progress.quiz_attempts,
+      ];
+      setProgress((prev) => ({ ...prev, quiz_attempts: updatedAttempts }));
+
+      // Issue certificate only when ALL module quizzes in this course are passed (≥ 60%)
       if (selectedCourse && Math.round((score / total) * 100) >= 60) {
-        setCertLoading(true);
-        setCertData(null);
-        fetch(`${API}/study/certificates`, {
-          method: "POST",
-          headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-          body: JSON.stringify({ course_title: selectedCourse.title }),
-        })
-          .then((r) => r.json())
-          .then((data) => { setCertData(data); setCertLoading(false); })
-          .catch(() => setCertLoading(false));
+        const modulesWithQuiz = selectedCourse.modules.filter((m) => m.quiz_questions?.length > 0);
+        const allQuizzesPassed = modulesWithQuiz.every((m) => {
+          const attempts = updatedAttempts.filter((a) => a.module_id === m.id);
+          if (!attempts.length) return false;
+          const best = Math.max(...attempts.map((a) => a.score));
+          const bestTotal = attempts.find((a) => a.score === best)?.total ?? m.quiz_questions.length;
+          return Math.round((best / bestTotal) * 100) >= 60;
+        });
+
+        if (allQuizzesPassed) {
+          setCertLoading(true);
+          setCertData(null);
+          fetch(`${API}/study/certificates`, {
+            method: "POST",
+            headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+            body: JSON.stringify({ course_title: selectedCourse.title }),
+          })
+            .then((r) => r.json())
+            .then((data) => { setCertData(data); setCertLoading(false); })
+            .catch(() => setCertLoading(false));
+        }
       }
     } catch { /* silent */ }
   };

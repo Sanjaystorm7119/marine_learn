@@ -13,6 +13,7 @@ All routes require authentication. Admin gets extra stats endpoint.
 """
 
 import uuid
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -35,6 +36,37 @@ def get_courses(
     current_user: models.User = Depends(get_current_user),
 ):
     return db.query(models.Course).order_by(models.Course.order_num).all()
+
+
+@router.get("/my-assigned-courses", response_model=list[schemas.CourseResponse])
+def get_my_assigned_courses(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    """Returns only the courses that have been assigned to the current user."""
+    assigned_module_ids = {
+        a.module_id
+        for a in db.query(models.UserCourseAssignment)
+        .filter(models.UserCourseAssignment.user_id == current_user.id)
+        .all()
+    }
+    if not assigned_module_ids:
+        return []
+    assigned_course_ids = {
+        m.course_id
+        for m in db.query(models.StudyModule)
+        .filter(models.StudyModule.id.in_(assigned_module_ids))
+        .all()
+        if m.course_id
+    }
+    if not assigned_course_ids:
+        return []
+    return (
+        db.query(models.Course)
+        .filter(models.Course.id.in_(assigned_course_ids))
+        .order_by(models.Course.order_num)
+        .all()
+    )
 
 
 @router.get("/modules", response_model=list[schemas.StudyModuleResponse])
@@ -65,6 +97,7 @@ def mark_topic_complete(
             user_id=current_user.id,
             topic_id=body.topic_id,
             time_spent_seconds=body.time_spent_seconds,
+            completed_at=datetime.now(timezone.utc),  # explicit — bypasses broken model default
         )
         db.add(record)
     else:
@@ -137,9 +170,32 @@ def get_dashboard_data(
     Returns per-user dashboard stats:
       - role, enrolled_courses, completed_courses, certificates
       - total_topics_completed, hours_logged
-      - in_progress_courses (list of courses with partial progress)
+      - in_progress_courses (assigned courses — started or not)
     """
-    courses = db.query(models.Course).order_by(models.Course.order_num).all()
+    # Only show courses that have been assigned to this user
+    assigned_module_ids = {
+        a.module_id
+        for a in db.query(models.UserCourseAssignment)
+        .filter(models.UserCourseAssignment.user_id == current_user.id)
+        .all()
+    }
+
+    if assigned_module_ids:
+        assigned_course_ids = {
+            m.course_id
+            for m in db.query(models.StudyModule)
+            .filter(models.StudyModule.id.in_(assigned_module_ids))
+            .all()
+            if m.course_id
+        }
+        courses = (
+            db.query(models.Course)
+            .filter(models.Course.id.in_(assigned_course_ids))
+            .order_by(models.Course.order_num)
+            .all()
+        )
+    else:
+        courses = []
 
     # Completed topic IDs for this user (set for O(1) lookup)
     completed_set = {
@@ -169,7 +225,7 @@ def get_dashboard_data(
 
         if pct >= 100:
             completed_count += 1
-        elif done > 0:
+        else:
             # First module that still has incomplete topics
             next_module = None
             for module in course.modules:
