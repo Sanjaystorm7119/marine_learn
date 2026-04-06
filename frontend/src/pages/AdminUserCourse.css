@@ -1080,6 +1080,15 @@
   cursor: not-allowed;
 }
 
+.no-courses-msg {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 0.85rem;
+  text-align: center;
+  padding: 1.2rem 0;
+  margin: 0;
+  font-style: italic;
+}
+
 .assign-empty-msg {
   color: rgba(255, 255, 255, 0.4);
   font-size: 0.8rem;

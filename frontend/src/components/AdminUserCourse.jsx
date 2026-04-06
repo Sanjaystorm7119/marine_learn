@@ -133,7 +133,9 @@ const AdminUserCourse = () => {
       });
 
       const payload = {
-        user_ids: selectedUsersForAssign.map(Number).filter((n) => Number.isInteger(n) && n > 0),
+        user_ids: selectedUsersForAssign
+          .map(Number)
+          .filter((n) => Number.isInteger(n) && n > 0),
         module_ids: moduleIds.filter((n) => Number.isInteger(n) && n > 0),
       };
       console.log("Assign payload →", JSON.stringify(payload));
@@ -167,10 +169,15 @@ const AdminUserCourse = () => {
         fetchData();
       } else {
         const err = await response.json().catch(() => ({}));
-        console.error("Assign 422 full detail:", JSON.stringify(err.detail, null, 2));
+        console.error(
+          "Assign 422 full detail:",
+          JSON.stringify(err.detail, null, 2),
+        );
         // Pydantic v2 returns detail as an array of {type, loc, msg, input}
         const detail = Array.isArray(err.detail)
-          ? err.detail.map((e) => `${e.loc?.slice(-1)[0] ?? "field"}: ${e.msg}`).join("; ")
+          ? err.detail
+              .map((e) => `${e.loc?.slice(-1)[0] ?? "field"}: ${e.msg}`)
+              .join("; ")
           : typeof err.detail === "string"
             ? err.detail
             : `Server error ${response.status}`;
@@ -196,7 +203,7 @@ const AdminUserCourse = () => {
       selectedUsersForAssign.some((uid) => {
         const user = users.find((u) => u.id === uid);
         const assignedModuleIds = new Set(
-          user?.courses.map((uc) => uc.courseId) ?? []
+          user?.courses.map((uc) => uc.courseId) ?? [],
         );
         const courseModuleIds = course.modules?.map((m) => m.id) ?? [];
         // course is available if at least one of its modules isn't yet assigned
@@ -693,7 +700,9 @@ const AdminUserCourse = () => {
                   </p>
                   <div className="assign-list assign-list-courses">
                     {availableCoursesForAssign.length === 0 && (
-                      <p className="assign-empty-msg">No courses available to assign.</p>
+                      <p className="assign-empty-msg">
+                        No courses available to assign.
+                      </p>
                     )}
                     {availableCoursesForAssign.map((course) => {
                       const moduleCount = course.modules?.length ?? 0;
@@ -702,13 +711,19 @@ const AdminUserCourse = () => {
                         <label
                           key={course.id}
                           className={`assign-list-item${noModules ? " assign-item-disabled" : ""}`}
-                          title={noModules ? "This course has no modules yet — assign modules to it first." : ""}
+                          title={
+                            noModules
+                              ? "This course has no modules yet — assign modules to it first."
+                              : ""
+                          }
                         >
                           <input
                             type="checkbox"
                             className="assign-checkbox assign-checkbox-emerald"
                             disabled={noModules}
-                            checked={selectedCoursesForAssign.includes(course.id)}
+                            checked={selectedCoursesForAssign.includes(
+                              course.id,
+                            )}
                             onChange={(e) => {
                               setSelectedCoursesForAssign((prev) =>
                                 e.target.checked
@@ -718,9 +733,15 @@ const AdminUserCourse = () => {
                             }}
                           />
                           <BookOpen className="icon-sm assign-course-icon" />
-                          <span className="assign-item-name">{course.title}</span>
-                          <span className={`assign-item-count${noModules ? " assign-count-warn" : ""}`}>
-                            {noModules ? "no modules" : `${moduleCount} module${moduleCount !== 1 ? "s" : ""}`}
+                          <span className="assign-item-name">
+                            {course.title}
+                          </span>
+                          <span
+                            className={`assign-item-count${noModules ? " assign-count-warn" : ""}`}
+                          >
+                            {noModules
+                              ? "no modules"
+                              : `${moduleCount} module${moduleCount !== 1 ? "s" : ""}`}
                           </span>
                         </label>
                       );
@@ -763,23 +784,6 @@ const AdminUserCourse = () => {
     </div>
   );
 };
-
-// ─── Group a user's flat module list into course buckets using coursePool ───
-function groupModulesByCourse(userCourses, coursePool) {
-  const buckets = {};
-  userCourses.forEach((entry) => {
-    const parent = coursePool.find((c) =>
-      c.modules?.some((m) => m.id === entry.courseId)
-    );
-    const key = parent ? parent.id : 0;
-    const label = parent ? parent.title : "Unassigned Modules";
-    if (!buckets[key]) {
-      buckets[key] = { courseId: key, courseTitle: label, modules: [] };
-    }
-    buckets[key].modules.push(entry);
-  });
-  return Object.values(buckets);
-}
 
 // ─── UserTable Sub-Component ───
 const UserTable = ({
@@ -835,11 +839,16 @@ const UserTable = ({
 
                   <td className="td">
                     <div className="courses-cell">
-                      <span className="courses-completed">{completedCount}</span>
+                      <span className="courses-completed">
+                        {completedCount}
+                      </span>
                       <span className="courses-sep">/</span>
-                      <span className="courses-total">{user.courses.length} modules</span>
+                      <span className="courses-total">
+                        {user.courses.length} courses
+                      </span>
                       <span className="courses-pending">
-                        ({user.courses.reduce((s, c) => s + c.totalModules, 0)} topics)
+                        ({user.courses.reduce((s, c) => s + c.totalModules, 0)}{" "}
+                        modules)
                       </span>
                     </div>
                   </td>
@@ -917,60 +926,78 @@ const UserTable = ({
                           <div className="expanded-content">
                             <p className="breakdown-label">Course Breakdown</p>
                             <div className="course-list">
-                              {groupModulesByCourse(user.courses, coursePool).map((group) => (
-                                <div key={group.courseId} className="course-block">
-                                  {/* Course name header */}
-                                  <div className="course-group-header">
-                                    <BookOpen className="icon-sm course-block-icon" />
-                                    <span className="course-group-title">{group.courseTitle}</span>
-                                    <span className="course-group-meta">
-                                      {group.modules.length} module{group.modules.length !== 1 ? "s" : ""}
-                                    </span>
-                                  </div>
+                              {user.courses.length === 0 ? (
+                                <p className="no-courses-msg">
+                                  No courses assigned
+                                </p>
+                              ) : (
+                                user.courses.map((course) => (
+                                  <div
+                                    key={course.courseId}
+                                    className="course-block"
+                                  >
+                                    {/* Course name header */}
+                                    <div className="course-group-header">
+                                      <BookOpen className="icon-sm course-block-icon" />
+                                      <span className="course-group-title">
+                                        {course.courseTitle}
+                                      </span>
+                                      <span className="course-group-meta">
+                                        {course.totalModules} module
+                                        {course.totalModules !== 1 ? "s" : ""}
+                                      </span>
+                                    </div>
 
-                                  {/* Module rows */}
-                                  <div className="module-list">
-                                    {group.modules.map((mod) => (
-                                      <div
-                                        key={mod.courseId}
-                                        className="module-item"
-                                      >
-                                        <div className="module-connector" />
-                                        <div className="course-info">
-                                          <p className="module-title">
-                                            {mod.courseTitle}
-                                          </p>
-                                          <p className="module-meta">
-                                            {mod.completedLessons}/{mod.totalLessons} lessons
-                                            {mod.totalQuizQuestions > 0 && (
-                                              <> &bull; {mod.totalQuizQuestions} quiz Q</>
-                                            )}
-                                          </p>
-                                        </div>
-                                        <div className="course-stats">
-                                          <div className="course-progress-wrap">
-                                            <div className="progress-bar-wrap progress-bar-sm">
-                                              <div
-                                                className="progress-bar-fill module-progress-fill"
-                                                style={{
-                                                  width: `${mod.progress}%`,
-                                                }}
-                                              />
+                                    {/* Module rows */}
+                                    <div className="module-list">
+                                      {(course.modules ?? []).map((mod) => (
+                                        <div
+                                          key={mod.moduleId}
+                                          className="module-item"
+                                        >
+                                          <div className="module-connector" />
+                                          <div className="course-info">
+                                            <p className="module-title">
+                                              {mod.moduleTitle}
+                                            </p>
+                                            <p className="module-meta">
+                                              {mod.completedLessons}/
+                                              {mod.totalLessons} lessons
+                                              {mod.totalQuizQuestions > 0 && (
+                                                <>
+                                                  {" "}
+                                                  &bull;{" "}
+                                                  {mod.totalQuizQuestions} quiz
+                                                  Q
+                                                </>
+                                              )}
+                                            </p>
+                                          </div>
+                                          <div className="course-stats">
+                                            <div className="course-progress-wrap">
+                                              <div className="progress-bar-wrap progress-bar-sm">
+                                                <div
+                                                  className="progress-bar-fill module-progress-fill"
+                                                  style={{
+                                                    width: `${mod.progress}%`,
+                                                  }}
+                                                />
+                                              </div>
+                                              <span className="course-progress-label">
+                                                {mod.progress}%
+                                              </span>
                                             </div>
-                                            <span className="course-progress-label">
-                                              {mod.progress}%
-                                            </span>
-                                          </div>
-                                          {statusBadge(mod.status)}
-                                          <div className="course-quiz">
-                                            {quizBadge(mod.quizScore)}
+                                            {statusBadge(mod.status)}
+                                            <div className="course-quiz">
+                                              {quizBadge(mod.quizScore)}
+                                            </div>
                                           </div>
                                         </div>
-                                      </div>
-                                    ))}
+                                      ))}
+                                    </div>
                                   </div>
-                                </div>
-                              ))}
+                                ))
+                              )}
                             </div>
                           </div>
                         </motion.div>
