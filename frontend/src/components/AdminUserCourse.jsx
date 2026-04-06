@@ -959,7 +959,7 @@ const UserTable = ({
                                           <div className="course-info">
                                             <p className="module-title">
                                               {mod.moduleTitle}
-                                            </p>
+                                              </p>
                                             <p className="module-meta">
                                               {mod.completedLessons}/
                                               {mod.totalLessons} lessons
