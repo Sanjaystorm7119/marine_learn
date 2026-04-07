@@ -287,20 +287,69 @@ const AdminUserCourse = () => {
     return { total, completed, avgProgress, pending, avgQuiz };
   }, [users, activeTab]);
 
-  const handlePushNotification = (user) => {
+  const sendNotifications = async (userIds, title, message) => {
+    const token =
+      localStorage.getItem("access_token") || localStorage.getItem("token");
+    try {
+      const res = await fetch("http://127.0.0.1:8000/notifications/admin/send", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          user_ids: userIds,
+          title,
+          message,
+          type: "pending_reminder",
+        }),
+      });
+      return res.ok;
+    } catch {
+      return false;
+    }
+  };
+
+  const handlePushNotification = async (user) => {
+    const pendingCourses = user.courses
+      .filter((c) => c.status !== "completed")
+      .map((c) => c.courseTitle);
+    const courseList =
+      pendingCourses.length > 0
+        ? pendingCourses.join(", ")
+        : "your assigned courses";
+
+    const ok = await sendNotifications(
+      [user.id],
+      "Pending Course Reminder",
+      `You have pending work in: ${courseList}. Keep learning!`
+    );
+
     _toastCallback &&
       _toastCallback({
-        title: "Notification Sent",
-        description: `Reminder pushed to ${user.name} for pending courses.`,
+        title: ok ? "Notification Sent" : "Send Failed",
+        description: ok
+          ? `Reminder pushed to ${user.name}.`
+          : "Could not reach the server.",
       });
   };
 
-  const handleBulkNotify = () => {
+  const handleBulkNotify = async () => {
     const pending = filtered.filter((u) => u.overallProgress < 100);
+    if (pending.length === 0) return;
+
+    const ok = await sendNotifications(
+      pending.map((u) => u.id),
+      "Pending Course Reminder",
+      "You have pending courses. Log in and continue your maritime training!"
+    );
+
     _toastCallback &&
       _toastCallback({
-        title: "Bulk Notification Sent",
-        description: `Reminders pushed to ${pending.length} ${activeTab}s with pending courses.`,
+        title: ok ? "Bulk Notification Sent" : "Send Failed",
+        description: ok
+          ? `Reminders pushed to ${pending.length} ${activeTab}(s) with pending courses.`
+          : "Could not reach the server.",
       });
   };
 

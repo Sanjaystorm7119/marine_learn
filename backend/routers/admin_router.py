@@ -7,7 +7,9 @@ Every route depends on `require_admin`.
     GET /admin/stats
 """
 
-from fastapi import APIRouter, Depends,HTTPException 
+from datetime import datetime, timezone
+
+from fastapi import APIRouter, Depends,HTTPException
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 import schemas # <-- Added schemas
@@ -295,11 +297,22 @@ def assign_courses_to_users(
     _: models.User = Depends(require_admin),
 ):
     assigned_count = 0
+    # Track which (user_id, course_title) pairs got newly assigned so we send
+    # exactly one notification per user per course, not per module.
+    notified: set[tuple[int, str]] = set()
 
     for module_id in payload.module_ids:
         module = db.query(models.StudyModule).filter(models.StudyModule.id == module_id).first()
         if not module:
             continue
+
+        # Resolve course title for notification message
+        course_title = "a new course"
+        if module.course_id:
+            course = db.query(models.Course).filter(models.Course.id == module.course_id).first()
+            if course:
+                course_title = course.title
+
         for uid in payload.user_ids:
             existing = db.query(models.UserCourseAssignment).filter(
                 models.UserCourseAssignment.user_id == uid,
@@ -308,6 +321,19 @@ def assign_courses_to_users(
             if not existing:
                 db.add(models.UserCourseAssignment(user_id=uid, module_id=module_id))
                 assigned_count += 1
+
+            # Notify once per user+course (not per module)
+            key = (uid, course_title)
+            if key not in notified:
+                notified.add(key)
+                db.add(models.Notification(
+                    user_id=uid,
+                    title="New Course Assigned",
+                    message=f"You have been assigned to '{course_title}'. Start learning now!",
+                    type="course_assigned",
+                    related_course_title=course_title,
+                    created_at=datetime.now(timezone.utc),
+                ))
 
     db.commit()
     return {

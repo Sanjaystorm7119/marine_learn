@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, ForeignKey, DateTime, UniqueConstraint
+from sqlalchemy import Column, Integer, String, Text, ForeignKey, DateTime, UniqueConstraint, Boolean
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import JSONB
 from datetime import datetime, timezone
@@ -121,4 +121,20 @@ class UserCourseAssignment(Base):
     module_id = Column(Integer, ForeignKey("study_modules.id"), nullable=False)
     assigned_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
-    __table_args__ = (UniqueConstraint("user_id", "module_id", name="uq_user_module_assign"),)       
+    __table_args__ = (UniqueConstraint("user_id", "module_id", name="uq_user_module_assign"),)
+
+
+class Notification(Base):
+    __tablename__ = "notifications"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    title = Column(String, nullable=False)
+    message = Column(Text, nullable=False)
+    # type: "course_assigned" | "pending_reminder" | "info"
+    type = Column(String, default="info", nullable=False)
+    is_read = Column(Boolean, default=False, nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    related_course_title = Column(String, nullable=True)
+
+    user = relationship("User", backref="notifications")
