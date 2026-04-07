@@ -5,7 +5,7 @@ from fastapi.responses import JSONResponse
 
 import models
 from database import engine
-from routers import auth_router, user_router, admin_router, study_router
+from routers import auth_router, user_router, admin_router, study_router, notification_router
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -37,6 +37,7 @@ app.include_router(auth_router.router)
 app.include_router(user_router.router)
 app.include_router(admin_router.router)
 app.include_router(study_router.router)
+app.include_router(notification_router.router)
 
 
 @app.get("/")

@@ -166,6 +166,29 @@ class CertificateResponse(BaseModel):
         from_attributes = True
 
 
+# ── Notifications ─────────────────────────────────────────────────────────────
+
+class NotificationResponse(BaseModel):
+    id: int
+    title: str
+    message: str
+    type: str
+    is_read: bool
+    created_at: str
+    related_course_title: str | None = None
+
+    class Config:
+        from_attributes = True
+
+
+class SendNotificationRequest(BaseModel):
+    user_ids: list[int]
+    title: str
+    message: str
+    type: str = "info"
+    related_course_title: str | None = None
+
+
 # --- NEW: ROLE MANAGEMENT SCHEMAS ---
 class AdminRoleCreate(BaseModel):
     name: str

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import {
@@ -233,6 +233,15 @@ const Dashboard = () => {
   const [assignedCourses, setAssignedCourses] = useState(null);
   const navigate = useNavigate();
 
+  /* ── Notifications state ── */
+  const [notifications, setNotifications] = useState([]);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const notifRef = useRef(null);
+  const unreadCount = useMemo(
+    () => notifications.filter((n) => !n.is_read).length,
+    [notifications]
+  );
+
   /* ── Search state ── */
   const [searchQuery, setSearchQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
@@ -271,6 +280,64 @@ const Dashboard = () => {
     setSearchQuery("");
     setSearchOpen(false);
   }, []);
+
+  const fetchNotifications = useCallback(async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    try {
+      const res = await fetch("http://localhost:8000/notifications/", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) setNotifications(await res.json());
+    } catch (_) {}
+  }, []);
+
+  const markRead = useCallback(async (id) => {
+    const token = localStorage.getItem("token");
+    await fetch(`http://localhost:8000/notifications/${id}/read`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, is_read: true } : n))
+    );
+  }, []);
+
+  const markAllRead = useCallback(async () => {
+    const token = localStorage.getItem("token");
+    await fetch("http://localhost:8000/notifications/read-all", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
+  }, []);
+
+  const deleteNotification = useCallback(async (id) => {
+    const token = localStorage.getItem("token");
+    await fetch(`http://localhost:8000/notifications/${id}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
+  }, []);
+
+  // Close notification panel when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (notifRef.current && !notifRef.current.contains(e.target)) {
+        setNotifOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Poll notifications every 30 seconds
+  useEffect(() => {
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 30000);
+    return () => clearInterval(interval);
+  }, [fetchNotifications]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -517,10 +584,89 @@ const Dashboard = () => {
           </div>
 
           <div className="topbar-actions">
-            <button className="topbar-bell-btn">
-              <Bell className="topbar-bell-icon" />
-              <span className="topbar-bell-dot" />
-            </button>
+            {/* Notification Bell */}
+            <div className="notif-wrap" ref={notifRef}>
+              <button
+                className="topbar-bell-btn"
+                onClick={() => {
+                  setNotifOpen((v) => !v);
+                  if (!notifOpen && unreadCount > 0) markAllRead();
+                }}
+                aria-label="Notifications"
+              >
+                <Bell className="topbar-bell-icon" />
+                {unreadCount > 0 && (
+                  <span className="topbar-bell-badge">
+                    {unreadCount > 9 ? "9+" : unreadCount}
+                  </span>
+                )}
+              </button>
+
+              <AnimatePresence>
+                {notifOpen && (
+                  <motion.div
+                    className="notif-panel"
+                    initial={{ opacity: 0, y: -8, scale: 0.97 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -8, scale: 0.97 }}
+                    transition={{ duration: 0.15 }}
+                  >
+                    <div className="notif-panel-header">
+                      <span className="notif-panel-title">Notifications</span>
+                      {notifications.length > 0 && (
+                        <button
+                          className="notif-clear-btn"
+                          onClick={markAllRead}
+                        >
+                          Mark all read
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="notif-list">
+                      {notifications.length === 0 ? (
+                        <div className="notif-empty">
+                          <Bell style={{ width: 24, height: 24, opacity: 0.3, marginBottom: 8 }} />
+                          <p>No notifications yet</p>
+                        </div>
+                      ) : (
+                        notifications.map((n) => (
+                          <div
+                            key={n.id}
+                            className={`notif-item${n.is_read ? "" : " notif-item--unread"}`}
+                            onClick={() => !n.is_read && markRead(n.id)}
+                          >
+                            <div className={`notif-dot notif-dot--${n.type}`} />
+                            <div className="notif-body">
+                              <p className="notif-title">{n.title}</p>
+                              <p className="notif-msg">{n.message}</p>
+                              <p className="notif-time">
+                                {new Date(n.created_at).toLocaleDateString(undefined, {
+                                  month: "short",
+                                  day: "numeric",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })}
+                              </p>
+                            </div>
+                            <button
+                              className="notif-delete-btn"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                deleteNotification(n.id);
+                              }}
+                              aria-label="Dismiss"
+                            >
+                              <X style={{ width: 12, height: 12 }} />
+                            </button>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
         </header>
 
