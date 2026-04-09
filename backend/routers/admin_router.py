@@ -313,26 +313,22 @@ def assign_courses_to_users(
             if course:
                 course_title = course.title
 
-    for uid in payload.user_ids:
+        for uid in payload.user_ids:
             existing = db.query(models.UserCourseAssignment).filter(
                 models.UserCourseAssignment.user_id == uid,
                 models.UserCourseAssignment.module_id == module_id,
             ).first()
-            
+
             if not existing:
-                # 1. Create new assignment if it doesn't exist
                 db.add(models.UserCourseAssignment(
-                    user_id=uid, 
+                    user_id=uid,
                     module_id=module_id,
                     deadline=payload.deadline
                 ))
                 assigned_count += 1
             else:
-                # 2. UPDATE the deadline if the user is already assigned!
                 if payload.deadline:
                     existing.deadline = payload.deadline
-
-            # Notify once per user+course (not per module)
 
             # Notify once per user+course (not per module)
             key = (uid, course_title)
