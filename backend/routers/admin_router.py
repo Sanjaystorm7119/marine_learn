@@ -229,6 +229,13 @@ def get_user_course_management_data(db: Session = Depends(get_db), _: models.Use
             )
             avg_quiz = int(sum(quiz_scores) / len(quiz_scores)) if quiz_scores else None
 
+            course_deadline = None
+            for module in modules:
+                assignment = next((a for a in assignments if a.module_id == module.id), None)
+                if assignment and assignment.deadline:
+                    course_deadline = assignment.deadline.strftime("%Y-%m-%d")
+                    break
+
             courses_data.append({
                 "courseId": course_id,
                 "courseTitle": course_title,
@@ -239,6 +246,7 @@ def get_user_course_management_data(db: Session = Depends(get_db), _: models.Use
                 "progress": progress,
                 "status": status,
                 "quizScore": avg_quiz,
+                "deadline": course_deadline,
                 "modules": modules_data,
             })
 
