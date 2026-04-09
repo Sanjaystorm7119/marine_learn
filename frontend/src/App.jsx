@@ -38,6 +38,8 @@ const PublicLayout = ({ children }) => {
       "/certificates",
       "/mycourses",
       "/study-materials",
+      "/settings",
+      "/help",
     ].includes(location.pathname) || location.pathname.startsWith("/admin");
 
   return (
@@ -65,9 +67,9 @@ function App() {
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/certificates" element={<Certificates />} />
                 <Route path="/calendar" element={<CalendarPage />} />
-                <Route path="/help" element={<Help />} />
+                <Route path="/help" element={<Dashboard><Help /></Dashboard>} />
                 <Route path="/coursepage" element={<CoursesCatalog />} />
-                <Route path="/settings" element={<Settings />} />
+                <Route path="/settings" element={<Dashboard><Settings /></Dashboard>} />
                 <Route
                   path="/learn/:departmentId/:courseId"
                   element={<LearningPage />}

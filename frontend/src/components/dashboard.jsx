@@ -223,7 +223,8 @@ const sidebarItems = [
   { label: "Help", icon: HelpCircle, href: "/help" },
 ];
 
-const Dashboard = () => {
+const Dashboard = ({ children }) => {
+
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
@@ -672,6 +673,7 @@ const Dashboard = () => {
 
         {/* Dashboard Content */}
         <div className="dashboard-content">
+          {children ? children : <>
           {/* Welcome */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -1004,6 +1006,7 @@ const Dashboard = () => {
               </div>
             </div>
           </div>
+           </>}
         </div>
       </main>
     </div>
