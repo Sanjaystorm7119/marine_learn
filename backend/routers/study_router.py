@@ -158,6 +158,163 @@ def submit_quiz(
     return {"message": "Quiz attempt saved", "score": body.score, "total": body.total}
 
 
+@router.get("/calendar-activity")
+def get_calendar_activity(
+    year: int,
+    month: int,  # 1-based
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    """
+    Returns per-day activity for the given month, month-level stats,
+    and today's goal completion for the current user.
+    """
+    from calendar import monthrange
+    tz = timezone.utc
+    month_start = datetime(year, month, 1, tzinfo=tz)
+    _, days_in_month = monthrange(year, month)
+    month_end = datetime(year, month, days_in_month, 23, 59, 59, tzinfo=tz)
+    today_utc = datetime.now(tz).date()
+
+    # ── Topic completions this month ──────────────────────────────────────────
+    topic_rows = (
+        db.query(models.UserTopicProgress, models.StudyTopic, models.StudyModule)
+        .join(models.StudyTopic, models.UserTopicProgress.topic_id == models.StudyTopic.id)
+        .join(models.StudyModule, models.StudyTopic.module_id == models.StudyModule.id)
+        .filter(
+            models.UserTopicProgress.user_id == current_user.id,
+            models.UserTopicProgress.completed_at >= month_start,
+            models.UserTopicProgress.completed_at <= month_end,
+        )
+        .all()
+    )
+
+    # ── Quiz attempts this month ──────────────────────────────────────────────
+    quiz_rows = (
+        db.query(models.UserQuizAttempt, models.StudyModule)
+        .join(models.StudyModule, models.UserQuizAttempt.module_id == models.StudyModule.id)
+        .filter(
+            models.UserQuizAttempt.user_id == current_user.id,
+            models.UserQuizAttempt.attempted_at >= month_start,
+            models.UserQuizAttempt.attempted_at <= month_end,
+        )
+        .all()
+    )
+
+    # ── Build per-day buckets ─────────────────────────────────────────────────
+    days: dict[int, dict] = {}
+
+    for progress, topic, module in topic_rows:
+        ts = progress.completed_at
+        if ts.tzinfo is None:
+            ts = ts.replace(tzinfo=tz)
+        d = ts.day
+        bucket = days.setdefault(d, {
+            "topicsCompleted": 0,
+            "timeSpentMinutes": 0,
+            "topicTitles": [],
+            "quizzes": [],
+        })
+        bucket["topicsCompleted"] += 1
+        bucket["timeSpentMinutes"] += progress.time_spent_seconds // 60
+        bucket["topicTitles"].append(topic.title)
+
+    for attempt, module in quiz_rows:
+        ts = attempt.attempted_at
+        if ts.tzinfo is None:
+            ts = ts.replace(tzinfo=tz)
+        d = ts.day
+        bucket = days.setdefault(d, {
+            "topicsCompleted": 0,
+            "timeSpentMinutes": 0,
+            "topicTitles": [],
+            "quizzes": [],
+        })
+        pct = int(attempt.score / attempt.total * 100) if attempt.total else 0
+        bucket["quizzes"].append({
+            "moduleTitle": module.title,
+            "score": attempt.score,
+            "total": attempt.total,
+            "pct": pct,
+        })
+
+    # ── Month stats ───────────────────────────────────────────────────────────
+    active_days = len(days)
+
+    # Streak: count consecutive days with activity going back from today.
+    # Source: all UserTopicProgress + UserQuizAttempt timestamps (not limited
+    # to the viewed month — a streak can span month boundaries).
+    topic_dates = {
+        row.completed_at.date() if row.completed_at.tzinfo
+        else row.completed_at.replace(tzinfo=tz).date()
+        for row in db.query(models.UserTopicProgress.completed_at)
+        .filter(models.UserTopicProgress.user_id == current_user.id)
+        .all()
+    }
+    quiz_dates = {
+        row.attempted_at.date() if row.attempted_at.tzinfo
+        else row.attempted_at.replace(tzinfo=tz).date()
+        for row in db.query(models.UserQuizAttempt.attempted_at)
+        .filter(models.UserQuizAttempt.user_id == current_user.id)
+        .all()
+    }
+    all_active_dates = topic_dates | quiz_dates
+
+    from datetime import timedelta
+    streak = 0
+    check_date = today_utc
+    # If the user hasn't done anything today, start counting from yesterday
+    if check_date not in all_active_dates:
+        check_date -= timedelta(days=1)
+    while check_date in all_active_dates:
+        streak += 1
+        check_date -= timedelta(days=1)
+
+    # Modules completed all-time (all topics done)
+    assigned_module_ids = {
+        a.module_id for a in db.query(models.UserCourseAssignment)
+        .filter(models.UserCourseAssignment.user_id == current_user.id).all()
+    }
+    total_modules = len(assigned_module_ids)
+    modules_completed = 0
+    for mid in assigned_module_ids:
+        total_t = db.query(models.StudyTopic).filter(models.StudyTopic.module_id == mid).count()
+        if total_t == 0:
+            continue
+        done_t = (
+            db.query(models.UserTopicProgress)
+            .join(models.StudyTopic)
+            .filter(
+                models.UserTopicProgress.user_id == current_user.id,
+                models.StudyTopic.module_id == mid,
+            )
+            .count()
+        )
+        if done_t >= total_t:
+            modules_completed += 1
+
+    # ── Today's goals ─────────────────────────────────────────────────────────
+    today_bucket = days.get(today_utc.day, {}) if (year == today_utc.year and month == today_utc.month) else {}
+    today_goals = {
+        "lessonWatched": today_bucket.get("topicsCompleted", 0) > 0,
+        "quizCompleted": len(today_bucket.get("quizzes", [])) > 0,
+        "studyMinutes": today_bucket.get("timeSpentMinutes", 0),
+        "studyGoalMet": today_bucket.get("timeSpentMinutes", 0) >= 30,
+    }
+
+    return {
+        "days": days,
+        "monthStats": {
+            "activeDays": active_days,
+            "totalDays": days_in_month,
+            "streak": streak,
+            "modulesCompleted": modules_completed,
+            "totalModules": total_modules,
+        },
+        "todayGoals": today_goals,
+    }
+
+
 @router.get("/recent-activity")
 def get_recent_activity(
     db: Session = Depends(get_db),
