@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Navbar from "./nav";
+
 import "../pages/settings.css";
 
 const Settings = () => {
@@ -69,7 +69,7 @@ const Settings = () => {
 
   return (
     <div className="settings-page">
-      <Navbar />
+     
       <div className="settings-container">
         <div className="settings-header">
           <h1>Settings</h1>

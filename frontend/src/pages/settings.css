@@ -9,8 +9,8 @@
 .settings-container {
   max-width: 900px;
   margin: 0 auto;
-  padding: 80px 24px 60px;
-   margin-top: 45px;
+  padding: 24px 24px 60px;
+  margin-top: 0;
 }
 
 .settings-header {
