@@ -135,6 +135,18 @@ class CourseResponse(BaseModel):
         from_attributes = True
 
 
+class AssignedCourseResponse(BaseModel):
+    id: int
+    title: str
+    description: str | None = None
+    order_num: int
+    modules: list[StudyModuleResponse]
+    deadline: str | None = None
+
+    class Config:
+        from_attributes = True
+
+
 class TopicProgressCreate(BaseModel):
     topic_id: int
     time_spent_seconds: int = 0

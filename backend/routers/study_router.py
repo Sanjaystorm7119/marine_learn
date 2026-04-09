@@ -38,35 +38,64 @@ def get_courses(
     return db.query(models.Course).order_by(models.Course.order_num).all()
 
 
-@router.get("/my-assigned-courses", response_model=list[schemas.CourseResponse])
+@router.get("/my-assigned-courses", response_model=list[schemas.AssignedCourseResponse])
 def get_my_assigned_courses(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user),
 ):
-    """Returns only the courses that have been assigned to the current user."""
-    assigned_module_ids = {
-        a.module_id
-        for a in db.query(models.UserCourseAssignment)
+    """Returns only the courses that have been assigned to the current user, with deadlines."""
+    assignments = (
+        db.query(models.UserCourseAssignment)
         .filter(models.UserCourseAssignment.user_id == current_user.id)
         .all()
-    }
-    if not assigned_module_ids:
+    )
+    if not assignments:
         return []
-    assigned_course_ids = {
-        m.course_id
-        for m in db.query(models.StudyModule)
+
+    assigned_module_ids = {a.module_id for a in assignments}
+    deadline_by_module = {a.module_id: a.deadline for a in assignments}
+
+    assigned_modules = (
+        db.query(models.StudyModule)
         .filter(models.StudyModule.id.in_(assigned_module_ids))
         .all()
-        if m.course_id
-    }
+    )
+    assigned_course_ids = {m.course_id for m in assigned_modules if m.course_id}
     if not assigned_course_ids:
         return []
-    return (
+
+    # Build a map: course_id → earliest deadline across its assigned modules
+    deadline_by_course: dict[int, str | None] = {}
+    for module in assigned_modules:
+        if not module.course_id:
+            continue
+        dl = deadline_by_module.get(module.id)
+        if dl is not None:
+            existing = deadline_by_course.get(module.course_id)
+            if existing is None or dl < existing:
+                deadline_by_course[module.course_id] = dl
+        elif module.course_id not in deadline_by_course:
+            deadline_by_course[module.course_id] = None
+
+    courses = (
         db.query(models.Course)
         .filter(models.Course.id.in_(assigned_course_ids))
         .order_by(models.Course.order_num)
         .all()
     )
+
+    result = []
+    for course in courses:
+        dl = deadline_by_course.get(course.id)
+        result.append(schemas.AssignedCourseResponse(
+            id=course.id,
+            title=course.title,
+            description=course.description,
+            order_num=course.order_num,
+            modules=[schemas.StudyModuleResponse.model_validate(m) for m in course.modules],
+            deadline=dl.strftime("%Y-%m-%d") if dl else None,
+        ))
+    return result
 
 
 @router.get("/modules", response_model=list[schemas.StudyModuleResponse])
@@ -127,6 +156,94 @@ def submit_quiz(
     db.add(attempt)
     db.commit()
     return {"message": "Quiz attempt saved", "score": body.score, "total": body.total}
+
+
+@router.get("/recent-activity")
+def get_recent_activity(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    """Returns up to 15 most recent activity events for the current user."""
+    events = []
+
+    # Topic completions
+    topic_rows = (
+        db.query(models.UserTopicProgress, models.StudyTopic, models.StudyModule)
+        .join(models.StudyTopic, models.UserTopicProgress.topic_id == models.StudyTopic.id)
+        .join(models.StudyModule, models.StudyTopic.module_id == models.StudyModule.id)
+        .filter(models.UserTopicProgress.user_id == current_user.id)
+        .order_by(models.UserTopicProgress.completed_at.desc())
+        .limit(10)
+        .all()
+    )
+    for progress, topic, module in topic_rows:
+        events.append({
+            "type": "topic",
+            "text": f"Completed: {topic.title}",
+            "sub": module.title,
+            "timestamp": progress.completed_at,
+        })
+
+    # Quiz attempts
+    quiz_rows = (
+        db.query(models.UserQuizAttempt, models.StudyModule)
+        .join(models.StudyModule, models.UserQuizAttempt.module_id == models.StudyModule.id)
+        .filter(models.UserQuizAttempt.user_id == current_user.id)
+        .order_by(models.UserQuizAttempt.attempted_at.desc())
+        .limit(10)
+        .all()
+    )
+    for attempt, module in quiz_rows:
+        pct = int(attempt.score / attempt.total * 100) if attempt.total else 0
+        events.append({
+            "type": "quiz",
+            "text": f"Quiz submitted: {module.title}",
+            "sub": f"Score: {pct}%",
+            "timestamp": attempt.attempted_at,
+        })
+
+    # Certificates
+    cert_rows = (
+        db.query(models.Certificate)
+        .filter(models.Certificate.user_id == current_user.id)
+        .order_by(models.Certificate.issued_at.desc())
+        .all()
+    )
+    for cert in cert_rows:
+        events.append({
+            "type": "certificate",
+            "text": f"Certificate earned: {cert.course_title}",
+            "sub": cert.certificate_number,
+            "timestamp": cert.issued_at,
+        })
+
+    events.sort(key=lambda e: e["timestamp"], reverse=True)
+
+    now = datetime.now(timezone.utc)
+
+    def relative_time(ts):
+        if ts.tzinfo is None:
+            ts = ts.replace(tzinfo=timezone.utc)
+        diff = now - ts
+        s = int(diff.total_seconds())
+        if s < 60:
+            return "just now"
+        if s < 3600:
+            m = s // 60
+            return f"{m} minute{'s' if m != 1 else ''} ago"
+        if s < 86400:
+            h = s // 3600
+            return f"{h} hour{'s' if h != 1 else ''} ago"
+        d = s // 86400
+        if d < 30:
+            return f"{d} day{'s' if d != 1 else ''} ago"
+        mo = d // 30
+        return f"{mo} month{'s' if mo != 1 else ''} ago"
+
+    return [
+        {"type": e["type"], "text": e["text"], "sub": e["sub"], "time": relative_time(e["timestamp"])}
+        for e in events[:15]
+    ]
 
 
 @router.get("/my-progress", response_model=schemas.UserProgressResponse)
