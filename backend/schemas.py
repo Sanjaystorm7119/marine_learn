@@ -74,6 +74,7 @@ class UserCourseDetail(BaseModel):
     progress: int
     status: str
     quizScore: int | None
+    deadline: str | None = None
     modules: list[ModuleProgressDetail]
 
 class UserCourseManagementResponse(BaseModel):
@@ -129,6 +130,18 @@ class CourseResponse(BaseModel):
     description: str | None = None
     order_num: int
     modules: list[StudyModuleResponse]
+
+    class Config:
+        from_attributes = True
+
+
+class AssignedCourseResponse(BaseModel):
+    id: int
+    title: str
+    description: str | None = None
+    order_num: int
+    modules: list[StudyModuleResponse]
+    deadline: str | None = None
 
     class Config:
         from_attributes = True

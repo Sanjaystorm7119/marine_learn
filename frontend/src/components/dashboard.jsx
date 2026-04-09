@@ -165,42 +165,10 @@ const forYouCourses = [
   },
 ];
 
-const recentActivity = [
-  {
-    text: "Completed Module 5: Fire Prevention",
-    time: "2 hours ago",
-    icon: CheckCircle2,
-  },
-  {
-    text: "Started Bridge Simulation Exercise",
-    time: "5 hours ago",
-    icon: Play,
-  },
-  { text: "Earned Certificate: Basic Safety", time: "1 day ago", icon: Award },
-  {
-    text: "Submitted Quiz: Engine Fundamentals",
-    time: "2 days ago",
-    icon: FileText,
-  },
-  { text: "Joined study group: Deck Officers", time: "3 days ago", icon: User },
-];
 
-const upcomingDeadlines = [
-  { title: "STCW Quiz 3", date: "Feb 25, 2026", course: "STCW Basic Safety" },
-  {
-    title: "Engine Lab Report",
-    date: "Feb 28, 2026",
-    course: "Marine Engine Operations",
-  },
-  {
-    title: "Final Assessment",
-    date: "Mar 5, 2026",
-    course: "Deck Officer Certificate",
-  },
-];
 
 const leaderboard = [
-  { name: "Capt. James Miller", points: 2450, rank: 1 },
+  // { name: "Capt. James Miller", points: 2450, rank: 1 },
   { name: "Sarah Chen", points: 2380, rank: 2 },
   { name: "You", points: 2120, rank: 3 },
   { name: "Raj Patel", points: 1980, rank: 4 },
@@ -232,7 +200,22 @@ const Dashboard = ({ children }) => {
   const [userRole, setUserRole] = useState("crew");
   const [dashboardData, setDashboardData] = useState(null);
   const [assignedCourses, setAssignedCourses] = useState(null);
+  const [recentActivity, setRecentActivity] = useState([]);
   const navigate = useNavigate();
+
+  const upcomingDeadlines = useMemo(() => {
+    if (!assignedCourses) return [];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return assignedCourses
+      .filter((c) => c.deadline)
+      .map((c) => {
+        const d = new Date(c.deadline);
+        const daysLeft = Math.ceil((d - today) / (1000 * 60 * 60 * 24));
+        return { title: c.title, date: d, daysLeft };
+      })
+      .sort((a, b) => a.date - b.date);
+  }, [assignedCourses]);
 
   /* ── Notifications state ── */
   const [notifications, setNotifications] = useState([]);
@@ -388,6 +371,12 @@ const Dashboard = ({ children }) => {
           );
           if (allCoursesRes.ok) setAssignedCourses(await allCoursesRes.json());
         }
+
+        const activityRes = await fetch(
+          "http://localhost:8000/study/recent-activity",
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (activityRes.ok) setRecentActivity(await activityRes.json());
       } catch (error) {
         console.error("Dashboard fetch error:", error);
       }
@@ -788,6 +777,7 @@ const Dashboard = ({ children }) => {
                             prog?.next_module_title ??
                             c.modules?.[0]?.title ??
                             "Module 1",
+                          deadline: c.deadline ?? null,
                         };
                       })
                     : inProgress;
@@ -836,6 +826,21 @@ const Dashboard = ({ children }) => {
                                         style={{ width: `${course.progress_pct}%` }}
                                       />
                                     </div>
+                                    {course.deadline && (() => {
+                                      const d = new Date(course.deadline);
+                                      const today = new Date();
+                                      today.setHours(0, 0, 0, 0);
+                                      const daysLeft = Math.ceil((d - today) / (1000 * 60 * 60 * 24));
+                                      const isOverdue = daysLeft < 0;
+                                      const isSoon = daysLeft >= 0 && daysLeft <= 7;
+                                      return (
+                                        <p className={`cl-deadline${isOverdue ? " cl-deadline-overdue" : isSoon ? " cl-deadline-soon" : ""}`}>
+                                          📅 Due {d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}
+                                          {isOverdue && <span className="cl-deadline-tag">Overdue</span>}
+                                          {isSoon && <span className="cl-deadline-tag">{daysLeft === 0 ? "Today" : `${daysLeft}d left`}</span>}
+                                        </p>
+                                      );
+                                    })()}
                                   </div>
                                   <Link
                                     to={`/study-materials?courseId=${course.course_id}`}
@@ -926,23 +931,30 @@ const Dashboard = ({ children }) => {
                   <h3 className="card-title">Recent Activity</h3>
                 </div>
                 <div className="card-body activity-list">
-                  {recentActivity.map((item, i) => (
-                    <motion.div
-                      key={i}
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.08 * i }}
-                      className="activity-item"
-                    >
-                      <div className="activity-icon-wrap">
-                        <item.icon className="activity-icon" />
-                      </div>
-                      <div className="activity-text-wrap">
-                        <p className="activity-text">{item.text}</p>
-                        <p className="activity-time">{item.time}</p>
-                      </div>
-                    </motion.div>
-                  ))}
+                  {recentActivity.length === 0 ? (
+                    <p className="activity-empty">No activity yet. Start a course to see your progress here.</p>
+                  ) : (
+                    recentActivity.map((item, i) => {
+                      const Icon = item.type === "certificate" ? Award : item.type === "quiz" ? FileText : CheckCircle2;
+                      return (
+                        <motion.div
+                          key={i}
+                          initial={{ opacity: 0, x: 20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.08 * i }}
+                          className="activity-item"
+                        >
+                          <div className={`activity-icon-wrap activity-icon-wrap--${item.type}`}>
+                            <Icon className="activity-icon" />
+                          </div>
+                          <div className="activity-text-wrap">
+                            <p className="activity-text">{item.text}</p>
+                            <p className="activity-time">{item.sub} · {item.time}</p>
+                          </div>
+                        </motion.div>
+                      );
+                    })
+                  )}
                 </div>
               </div>
 
@@ -952,24 +964,37 @@ const Dashboard = ({ children }) => {
                   <h3 className="card-title">Upcoming Deadlines</h3>
                 </div>
                 <div className="card-body deadline-list">
-                  {upcomingDeadlines.map((item, i) => (
-                    <div key={i} className="deadline-item">
-                      <div className="deadline-icon-wrap">
-                        <Calendar className="deadline-icon" />
-                      </div>
-                      <div className="deadline-info">
-                        <p className="deadline-title">{item.title}</p>
-                        <p className="deadline-meta">
-                          {item.date} · {item.course}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
+                  {upcomingDeadlines.length === 0 ? (
+                    <p className="deadline-empty">No deadlines set for your courses.</p>
+                  ) : (
+                    upcomingDeadlines.map((item, i) => {
+                      const isOverdue = item.daysLeft < 0;
+                      const isSoon = item.daysLeft >= 0 && item.daysLeft <= 7;
+                      const label = isOverdue
+                        ? `Overdue by ${Math.abs(item.daysLeft)}d`
+                        : item.daysLeft === 0
+                        ? "Due today"
+                        : isSoon
+                        ? `${item.daysLeft}d left`
+                        : item.date.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+                      return (
+                        <div key={i} className={`deadline-item${isOverdue ? " deadline-item--overdue" : isSoon ? " deadline-item--soon" : ""}`}>
+                          <div className="deadline-icon-wrap">
+                            <Calendar className="deadline-icon" />
+                          </div>
+                          <div className="deadline-info">
+                            <p className="deadline-title">{item.title}</p>
+                            <p className="deadline-meta">{label}</p>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
                 </div>
               </div>
 
               {/* Leaderboard */}
-              <div className="card">
+              {/* <div className="card">
                 <div className="card-header">
                   <h3 className="card-title">Leaderboard</h3>
                   <p className="card-desc">Top learners this month</p>
@@ -985,7 +1010,7 @@ const Dashboard = ({ children }) => {
                           <Star className="rank-star" />
                         ) : (
                           `#${user.rank}`
-                        )}
+                        )}   
                       </span>
                       <div className="leaderboard-avatar">
                         <User className="leaderboard-avatar-icon" />
@@ -1003,7 +1028,10 @@ const Dashboard = ({ children }) => {
                     </div>
                   ))}
                 </div>
-              </div>
+              </div> */}
+
+              {/* Leaderboard  ends here*/}
+
             </div>
           </div>
            </>}

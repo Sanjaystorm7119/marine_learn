@@ -41,51 +41,6 @@ const sidebarItems = [
   { label: "Help", icon: HelpCircle, href: "/help" },
 ];
 
-/* ── Mock activity data ── */
-const generateMockData = (year, month) => {
-  const data = {};
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const topicPool = [
-    "Fire Prevention & Safety",
-    "Bridge Operations",
-    "Engine Room Procedures",
-    "Navigation Charts & ECDIS",
-    "Cargo Handling",
-    "Emergency Drills",
-    "Phishing & Ransomware",
-    "Maritime Law Basics",
-    "STCW Compliance",
-    "Diesel Propulsion Systems",
-    "Life Raft Operations",
-    "Radio Communication",
-    "Weather Routing",
-    "Pollution Prevention",
-    "First Aid at Sea",
-  ];
-  for (let d = 1; d <= daysInMonth; d++) {
-    if (Math.random() > 0.35) {
-      const lessons = Math.floor(Math.random() * 5) + 1;
-      const quizDone = Math.random() > 0.4;
-      const topicCount = Math.min(lessons, 3);
-      const shuffled = [...topicPool].sort(() => 0.5 - Math.random());
-      data[d] = {
-        lessonsWatched: lessons,
-        totalMinutes: lessons * Math.floor(Math.random() * 20 + 10),
-        quizCompleted: quizDone,
-        quizScore: quizDone
-          ? { correct: Math.floor(Math.random() * 5 + 15), total: 20 }
-          : undefined,
-        phaseCompleted:
-          Math.random() > 0.7
-            ? `Phase ${Math.floor(Math.random() * 4 + 1)}`
-            : undefined,
-        topics: shuffled.slice(0, topicCount),
-        achievement: Math.random() > 0.8 ? "Perfect Score 🏆" : undefined,
-      };
-    }
-  }
-  return data;
-};
 
 const MONTH_NAMES = [
   "January",
@@ -113,20 +68,21 @@ const CalendarPage = () => {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [userName, setUserName] = useState("Loading...");
   const [userRole, setUserRole] = useState("...");
+  const [activityData, setActivityData] = useState({});
+  const [monthStats, setMonthStats] = useState({ activeDays: 0, totalDays: 0, streak: 0, modulesCompleted: 0, totalModules: 0 });
+  const [todayGoals, setTodayGoals] = useState({ lessonWatched: false, quizCompleted: false, studyMinutes: 0, studyGoalMet: false });
+  const [loadingActivity, setLoadingActivity] = useState(false);
 
   useEffect(() => {
     const fetchUserData = async () => {
       const token = localStorage.getItem("token");
-      if (!token) {
-        navigate("/login");
-        return;
-      }
+      if (!token) { navigate("/login"); return; }
       try {
-        const response = await fetch("http://localhost:8000/users/me", {
+        const res = await fetch("http://localhost:8000/users/me", {
           headers: { Authorization: `Bearer ${token}` },
         });
-        if (response.ok) {
-          const userData = await response.json();
+        if (res.ok) {
+          const userData = await res.json();
           setUserName(userData.full_name.split(" ")[0]);
           setUserRole(userData.role);
         } else {
@@ -140,10 +96,33 @@ const CalendarPage = () => {
     fetchUserData();
   }, [navigate]);
 
-  const activityData = useMemo(
-    () => generateMockData(currentYear, currentMonth),
-    [currentYear, currentMonth],
-  );
+  useEffect(() => {
+    const fetchActivity = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+      setLoadingActivity(true);
+      try {
+        const res = await fetch(
+          `http://localhost:8000/study/calendar-activity?year=${currentYear}&month=${currentMonth + 1}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (res.ok) {
+          const data = await res.json();
+          // Convert string keys to ints
+          const days = {};
+          for (const [k, v] of Object.entries(data.days)) days[parseInt(k)] = v;
+          setActivityData(days);
+          setMonthStats(data.monthStats);
+          setTodayGoals(data.todayGoals);
+        }
+      } catch (error) {
+        console.error("Calendar fetch error:", error);
+      } finally {
+        setLoadingActivity(false);
+      }
+    };
+    fetchActivity();
+  }, [currentYear, currentMonth]);
 
   const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
   const firstDayOfWeek = new Date(currentYear, currentMonth, 1).getDay();
@@ -171,25 +150,6 @@ const CalendarPage = () => {
     setSelectedDay(today.getDate());
   };
 
-  const activeDays = Object.keys(activityData).length;
-  const greenPercent = Math.round((activeDays / daysInMonth) * 100);
-  const modulesComplete = Object.values(activityData).filter(
-    (d) => d.phaseCompleted,
-  ).length;
-
-  const calcStreak = () => {
-    let streak = 0;
-    const startDay =
-      today.getMonth() === currentMonth && today.getFullYear() === currentYear
-        ? today.getDate()
-        : daysInMonth;
-    for (let i = startDay; i >= 1; i--) {
-      if (activityData[i]) streak++;
-      else break;
-    }
-    return streak;
-  };
-  const currentStreak = calcStreak();
   const selectedActivity = selectedDay ? activityData[selectedDay] : null;
 
   return (
@@ -321,6 +281,7 @@ const CalendarPage = () => {
                       const isActive = !!activity;
                       const isSelected = selectedDay === day;
                       const isTodayDate = isToday(day);
+                      const hasPerfectQuiz = activity?.quizzes?.some(q => q.pct === 100);
                       return (
                         <motion.button
                           key={day}
@@ -339,7 +300,7 @@ const CalendarPage = () => {
                           <span
                             className={`cal-day-dot${isActive ? " cal-day-dot--active" : " cal-day-dot--inactive"}`}
                           />
-                          {activity?.achievement && (
+                          {hasPerfectQuiz && (
                             <span className="cal-day-trophy">🏆</span>
                           )}
                         </motion.button>
@@ -394,107 +355,59 @@ const CalendarPage = () => {
                           <div className="cal-detail-content">
                             <div className="cal-summary-grid">
                               <div className="cal-stat-box cal-stat-box--green">
-                                <Play
-                                  size={16}
-                                  className="cal-stat-icon cal-stat-icon--green"
-                                />
+                                <Play size={16} className="cal-stat-icon cal-stat-icon--green" />
                                 <p className="cal-stat-value cal-stat-value--green">
-                                  {selectedActivity.lessonsWatched}
+                                  {selectedActivity.topicsCompleted}
                                 </p>
-                                <p className="cal-stat-label cal-stat-label--green">
-                                  Lessons
-                                </p>
+                                <p className="cal-stat-label cal-stat-label--green">Topics</p>
                               </div>
                               <div className="cal-stat-box cal-stat-box--blue">
-                                <Clock
-                                  size={16}
-                                  className="cal-stat-icon cal-stat-icon--blue"
-                                />
+                                <Clock size={16} className="cal-stat-icon cal-stat-icon--blue" />
                                 <p className="cal-stat-value cal-stat-value--blue">
-                                  {selectedActivity.totalMinutes}m
+                                  {selectedActivity.timeSpentMinutes}m
                                 </p>
-                                <p className="cal-stat-label cal-stat-label--blue">
-                                  Study Time
-                                </p>
+                                <p className="cal-stat-label cal-stat-label--blue">Study Time</p>
                               </div>
-                              {selectedActivity.quizScore && (
+                              {selectedActivity.quizzes?.length > 0 && (
                                 <div className="cal-stat-box cal-stat-box--amber">
-                                  <FileText
-                                    size={16}
-                                    className="cal-stat-icon cal-stat-icon--amber"
-                                  />
+                                  <FileText size={16} className="cal-stat-icon cal-stat-icon--amber" />
                                   <p className="cal-stat-value cal-stat-value--amber">
-                                    {selectedActivity.quizScore.correct}/
-                                    {selectedActivity.quizScore.total}
+                                    {selectedActivity.quizzes[0].score}/{selectedActivity.quizzes[0].total}
                                   </p>
-                                  <p className="cal-stat-label cal-stat-label--amber">
-                                    Quiz Score
-                                  </p>
+                                  <p className="cal-stat-label cal-stat-label--amber">Quiz Score</p>
                                 </div>
                               )}
-                              {selectedActivity.phaseCompleted && (
+                              {selectedActivity.quizzes?.some(q => q.pct === 100) && (
                                 <div className="cal-stat-box cal-stat-box--violet">
-                                  <Trophy
-                                    size={16}
-                                    className="cal-stat-icon cal-stat-icon--violet"
-                                  />
-                                  <p className="cal-stat-value cal-stat-value--violet">
-                                    {selectedActivity.phaseCompleted}
-                                  </p>
-                                  <p className="cal-stat-label cal-stat-label--violet">
-                                    Complete
-                                  </p>
+                                  <Trophy size={16} className="cal-stat-icon cal-stat-icon--violet" />
+                                  <p className="cal-stat-value cal-stat-value--violet">100%</p>
+                                  <p className="cal-stat-label cal-stat-label--violet">Perfect!</p>
                                 </div>
                               )}
                             </div>
                             <div className="cal-detail-list">
                               <div className="cal-detail-row">
-                                <CheckCircle2
-                                  size={16}
-                                  className="cal-detail-row-icon cal-detail-row-icon--green"
-                                />
+                                <CheckCircle2 size={16} className="cal-detail-row-icon cal-detail-row-icon--green" />
                                 <span className="cal-detail-row-text">
-                                  {selectedActivity.lessonsWatched} lessons
-                                  watched ({selectedActivity.totalMinutes} min)
+                                  {selectedActivity.topicsCompleted} topic{selectedActivity.topicsCompleted !== 1 ? "s" : ""} completed
+                                  {selectedActivity.timeSpentMinutes > 0 && ` · ${selectedActivity.timeSpentMinutes} min`}
                                 </span>
                               </div>
-                              {selectedActivity.phaseCompleted && (
-                                <div className="cal-detail-row">
-                                  <CheckCircle2
-                                    size={16}
-                                    className="cal-detail-row-icon cal-detail-row-icon--green"
-                                  />
-                                  <span className="cal-detail-row-text">
-                                    {selectedActivity.phaseCompleted} Complete
-                                    🏆
-                                  </span>
-                                </div>
-                              )}
-                              {selectedActivity.topics.map((t, idx) => (
+                              {(selectedActivity.topicTitles ?? []).map((t, idx) => (
                                 <div key={idx} className="cal-detail-row">
-                                  <BookMarked
-                                    size={16}
-                                    className="cal-detail-row-icon cal-detail-row-icon--muted"
-                                  />
-                                  <span className="cal-detail-row-text cal-detail-row-text--muted">
-                                    {t}
+                                  <BookMarked size={16} className="cal-detail-row-icon cal-detail-row-icon--muted" />
+                                  <span className="cal-detail-row-text cal-detail-row-text--muted">{t}</span>
+                                </div>
+                              ))}
+                              {(selectedActivity.quizzes ?? []).map((q, idx) => (
+                                <div key={idx} className="cal-detail-row">
+                                  <FileText size={16} className="cal-detail-row-icon cal-detail-row-icon--amber" />
+                                  <span className="cal-detail-row-text">
+                                    {q.moduleTitle}: {q.score}/{q.total}
+                                    {q.pct === 100 && " ⭐ Perfect"}
                                   </span>
                                 </div>
                               ))}
-                              {selectedActivity.quizScore && (
-                                <div className="cal-detail-row">
-                                  <FileText
-                                    size={16}
-                                    className="cal-detail-row-icon cal-detail-row-icon--amber"
-                                  />
-                                  <span className="cal-detail-row-text">
-                                    Quiz: {selectedActivity.quizScore.correct}/
-                                    {selectedActivity.quizScore.total}
-                                    {selectedActivity.quizScore.correct >= 18 &&
-                                      " Perfect ⭐"}
-                                  </span>
-                                </div>
-                              )}
                             </div>
                           </div>
                         ) : (
@@ -537,53 +450,46 @@ const CalendarPage = () => {
                     <div className="cal-progress-row">
                       <span className="cal-progress-label">Active Days</span>
                       <span className="cal-progress-value">
-                        {activeDays}/{daysInMonth}
+                        {monthStats.activeDays}/{monthStats.totalDays || daysInMonth}
                       </span>
                     </div>
                     <div className="cal-progress-track">
                       <div
                         className="cal-progress-fill"
                         style={{
-                          width: `${(activeDays / daysInMonth) * 100}%`,
+                          width: `${monthStats.totalDays ? (monthStats.activeDays / monthStats.totalDays) * 100 : 0}%`,
                         }}
                       />
                     </div>
                     <p className="cal-progress-hint">
-                      {Math.round((activeDays / daysInMonth) * 100)}% of the
-                      month
+                      {monthStats.totalDays ? Math.round((monthStats.activeDays / monthStats.totalDays) * 100) : 0}% of the month
                     </p>
                   </div>
                   <div className="cal-badge cal-badge--green">
                     <div className="cal-badge-left">
                       <span className="cal-badge-dot cal-badge-dot--green" />
-                      <span className="cal-badge-label">Green Dots</span>
+                      <span className="cal-badge-label">Active Days</span>
                     </div>
                     <span className="cal-badge-value cal-badge-value--green">
-                      {greenPercent}%
+                      {monthStats.totalDays ? Math.round((monthStats.activeDays / monthStats.totalDays) * 100) : 0}%
                     </span>
                   </div>
                   <div className="cal-badge cal-badge--blue">
                     <div className="cal-badge-left">
-                      <GraduationCap
-                        size={16}
-                        className="cal-badge-icon cal-badge-icon--blue"
-                      />
+                      <GraduationCap size={16} className="cal-badge-icon cal-badge-icon--blue" />
                       <span className="cal-badge-label">Modules Complete</span>
                     </div>
                     <span className="cal-badge-value cal-badge-value--blue">
-                      {modulesComplete}/8
+                      {monthStats.modulesCompleted}/{monthStats.totalModules}
                     </span>
                   </div>
                   <div className="cal-badge cal-badge--amber">
                     <div className="cal-badge-left">
-                      <Flame
-                        size={16}
-                        className="cal-badge-icon cal-badge-icon--amber"
-                      />
+                      <Flame size={16} className="cal-badge-icon cal-badge-icon--amber" />
                       <span className="cal-badge-label">Current Streak</span>
                     </div>
                     <span className="cal-badge-value cal-badge-value--amber">
-                      {currentStreak} days 🔥
+                      {monthStats.streak} day{monthStats.streak !== 1 ? "s" : ""} 🔥
                     </span>
                   </div>
                 </div>
@@ -597,23 +503,17 @@ const CalendarPage = () => {
                 </div>
                 <div className="cal-card-body cal-goals-body">
                   {[
-                    { label: "Watch 1+ lesson", done: true },
-                    { label: "Complete a quiz", done: true },
-                    { label: "30 min study time", done: false },
-                    { label: "Review flashcards", done: false },
+                    { label: "Complete 1+ topic today", done: todayGoals.lessonWatched },
+                    { label: "Submit a quiz today", done: todayGoals.quizCompleted },
+                    { label: `Study 30 min today${todayGoals.studyMinutes > 0 ? ` (${todayGoals.studyMinutes}m logged)` : ""}`, done: todayGoals.studyGoalMet },
                   ].map((goal, i) => (
                     <div key={i} className="cal-goal-row">
                       {goal.done ? (
-                        <CheckCircle2
-                          size={16}
-                          className="cal-goal-icon cal-goal-icon--done"
-                        />
+                        <CheckCircle2 size={16} className="cal-goal-icon cal-goal-icon--done" />
                       ) : (
                         <div className="cal-goal-circle" />
                       )}
-                      <span
-                        className={`cal-goal-label${goal.done ? " cal-goal-label--done" : ""}`}
-                      >
+                      <span className={`cal-goal-label${goal.done ? " cal-goal-label--done" : ""}`}>
                         {goal.label}
                       </span>
                     </div>
