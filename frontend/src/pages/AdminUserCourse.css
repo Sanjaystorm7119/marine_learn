@@ -483,6 +483,82 @@
   font-size: 0.875rem;
 }
 
+/* Deadline column */
+.deadline-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+.deadline-cell svg {
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+.deadline-none {
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 0.875rem;
+}
+.deadline-ok {
+  color: rgba(255, 255, 255, 0.65);
+}
+.deadline-soon {
+  color: #fbbf24;
+}
+.deadline-overdue {
+  color: #f87171;
+}
+.deadline-tag {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  letter-spacing: 0.02em;
+}
+.deadline-soon .deadline-tag {
+  background: rgba(251, 191, 36, 0.2);
+  color: #fbbf24;
+}
+.deadline-overdue .deadline-tag {
+  background: rgba(248, 113, 113, 0.2);
+  color: #f87171;
+}
+
+/* Expanded course deadline badge */
+.course-deadline-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  margin-left: auto;
+  white-space: nowrap;
+}
+.course-deadline-badge svg {
+  flex-shrink: 0;
+}
+.course-deadline-badge.deadline-ok {
+  color: rgba(255, 255, 255, 0.55);
+}
+.course-deadline-badge.deadline-soon {
+  color: #fbbf24;
+  border-color: rgba(251, 191, 36, 0.3);
+  background: rgba(251, 191, 36, 0.08);
+}
+.course-deadline-badge.deadline-overdue {
+  color: #f87171;
+  border-color: rgba(248, 113, 113, 0.3);
+  background: rgba(248, 113, 113, 0.08);
+}
+.course-deadline-badge.deadline-none {
+  color: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.07);
+}
+
 /* Actions */
 .actions-cell {
   display: flex;

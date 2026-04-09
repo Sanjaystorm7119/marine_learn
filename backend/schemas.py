@@ -74,6 +74,7 @@ class UserCourseDetail(BaseModel):
     progress: int
     status: str
     quizScore: int | None
+    deadline: str | None = None
     modules: list[ModuleProgressDetail]
 
 class UserCourseManagementResponse(BaseModel):

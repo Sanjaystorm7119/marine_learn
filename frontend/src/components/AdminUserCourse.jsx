@@ -23,6 +23,7 @@ import {
   Flame,
   Plus,
   X,
+  Calendar,
 } from "lucide-react";
 import "../pages/AdminUserCourse.css";
 
@@ -883,10 +884,10 @@ const UserTable = ({
         <thead>
           <tr className="table-header-row">
             <th className="th">User</th>
-
             <th className="th">Courses</th>
             <th className="th">Progress</th>
             <th className="th">Streak</th>
+            <th className="th">Deadline</th>
             <th className="th th-right">Actions</th>
           </tr>
         </thead>
@@ -951,6 +952,28 @@ const UserTable = ({
                       <Flame className="icon-sm streak-icon" />
                       <span className="streak-value">{user.streak}d</span>
                     </div>
+                  </td>
+                  <td className="td">
+                    {(() => {
+                      const deadlines = user.courses
+                        .filter((c) => c.deadline)
+                        .map((c) => ({ title: c.courseTitle, date: new Date(c.deadline) }))
+                        .sort((a, b) => a.date - b.date);
+                      if (deadlines.length === 0) return <span className="deadline-none">—</span>;
+                      const nearest = deadlines[0];
+                      const today = new Date();
+                      today.setHours(0, 0, 0, 0);
+                      const daysLeft = Math.ceil((nearest.date - today) / (1000 * 60 * 60 * 24));
+                      const cls = daysLeft < 0 ? "deadline-overdue" : daysLeft <= 7 ? "deadline-soon" : "deadline-ok";
+                      return (
+                        <div className={`deadline-cell ${cls}`} title={`${nearest.title}: ${nearest.date.toLocaleDateString()}`}>
+                          <Calendar className="icon-xs" />
+                          <span>{nearest.date.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}</span>
+                          {daysLeft < 0 && <span className="deadline-tag">Overdue</span>}
+                          {daysLeft >= 0 && daysLeft <= 7 && <span className="deadline-tag">Soon</span>}
+                        </div>
+                      );
+                    })()}
                   </td>
                   <td className="td td-right">
                     <div className="actions-cell">
@@ -1027,6 +1050,21 @@ const UserTable = ({
                                         {course.totalModules} module
                                         {course.totalModules !== 1 ? "s" : ""}
                                       </span>
+                                      {course.deadline ? (() => {
+                                        const d = new Date(course.deadline);
+                                        const today = new Date();
+                                        today.setHours(0, 0, 0, 0);
+                                        const daysLeft = Math.ceil((d - today) / (1000 * 60 * 60 * 24));
+                                        const cls = daysLeft < 0 ? "deadline-overdue" : daysLeft <= 7 ? "deadline-soon" : "deadline-ok";
+                                        return (
+                                          <span className={`course-deadline-badge ${cls}`}>
+                                            <Calendar className="icon-xs" />
+                                            {d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}
+                                            {daysLeft < 0 && " · Overdue"}
+                                            {daysLeft >= 0 && daysLeft <= 7 && ` · ${daysLeft}d left`}
+                                          </span>
+                                        );
+                                      })() : <span className="course-deadline-badge deadline-none">No deadline</span>}
                                     </div>
 
                                     {/* Module rows */}
