@@ -73,6 +73,7 @@ const AdminUserCourse = () => {
   const [selectedCoursesForAssign, setSelectedCoursesForAssign] = useState([]);
   const [assignUserSearch, setAssignUserSearch] = useState("");
   const [assignTargetSelectOpen, setAssignTargetSelectOpen] = useState(false);
+  const [assignDeadline, setAssignDeadline] = useState("");
 
   const fetchData = async () => {
     setLoading(true);
@@ -133,11 +134,12 @@ const AdminUserCourse = () => {
       });
 
       const payload = {
-        user_ids: selectedUsersForAssign
-          .map(Number)
-          .filter((n) => Number.isInteger(n) && n > 0),
-        module_ids: moduleIds.filter((n) => Number.isInteger(n) && n > 0),
-      };
+  user_ids: selectedUsersForAssign
+    .map(Number)
+    .filter((n) => Number.isInteger(n) && n > 0),
+  module_ids: moduleIds.filter((n) => Number.isInteger(n) && n > 0),
+  deadline: assignDeadline || null,
+};
       console.log("Assign payload →", JSON.stringify(payload));
 
       const response = await fetch(
@@ -163,10 +165,11 @@ const AdminUserCourse = () => {
               : `Successfully assigned ${result.assigned_count} modules to selected users.`,
           });
         setAssignDialogOpen(false);
-        setSelectedUsersForAssign([]);
-        setSelectedCoursesForAssign([]);
-        setAssignUserSearch("");
-        fetchData();
+setSelectedUsersForAssign([]);
+setSelectedCoursesForAssign([]);
+setAssignUserSearch("");
+setAssignDeadline("");
+fetchData();
       } else {
         const err = await response.json().catch(() => ({}));
         console.error(
@@ -228,13 +231,14 @@ const AdminUserCourse = () => {
     return list;
   }, [users, assignTarget, assignUserSearch]);
 
-  const openAssignForUser = (userId) => {
-    setSelectedUsersForAssign([userId]);
-    setAssignTarget("all");
-    setSelectedCoursesForAssign([]);
-    setAssignUserSearch("");
-    setAssignDialogOpen(true);
-  };
+const openAssignForUser = (userId) => {
+  setSelectedUsersForAssign([userId]);
+  setAssignTarget("all");
+  setSelectedCoursesForAssign([]);
+  setAssignUserSearch("");
+  setAssignDeadline("");
+  setAssignDialogOpen(true);
+};
 
   const filtered = useMemo(() => {
     return users
@@ -802,6 +806,33 @@ const AdminUserCourse = () => {
                     </p>
                   )}
                 </div>
+
+                {/* Step 3 — Deadline */}
+                <div className="dialog-section">
+                  <p className="dialog-section-label deadline-label">
+                    <span className="deadline-icon">📅</span>
+                    3. Set Deadline <span className="deadline-required">(required)</span>
+                  </p>
+                  <div className="deadline-row">
+                    <input
+                      type="date"
+                      className="deadline-input"
+                      value={assignDeadline}
+                      min={new Date().toISOString().split("T")[0]}
+                      onChange={(e) => setAssignDeadline(e.target.value)}
+                    />
+                    {assignDeadline && (
+                      <button
+                        className="deadline-clear"
+                        onClick={() => setAssignDeadline("")}
+                        title="Clear deadline"
+                      >
+                        <X className="icon-xs" />
+                      </button>
+                    )}
+                  </div>
+                  <p className="deadline-hint">After the deadline, the user will lose access to the course.</p>
+                </div>
               </div>
 
               <div className="dialog-footer">
@@ -815,7 +846,8 @@ const AdminUserCourse = () => {
                   className="btn-dialog-assign"
                   disabled={
                     selectedUsersForAssign.length === 0 ||
-                    selectedCoursesForAssign.length === 0
+                    selectedCoursesForAssign.length === 0 ||
+                    !assignDeadline
                   }
                   onClick={handleAssignCourses}
                 >

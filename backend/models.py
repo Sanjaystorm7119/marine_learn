@@ -120,6 +120,7 @@ class UserCourseAssignment(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     module_id = Column(Integer, ForeignKey("study_modules.id"), nullable=False)
     assigned_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    deadline = Column(DateTime, nullable=True) # <-- ADD THIS
 
     __table_args__ = (UniqueConstraint("user_id", "module_id", name="uq_user_module_assign"),)
 

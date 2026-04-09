@@ -52,6 +52,7 @@ class UserLeadUpdate(BaseModel):
 class CourseAssignmentCreate(BaseModel):
     user_ids: list[int]
     module_ids: list[int]
+    deadline: str | None = None  
 
 class ModuleProgressDetail(BaseModel):
     moduleId: int
