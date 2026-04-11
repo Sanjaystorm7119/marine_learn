@@ -2,14 +2,21 @@ from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.util import get_remote_address
 
 import models
 from database import engine
 from routers import auth_router, user_router, admin_router, study_router, notification_router
 
+limiter = Limiter(key_func=get_remote_address)
+
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="MarineLearn API")
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 
 @app.exception_handler(RequestValidationError)

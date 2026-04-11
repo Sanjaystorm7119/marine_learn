@@ -1,9 +1,11 @@
+import os
 import jwt
 from datetime import datetime, timedelta
 from passlib.context import CryptContext
 
-# This is your secret key. In a real app, this is hidden, but for now, this is fine!
-SECRET_KEY = "my_super_secret_marine_key_123"
+SECRET_KEY = os.environ.get("JWT_SECRET_KEY")
+if not SECRET_KEY:
+    raise RuntimeError("JWT_SECRET_KEY environment variable is not set. Add it to backend/.env")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 # Token expires in 1 hour
 

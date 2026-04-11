@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { 
-  LayoutDashboard, Users, BookOpen, Settings, 
-  LogOut, Menu, X, Bell, Search, User as UserIcon, Shield,ShieldCheck, GraduationCap 
+import {
+  LayoutDashboard, Users, BookOpen, Settings,
+  LogOut, Menu, X, Bell, Search, User as UserIcon, Shield,ShieldCheck, GraduationCap
 } from 'lucide-react';
 import '../pages/admin.css';
 
@@ -11,6 +11,14 @@ const AdminLayout = ({ children }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    const role = localStorage.getItem('role');
+    if (!token || role !== 'admin') {
+      navigate('/login', { replace: true });
+    }
+  }, [navigate]);
 
   const handleLogout = () => {
     localStorage.removeItem('token');

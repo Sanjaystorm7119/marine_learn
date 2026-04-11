@@ -98,12 +98,24 @@ def get_my_assigned_courses(
     return result
 
 
-@router.get("/modules", response_model=list[schemas.StudyModuleResponse])
+@router.get("/modules", response_model=list[schemas.StudyModuleStudentResponse])
 def get_modules(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user),
 ):
-    return db.query(models.StudyModule).order_by(models.StudyModule.order_num).all()
+    # Return only modules assigned to this user; omit correct_answer via student schema
+    assigned_module_ids = {
+        a.module_id
+        for a in db.query(models.UserCourseAssignment)
+        .filter(models.UserCourseAssignment.user_id == current_user.id)
+        .all()
+    }
+    return (
+        db.query(models.StudyModule)
+        .filter(models.StudyModule.id.in_(assigned_module_ids))
+        .order_by(models.StudyModule.order_num)
+        .all()
+    )
 
 
 @router.post("/progress")
@@ -115,6 +127,18 @@ def mark_topic_complete(
     topic = db.query(models.StudyTopic).filter(models.StudyTopic.id == body.topic_id).first()
     if not topic:
         raise HTTPException(status_code=404, detail="Topic not found")
+
+    # Verify the topic's parent module is assigned to this user
+    assignment = (
+        db.query(models.UserCourseAssignment)
+        .filter(
+            models.UserCourseAssignment.user_id == current_user.id,
+            models.UserCourseAssignment.module_id == topic.module_id,
+        )
+        .first()
+    )
+    if not assignment:
+        raise HTTPException(status_code=403, detail="This topic is not assigned to you")
 
     existing = (
         db.query(models.UserTopicProgress)
@@ -147,15 +171,28 @@ def submit_quiz(
     if not module:
         raise HTTPException(status_code=404, detail="Module not found")
 
+    # Fetch all questions for this module and grade server-side
+    questions = (
+        db.query(models.StudyQuizQuestion)
+        .filter(models.StudyQuizQuestion.module_id == body.module_id)
+        .all()
+    )
+    total = len(questions)
+    score = sum(
+        1
+        for q in questions
+        if body.answers.get(q.id) == q.correct_answer
+    )
+
     attempt = models.UserQuizAttempt(
         user_id=current_user.id,
         module_id=body.module_id,
-        score=body.score,
-        total=body.total,
+        score=score,
+        total=total,
     )
     db.add(attempt)
     db.commit()
-    return {"message": "Quiz attempt saved", "score": body.score, "total": body.total}
+    return {"message": "Quiz attempt saved", "score": score, "total": total}
 
 
 @router.get("/calendar-activity")
@@ -544,6 +581,31 @@ def issue_certificate(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user),
 ):
+    # Verify the course exists
+    course = (
+        db.query(models.Course)
+        .filter(models.Course.title == body.course_title)
+        .first()
+    )
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found")
+
+    # Verify the user is assigned to at least one module of this course
+    course_module_ids = {m.id for m in course.modules}
+    if course_module_ids:
+        assignment = (
+            db.query(models.UserCourseAssignment)
+            .filter(
+                models.UserCourseAssignment.user_id == current_user.id,
+                models.UserCourseAssignment.module_id.in_(course_module_ids),
+            )
+            .first()
+        )
+        if not assignment:
+            raise HTTPException(status_code=403, detail="You are not assigned to this course")
+    else:
+        raise HTTPException(status_code=403, detail="Course has no modules assigned")
+
     existing = (
         db.query(models.Certificate)
         .filter_by(user_id=current_user.id, course_title=body.course_title)
