@@ -100,6 +100,7 @@ class StudyTopicResponse(BaseModel):
 
 
 class StudyQuizQuestionResponse(BaseModel):
+    """Full question response including correct_answer — for admin use only."""
     id: int
     module_id: int
     question: str
@@ -112,13 +113,40 @@ class StudyQuizQuestionResponse(BaseModel):
         from_attributes = True
 
 
+class StudyQuizQuestionStudentResponse(BaseModel):
+    """Question response for students — correct_answer is omitted."""
+    id: int
+    module_id: int
+    question: str
+    options: list
+    explanation: str | None = None
+    order_num: int
+
+    class Config:
+        from_attributes = True
+
+
 class StudyModuleResponse(BaseModel):
+    """Full module response including correct answers — for admin use only."""
     id: int
     title: str
     description: str | None = None
     order_num: int
     topics: list[StudyTopicResponse]
     quiz_questions: list[StudyQuizQuestionResponse]
+
+    class Config:
+        from_attributes = True
+
+
+class StudyModuleStudentResponse(BaseModel):
+    """Module response for students — quiz correct_answer is omitted."""
+    id: int
+    title: str
+    description: str | None = None
+    order_num: int
+    topics: list[StudyTopicResponse]
+    quiz_questions: list[StudyQuizQuestionStudentResponse]
 
     class Config:
         from_attributes = True
@@ -154,8 +182,7 @@ class TopicProgressCreate(BaseModel):
 
 class QuizSubmit(BaseModel):
     module_id: int
-    score: int
-    total: int
+    answers: dict[int, int]  # {question_id: chosen_option_index}
 
 
 class UserProgressResponse(BaseModel):
