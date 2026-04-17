@@ -84,9 +84,28 @@ def get_my_assigned_courses(
         .all()
     )
 
+    completed_set = {
+        r.topic_id
+        for r in db.query(models.UserTopicProgress)
+        .filter(models.UserTopicProgress.user_id == current_user.id)
+        .all()
+    }
+
     result = []
     for course in courses:
         dl = deadline_by_course.get(course.id)
+        topic_ids = [t.id for m in course.modules for t in m.topics]
+        total = len(topic_ids)
+        done = sum(1 for tid in topic_ids if tid in completed_set) if total else 0
+        pct = round(done / total * 100, 1) if total else 0.0
+
+        next_module_title = None
+        for m in course.modules:
+            mod_topic_ids = [t.id for t in m.topics]
+            if mod_topic_ids and not all(tid in completed_set for tid in mod_topic_ids):
+                next_module_title = m.title
+                break
+
         result.append(schemas.AssignedCourseResponse(
             id=course.id,
             title=course.title,
@@ -94,6 +113,8 @@ def get_my_assigned_courses(
             order_num=course.order_num,
             modules=[schemas.StudyModuleResponse.model_validate(m) for m in course.modules],
             deadline=dl.strftime("%Y-%m-%d") if dl else None,
+            progress_pct=pct,
+            next_module_title=next_module_title,
         ))
     return result
 

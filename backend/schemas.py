@@ -174,6 +174,8 @@ class AssignedCourseResponse(BaseModel):
     order_num: int
     modules: list[StudyModuleResponse]
     deadline: str | None = None
+    progress_pct: float = 0.0
+    next_module_title: str | None = None
 
     class Config:
         from_attributes = True

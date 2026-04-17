@@ -20,3 +20,6 @@ bk1/
 # Claude
 .claude/
 CLAUDE.md
+
+# Playwright MCP artifacts
+.playwright-mcp/
