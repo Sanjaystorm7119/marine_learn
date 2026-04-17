@@ -24,3 +24,6 @@ dist-ssr
 *.sw?
 .claude
 CLAUDE.md
+
+
+.playwright-mcp*

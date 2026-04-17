@@ -200,6 +200,7 @@ const Dashboard = ({ children }) => {
   const [userRole, setUserRole] = useState("crew");
   const [dashboardData, setDashboardData] = useState(null);
   const [assignedCourses, setAssignedCourses] = useState(null);
+  const [completedTopicIds, setCompletedTopicIds] = useState(null);
   const [recentActivity, setRecentActivity] = useState([]);
   const navigate = useNavigate();
 
@@ -372,11 +373,15 @@ const Dashboard = ({ children }) => {
           if (allCoursesRes.ok) setAssignedCourses(await allCoursesRes.json());
         }
 
-        const activityRes = await fetch(
-          "http://localhost:8000/study/recent-activity",
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+        const [activityRes, progressRes] = await Promise.all([
+          fetch("http://localhost:8000/study/recent-activity", { headers: { Authorization: `Bearer ${token}` } }),
+          fetch("http://localhost:8000/study/my-progress", { headers: { Authorization: `Bearer ${token}` } }),
+        ]);
         if (activityRes.ok) setRecentActivity(await activityRes.json());
+        if (progressRes.ok) {
+          const progData = await progressRes.json();
+          setCompletedTopicIds(new Set(progData.completed_topic_ids ?? []));
+        }
       } catch (error) {
         console.error("Dashboard fetch error:", error);
       }
@@ -769,14 +774,32 @@ const Dashboard = ({ children }) => {
                   assignedCourses !== null
                     ? assignedCourses.map((c, i) => {
                         const prog = progressMap[c.id];
+
+                        // Compute progress locally from completedTopicIds when available
+                        let pct = c.progress_pct ?? prog?.progress_pct ?? 0;
+                        let nextMod = c.next_module_title ?? prog?.next_module_title ?? null;
+                        if (completedTopicIds && c.modules?.length > 0) {
+                          const allTopicIds = c.modules.flatMap((m) => (m.topics ?? []).map((t) => t.id));
+                          const total = allTopicIds.length;
+                          if (total > 0) {
+                            const done = allTopicIds.filter((id) => completedTopicIds.has(id)).length;
+                            pct = Math.round((done / total) * 100);
+                            nextMod = null;
+                            for (const m of c.modules) {
+                              const mTopics = (m.topics ?? []).map((t) => t.id);
+                              if (mTopics.length && !mTopics.every((id) => completedTopicIds.has(id))) {
+                                nextMod = m.title;
+                                break;
+                              }
+                            }
+                          }
+                        }
+
                         return {
                           course_id: c.id,
                           course_title: c.title,
-                          progress_pct: prog?.progress_pct ?? 0,
-                          next_module_title:
-                            prog?.next_module_title ??
-                            c.modules?.[0]?.title ??
-                            "Module 1",
+                          progress_pct: pct,
+                          next_module_title: nextMod ?? c.modules?.[0]?.title ?? "Module 1",
                           deadline: c.deadline ?? null,
                         };
                       })

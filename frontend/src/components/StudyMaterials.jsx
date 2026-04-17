@@ -96,10 +96,16 @@ const QuizPanel = ({ module, onQuizSubmit, bestScore, onBack, prevItem, nextItem
 
   const handleSubmit = async () => {
     let correct = 0;
-    questions.forEach((q, i) => { if (answers[i] === q.correct_answer) correct++; });
+    const answersByQuestionId = {};
+    questions.forEach((q, i) => {
+      if (answers[i] !== undefined) {
+        answersByQuestionId[q.id] = answers[i];
+        if (answers[i] === q.correct_answer) correct++;
+      }
+    });
     setScore(correct);
     setSubmitted(true);
-    await onQuizSubmit(module.id, correct, questions.length);
+    await onQuizSubmit(module.id, correct, questions.length, answersByQuestionId);
   };
 
   const handleRetry = () => { setAnswers({}); setSubmitted(false); setScore(0); };
@@ -339,7 +345,7 @@ const StudyMaterials = () => {
     if (!token) { navigate("/login"); return; }
     try {
       const [coursesRes, progRes] = await Promise.all([
-        fetch(`${API}/study/courses`, { headers: { Authorization: `Bearer ${token}` } }),
+        fetch(`${API}/study/my-assigned-courses`, { headers: { Authorization: `Bearer ${token}` } }),
         fetch(`${API}/study/my-progress`, { headers: { Authorization: `Bearer ${token}` } }),
       ]);
       if (coursesRes.status === 401 || progRes.status === 401) { navigate("/login"); return; }
@@ -419,12 +425,12 @@ const StudyMaterials = () => {
     }
   };
 
-  const handleQuizSubmit = async (moduleId, score, total) => {
+  const handleQuizSubmit = async (moduleId, score, total, answersByQuestionId = {}) => {
     try {
       await fetch(`${API}/study/quiz`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ module_id: moduleId, score, total }),
+        body: JSON.stringify({ module_id: moduleId, answers: answersByQuestionId }),
       });
 
       // Build updated attempts list synchronously so we can check completion below
