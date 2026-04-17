@@ -3,8 +3,46 @@ import CertificateTemplate from "./CertificateTemplate";
 import { downloadCertificatePDF } from "../lib/downloadCertificate";
 import { motion, AnimatePresence } from "framer-motion";
 import { useParams, useNavigate } from "react-router-dom";
-import { coursesByDepartment, getDepartmentTitle, getCourseData } from "./courseData";
+import { getCourseData } from "./courseData";
 import "../pages/Learningpage.css";
+
+const API = "http://localhost:8000";
+
+function authHeaders() {
+  return { Authorization: `Bearer ${localStorage.getItem("token")}` };
+}
+
+function mapDbCourse(c) {
+  const allQuiz = (c.modules || []).flatMap(mod =>
+    (mod.quiz_questions || []).map(q => ({
+      id: q.id,
+      question: q.question,
+      options: q.options || ["", "", "", ""],
+      correctIndex: q.correct_answer,
+    }))
+  );
+  return {
+    id: c.id,
+    title: c.title,
+    icon: c.icon || "📘",
+    description: c.description || "",
+    totalDuration: c.total_duration || "",
+    chapters: (c.modules || []).map(mod => ({
+      id: mod.id,
+      title: mod.title,
+      lessons: (mod.topics || []).map(t => ({
+        id: t.id,
+        title: t.title,
+        duration: t.duration || "15min",
+        videoUrl: t.video_url || "",
+        content: t.content || "",
+        topics: [],
+      })),
+    })),
+    quizPool: allQuiz,
+    _moduleIds: (c.modules || []).map(m => m.id),
+  };
+}
 
 
 
@@ -132,7 +170,23 @@ const LearningPage = () => {
   const { departmentId, courseId } = useParams();
   const navigate = useNavigate();
 
-  const course     = getCourseData(departmentId || "", courseId || "");
+  const isDatabaseCourse = departmentId === "db";
+  const [dbCourse, setDbCourse]   = useState(null);
+  const [dbLoading, setDbLoading] = useState(isDatabaseCourse);
+
+  useEffect(() => {
+    if (!isDatabaseCourse) return;
+    fetch(`${API}/study/my-assigned-courses`, { headers: authHeaders() })
+      .then(r => r.json())
+      .then(courses => {
+        const found = courses.find(c => c.id === parseInt(courseId));
+        if (found) setDbCourse(mapDbCourse(found));
+      })
+      .catch(() => {})
+      .finally(() => setDbLoading(false));
+  }, [isDatabaseCourse, courseId]);
+
+  const course     = isDatabaseCourse ? dbCourse : getCourseData(departmentId || "", courseId || "");
   const allLessons = course ? course.chapters.flatMap(ch => ch.lessons) : [];
 
   const [stage, setStage]                         = useState("learning");
@@ -140,9 +194,13 @@ const LearningPage = () => {
   const [lessonProgress, setLessonProgress]       = useState({});
   const [lessonsCompleted, setLessonsCompleted]   = useState(new Set());
   const [isPlaying, setIsPlaying]                 = useState(false);
-  const [expandedChapters, setExpandedChapters]   = useState(
-    new Set(course ? [course.chapters[0]?.id] : [])
-  );
+  const [expandedChapters, setExpandedChapters]   = useState(new Set());
+
+  useEffect(() => {
+    if (course?.chapters?.length > 0) {
+      setExpandedChapters(new Set([course.chapters[0].id]));
+    }
+  }, [course?.id]);
   const [certificateUnlocked, setCertificateUnlocked] = useState(false);
   const [certData, setCertData] = useState(null);
   const [certLoading, setCertLoading] = useState(false);
@@ -157,7 +215,29 @@ const LearningPage = () => {
   // Progress simulation tick
 
 
-  // Course not found
+  const markLessonComplete = useCallback((lessonId, timeSpentSeconds = 0) => {
+    setLessonProgress(prev => ({ ...prev, [lessonId]: 100 }));
+    setLessonsCompleted(prev => new Set(prev).add(lessonId));
+    if (isDatabaseCourse && typeof lessonId === "number") {
+      fetch(`${API}/study/progress`, {
+        method: "POST",
+        headers: { ...authHeaders(), "Content-Type": "application/json" },
+        body: JSON.stringify({ topic_id: lessonId, time_spent_seconds: timeSpentSeconds }),
+      }).catch(() => {});
+    }
+  }, [isDatabaseCourse]);
+
+  // Loading / not found
+  if (dbLoading) {
+    return (
+      <div className="lp-notfound">
+        <div className="lp-notfound__card">
+          <p className="lp-notfound__desc">Loading course…</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!course) {
     return (
       <div className="lp-notfound">
@@ -202,6 +282,19 @@ const LearningPage = () => {
     let correct = 0;
     quizQuestions.forEach((q, i) => { if (selectedAnswers[i] === q.correctIndex) correct++; });
     setScore(correct);
+
+    if (isDatabaseCourse && course._moduleIds?.length) {
+      const answers = {};
+      quizQuestions.forEach((q, i) => {
+        if (selectedAnswers[i] !== undefined) answers[q.id] = selectedAnswers[i];
+      });
+      fetch(`${API}/study/quiz`, {
+        method: "POST",
+        headers: { ...authHeaders(), "Content-Type": "application/json" },
+        body: JSON.stringify({ module_id: course._moduleIds[0], answers }),
+      }).catch(() => {});
+    }
+
     setStage("result");
     if (correct >= 7) {
       setCertificateUnlocked(true);
@@ -402,10 +495,7 @@ const LearningPage = () => {
     const pct = (e.target.currentTime / e.target.duration) * 100;
     setLessonProgress(prev => ({ ...prev, [selectedLessonId]: pct }));
   }}
-  onEnded={() => {
-    setLessonProgress(prev => ({ ...prev, [selectedLessonId]: 100 }));
-    setLessonsCompleted(prev => new Set(prev).add(selectedLessonId));
-  }}
+  onEnded={(e) => markLessonComplete(selectedLessonId, Math.round(e.target.duration || 0))}
 />
                       ) : (
                         /* w-full h-full nav-gradient flex items-center justify-center */
@@ -424,18 +514,27 @@ const LearningPage = () => {
                         <span className="lp-controls__label">Lesson Progress</span>
                         <div className="lp-controls__right">
                           {!selectedCompleted && (
-                            /* rounded-full text-xs h-7 px-3 gap-1 */
-                            <Btn
-                              size="sm"
-                              variant={isPlaying ? "secondary" : "default"}
-                              onClick={() => setIsPlaying(!isPlaying)}
-                              className="lp-btn--pill lp-btn--h7"
-                            >
-                              {isPlaying
-                                ? <><IconPause size={12} /> Pause</>
-                                : <><IconPlay size={12} /> {selectedProgress > 0 ? "Continue" : "Mark Progress"}</>
-                              }
-                            </Btn>
+                            selectedLesson?.videoUrl ? (
+                              <Btn
+                                size="sm"
+                                variant={isPlaying ? "secondary" : "default"}
+                                onClick={() => setIsPlaying(!isPlaying)}
+                                className="lp-btn--pill lp-btn--h7"
+                              >
+                                {isPlaying
+                                  ? <><IconPause size={12} /> Pause</>
+                                  : <><IconPlay size={12} /> {selectedProgress > 0 ? "Continue" : "Play"}</>
+                                }
+                              </Btn>
+                            ) : (
+                              <Btn
+                                size="sm"
+                                onClick={() => markLessonComplete(selectedLessonId)}
+                                className="lp-btn--pill lp-btn--h7"
+                              >
+                                <IconCheck size={12} /> Mark as Complete
+                              </Btn>
+                            )
                           )}
                           {selectedCompleted && (
                             /* flex items-center gap-1 text-xs text-emerald-600 font-semibold */

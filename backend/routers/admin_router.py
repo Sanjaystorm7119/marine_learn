@@ -265,6 +265,57 @@ def get_user_course_management_data(db: Session = Depends(get_db), _: models.Use
 
     return result
 
+# ── Course Management ──────────────────────────────────────────────────────────
+
+@router.get("/courses")
+def list_courses(db: Session = Depends(get_db), _: models.User = Depends(require_admin)):
+    courses = db.query(models.Course).order_by(models.Course.order_num).all()
+    return [crud.build_admin_course_response(c) for c in courses]
+
+
+@router.get("/courses/{course_id}")
+def get_course(course_id: int, db: Session = Depends(get_db), _: models.User = Depends(require_admin)):
+    course = db.query(models.Course).filter(models.Course.id == course_id).first()
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found")
+    return crud.build_admin_course_response(course)
+
+
+@router.post("/courses", status_code=201)
+def create_course(
+    payload: schemas.CourseInput,
+    db: Session = Depends(get_db),
+    _: models.User = Depends(require_admin),
+):
+    course = crud.create_course_full(db, payload)
+    return crud.build_admin_course_response(course)
+
+
+@router.put("/courses/{course_id}")
+def update_course(
+    course_id: int,
+    payload: schemas.CourseInput,
+    db: Session = Depends(get_db),
+    _: models.User = Depends(require_admin),
+):
+    course = crud.update_course_full(db, course_id, payload)
+    if not course:
+        raise HTTPException(status_code=404, detail="Course not found")
+    return crud.build_admin_course_response(course)
+
+
+@router.delete("/courses/{course_id}")
+def delete_course(
+    course_id: int,
+    db: Session = Depends(get_db),
+    _: models.User = Depends(require_admin),
+):
+    ok = crud.delete_course_full(db, course_id)
+    if not ok:
+        raise HTTPException(status_code=404, detail="Course not found")
+    return {"message": "Course deleted successfully"}
+
+
 @router.post("/repair-module-links")
 def repair_module_links(db: Session = Depends(get_db), _: models.User = Depends(require_admin)):
     """

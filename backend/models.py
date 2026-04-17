@@ -22,6 +22,8 @@ class Course(Base):
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, nullable=False)
     description = Column(Text)
+    icon = Column(String, default="📘")
+    total_duration = Column(String, default="")
     order_num = Column(Integer, default=0)
 
     modules = relationship("StudyModule", back_populates="course", order_by="StudyModule.order_num")
@@ -48,6 +50,8 @@ class StudyTopic(Base):
     module_id = Column(Integer, ForeignKey("study_modules.id"), nullable=False)
     title = Column(String, nullable=False)
     content = Column(Text)
+    duration = Column(String, default="15min")
+    video_url = Column(String, nullable=True)
     order_num = Column(Integer, default=0)
 
     module = relationship("StudyModule", back_populates="topics")

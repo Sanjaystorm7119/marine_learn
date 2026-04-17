@@ -1,7 +1,7 @@
-import { useState, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { coursesByDepartment } from "./courseData";
+// import { coursesByDepartment } from "./courseData"; // replaced by API
 import {
   LayoutDashboard, BookOpen, Award, BarChart3,
   FileText, Settings, HelpCircle, Calendar,
@@ -54,10 +54,30 @@ const MyCourses = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
-  const allCourses = useMemo(() => {
-    return Object.entries(coursesByDepartment).flatMap(([deptId, courses]) =>
-      courses.map(c => ({ ...c, departmentId: deptId }))
-    );
+  const [allCourses, setAllCourses] = useState([]);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    fetch("http://localhost:8000/study/my-assigned-courses", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(r => r.json())
+      .then(courses => {
+        setAllCourses(courses.map(c => ({
+          id: c.id,
+          title: c.title,
+          icon: c.icon || "📘",
+          description: c.description || "",
+          totalDuration: c.total_duration || "",
+          departmentId: "db",
+          chapters: (c.modules || []).map(mod => ({
+            id: mod.id,
+            title: mod.title,
+            lessons: (mod.topics || []),
+          })),
+        })));
+      })
+      .catch(() => {});
   }, []);
 
   return (
@@ -140,7 +160,7 @@ const MyCourses = () => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.04 * i, duration: 0.4 }}
                     className="mc-card"
-                    onClick={() => navigate(`/learn/${course.departmentId}/${course.id}`)}
+                    onClick={() => navigate(`/learn/db/${course.id}`)}
                   >
                     <div className="mc-card__thumb nav-gradient">
                       <span className="mc-card__icon">{course.icon}</span>

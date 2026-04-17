@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -7,10 +7,77 @@ import {
   BarChart3, FileText, HelpCircle,
   ArrowLeft, GripVertical, Save, Video, X
 } from "lucide-react";
-import { coursesByDepartment } from "./courseData";
+// import { coursesByDepartment } from "./courseData"; // removed: courses now come from API
 import { toast } from "sonner";
 
 import "../pages/AdminCourse.css";
+
+const API = "http://127.0.0.1:8000";
+
+function authHeaders() {
+  return { Authorization: `Bearer ${localStorage.getItem("token")}` };
+}
+
+function mapApiCourse(c) {
+  return {
+    id: c.id,
+    title: c.title,
+    icon: c.icon || "📘",
+    description: c.description || "",
+    totalDuration: c.total_duration || "",
+    chapters: (c.modules || []).map((mod, i) => ({
+      id: mod.id,
+      title: mod.title,
+      isExpanded: i === 0,
+      lessons: (mod.topics || []).map(t => ({
+        id: t.id,
+        title: t.title,
+        duration: t.duration || "15min",
+        videoUrl: t.video_url || "",
+        content: t.content || "",
+        topics: [],
+      })),
+    })),
+    quizPool: (c.quiz_questions || []).map(q => ({
+      id: q.id,
+      question: q.question,
+      options: q.options || ["", "", "", ""],
+      correctIndex: q.correct_answer,
+    })),
+  };
+}
+
+function buildSavePayload({ title, icon, description, totalDuration, modules, quizQuestions }) {
+  return {
+    title,
+    icon,
+    description,
+    total_duration: totalDuration,
+    order_num: 0,
+    modules: modules.map((mod, i) => ({
+      id: typeof mod.id === "number" ? mod.id : null,
+      title: mod.title,
+      description: null,
+      order_num: i,
+      lessons: mod.lessons.map((l, j) => ({
+        id: typeof l.id === "number" ? l.id : null,
+        title: l.title,
+        content: l.content || "",
+        duration: l.duration || "15min",
+        video_url: l.videoUrl || "",
+        order_num: j,
+      })),
+    })),
+    quiz_questions: quizQuestions.map((q, k) => ({
+      id: typeof q.id === "number" ? q.id : null,
+      question: q.question,
+      options: q.options,
+      correct_answer: q.correctIndex,
+      explanation: null,
+      order_num: k,
+    })),
+  };
+}
 
 /* ─────────────────────────────────────────────
    COURSE MANAGEMENT
@@ -21,25 +88,42 @@ export const CourseManagement = () => {
   const [viewMode, setViewMode] = useState("table");
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [expandedModules, setExpandedModules] = useState({});
+  const [allCourses, setAllCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const allCourses = useMemo(() => {
-    return Object.entries(coursesByDepartment).flatMap(([deptId, courses]) =>
-      courses.map(c => ({ ...c, departmentId: deptId }))
-    );
+  useEffect(() => {
+    fetch(`${API}/admin/courses`, { headers: authHeaders() })
+      .then(r => r.json())
+      .then(data => setAllCourses(data.map(mapApiCourse)))
+      .catch(() => toast.error("Failed to load courses"))
+      .finally(() => setLoading(false));
   }, []);
 
-  const filteredCourses = useMemo(() => {
-    return allCourses.filter(course =>
-      course.title.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [allCourses, searchQuery]);
+  const filteredCourses = useMemo(() =>
+    allCourses.filter(c => c.title.toLowerCase().includes(searchQuery.toLowerCase())),
+    [allCourses, searchQuery]
+  );
 
   const totalLessons = allCourses.reduce((acc, c) => acc + c.chapters.reduce((a, ch) => a + ch.lessons.length, 0), 0);
   const totalModules = allCourses.reduce((acc, c) => acc + c.chapters.length, 0);
   const totalQuizzes = allCourses.reduce((acc, c) => acc + c.quizPool.length, 0);
 
-  const toggleModuleExpand = (id) => {
+  const toggleModuleExpand = (id) =>
     setExpandedModules(prev => ({ ...prev, [id]: !prev[id] }));
+
+  const handleDelete = async (courseId) => {
+    if (!window.confirm("Delete this course? This cannot be undone.")) return;
+    const res = await fetch(`${API}/admin/courses/${courseId}`, {
+      method: "DELETE",
+      headers: authHeaders(),
+    });
+    if (res.ok) {
+      setAllCourses(prev => prev.filter(c => c.id !== courseId));
+      setSelectedCourse(null);
+      toast.success("Course deleted");
+    } else {
+      toast.error("Failed to delete course");
+    }
   };
 
   const stats = [
@@ -48,6 +132,8 @@ export const CourseManagement = () => {
     { label: "Total Lessons",   value: totalLessons,       Icon: FileText,   colorClass: "stat-amber"  },
     { label: "Quiz Questions",  value: totalQuizzes,       Icon: HelpCircle, colorClass: "stat-violet" },
   ];
+
+  if (loading) return <div className="ac-page"><p style={{ padding: "2rem" }}>Loading courses…</p></div>;
 
   return (
     <div className="ac-page">
@@ -154,7 +240,7 @@ export const CourseManagement = () => {
                           <button className="ac-icon-btn ac-icon-btn-edit" onClick={() => navigate(`/admin/courses/edit/${course.id}`)}>
                             <Edit size={16} />
                           </button>
-                          <button className="ac-icon-btn ac-icon-btn-del">
+                          <button className="ac-icon-btn ac-icon-btn-del" onClick={() => handleDelete(course.id)}>
                             <Trash2 size={16} />
                           </button>
                         </div>
@@ -312,7 +398,7 @@ export const CourseManagement = () => {
                   >
                     <Edit size={16} /> Edit Course
                   </button>
-                  <button className="ac-btn ac-btn-danger">
+                  <button className="ac-btn ac-btn-danger" onClick={() => handleDelete(selectedCourse.id)}>
                     <Trash2 size={16} /> Delete
                   </button>
                 </div>
@@ -334,39 +420,40 @@ export const CourseForm = () => {
   const { courseId } = useParams();
   const isEditing = !!courseId;
 
-  const existingCourse = isEditing
-    ? Object.values(coursesByDepartment).flat().find(c => c.id === courseId)
-    : null;
+  // Removed: const existingCourse = isEditing
+  //   ? Object.values(coursesByDepartment).flat().find(c => c.id === courseId)
+  //   : null;
 
-  const [title, setTitle]               = useState(existingCourse?.title || "");
-  const [icon, setIcon]                 = useState(existingCourse?.icon  || "📘");
-  const [description, setDescription]  = useState(existingCourse?.description || "");
-  const [totalDuration, setTotalDuration] = useState(existingCourse?.totalDuration || "");
+  const [loading, setLoading] = useState(isEditing);
+  const [saving, setSaving]   = useState(false);
+
+  const [title, setTitle]               = useState("");
+  const [icon, setIcon]                 = useState("📘");
+  const [description, setDescription]  = useState("");
+  const [totalDuration, setTotalDuration] = useState("");
   const [activeTab, setActiveTab]       = useState("details");
+  const [modules, setModules]           = useState([]);
+  const [quizQuestions, setQuizQuestions] = useState([]);
 
-  const [modules, setModules] = useState(
-    existingCourse?.chapters.map((ch, i) => ({
-      id: ch.id,
-      title: ch.title,
-      isExpanded: i === 0,
-      lessons: ch.lessons.map(l => ({
-        id: l.id,
-        title: l.title,
-        duration: l.duration,
-        videoUrl: l.videoUrl || "",
-        topics: l.topics,
-      })),
-    })) || []
-  );
-
-  const [quizQuestions, setQuizQuestions] = useState(
-    existingCourse?.quizPool.map(q => ({
-      id: q.id,
-      question: q.question,
-      options: [...q.options],
-      correctIndex: q.correctIndex,
-    })) || []
-  );
+  useEffect(() => {
+    if (!isEditing) return;
+    fetch(`${API}/admin/courses/${courseId}`, { headers: authHeaders() })
+      .then(r => {
+        if (!r.ok) throw new Error("Not found");
+        return r.json();
+      })
+      .then(data => {
+        const mapped = mapApiCourse(data);
+        setTitle(mapped.title);
+        setIcon(mapped.icon);
+        setDescription(mapped.description);
+        setTotalDuration(mapped.totalDuration);
+        setModules(mapped.chapters);
+        setQuizQuestions(mapped.quizPool);
+      })
+      .catch(() => toast.error("Failed to load course"))
+      .finally(() => setLoading(false));
+  }, [courseId, isEditing]);
 
   /* ── module helpers ── */
   const addModule = () =>
@@ -384,7 +471,7 @@ export const CourseForm = () => {
   /* ── lesson helpers ── */
   const addLesson = modIdx =>
     setModules(prev => prev.map((m, i) => i === modIdx
-      ? { ...m, lessons: [...m.lessons, { id: `lesson-${Date.now()}`, title: "", duration: "15min", videoUrl: "", topics: [] , content: ""}] }
+      ? { ...m, lessons: [...m.lessons, { id: `lesson-${Date.now()}`, title: "", duration: "15min", videoUrl: "", topics: [], content: "" }] }
       : m));
 
   const removeLesson = (modIdx, lesIdx) =>
@@ -414,16 +501,34 @@ export const CourseForm = () => {
 
   const totalLessons = modules.reduce((a, m) => a + m.lessons.length, 0);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!title.trim()) { toast.error("Course title is required"); return; }
-    toast.success(isEditing ? "Course updated successfully!" : "Course created successfully!");
-    navigate("/admin/courses");
+    setSaving(true);
+    const payload = buildSavePayload({ title, icon, description, totalDuration, modules, quizQuestions });
+    try {
+      const url = isEditing ? `${API}/admin/courses/${courseId}` : `${API}/admin/courses`;
+      const method = isEditing ? "PUT" : "POST";
+      const res = await fetch(url, {
+        method,
+        headers: { ...authHeaders(), "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) throw new Error("Save failed");
+      toast.success(isEditing ? "Course updated successfully!" : "Course created successfully!");
+      navigate("/admin/courses");
+    } catch {
+      toast.error("Failed to save course");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const tabLabel = tab =>
     tab === "details" ? "Course Details"
     : tab === "modules" ? `Modules (${modules.length})`
     : `Quiz (${quizQuestions.length})`;
+
+  if (loading) return <div className="ac-page"><p style={{ padding: "2rem" }}>Loading course…</p></div>;
 
   return (
     <div className="ac-page ac-form-page">
@@ -440,8 +545,8 @@ export const CourseForm = () => {
             </p>
           </div>
         </div>
-        <button className="ac-btn ac-btn-primary" onClick={handleSave}>
-          <Save size={16} /> {isEditing ? "Update" : "Create"} Course
+        <button className="ac-btn ac-btn-primary" onClick={handleSave} disabled={saving}>
+          <Save size={16} /> {saving ? "Saving…" : (isEditing ? "Update" : "Create") + " Course"}
         </button>
       </div>
 
@@ -587,7 +692,7 @@ export const CourseForm = () => {
                             onChange={e => updateLesson(modIdx, lesIdx, "videoUrl", e.target.value)}
                             placeholder="Video URL (YouTube embed link)..."
                           />
-                           <textarea
+                          <textarea
                             className="ac-input ac-url-input"
                             value={lesson.content || ""}
                             onChange={e => updateLesson(modIdx, lesIdx, "content", e.target.value)}
