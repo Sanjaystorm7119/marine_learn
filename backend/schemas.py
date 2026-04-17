@@ -93,6 +93,8 @@ class StudyTopicResponse(BaseModel):
     module_id: int
     title: str
     content: str | None = None
+    duration: str = "15min"
+    video_url: str | None = None
     order_num: int
 
     class Config:
@@ -156,6 +158,8 @@ class CourseResponse(BaseModel):
     id: int
     title: str
     description: str | None = None
+    icon: str = "📘"
+    total_duration: str = ""
     order_num: int
     modules: list[StudyModuleResponse]
 
@@ -249,4 +253,42 @@ class AdminRoleResponse(BaseModel):
     userCount: int = 0 # We will calculate this in the router!
 
     class Config:
-        from_attributes = True    
+        from_attributes = True
+
+
+# ── Course Management Input ────────────────────────────────────────────────────
+
+class LessonInput(BaseModel):
+    id: int | None = None
+    title: str
+    content: str | None = None
+    duration: str = "15min"
+    video_url: str | None = None
+    order_num: int = 0
+
+
+class ModuleInput(BaseModel):
+    id: int | None = None
+    title: str
+    description: str | None = None
+    order_num: int = 0
+    lessons: list[LessonInput] = []
+
+
+class QuizInput(BaseModel):
+    id: int | None = None
+    question: str
+    options: list[str]
+    correct_answer: int
+    explanation: str | None = None
+    order_num: int = 0
+
+
+class CourseInput(BaseModel):
+    title: str
+    description: str | None = None
+    icon: str = "📘"
+    total_duration: str = ""
+    order_num: int = 0
+    modules: list[ModuleInput] = []
+    quiz_questions: list[QuizInput] = []

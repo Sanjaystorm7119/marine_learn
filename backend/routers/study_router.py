@@ -528,7 +528,16 @@ def get_dashboard_data(
             for topic in module.topics
         ]
         total = len(topic_ids)
+
         if total == 0:
+            in_progress.append({
+                "course_id": course.id,
+                "course_title": course.title,
+                "progress_pct": 0,
+                "completed_topics": 0,
+                "total_topics": 0,
+                "next_module_title": course.modules[0].title if course.modules else "Module 1",
+            })
             continue
 
         done = sum(1 for tid in topic_ids if tid in completed_set)
@@ -536,23 +545,23 @@ def get_dashboard_data(
 
         if pct >= 100:
             completed_count += 1
-        else:
-            # First module that still has incomplete topics
-            next_module = None
-            for module in course.modules:
-                mod_topic_ids = [t.id for t in module.topics]
-                if mod_topic_ids and not all(tid in completed_set for tid in mod_topic_ids):
-                    next_module = module.title
-                    break
 
-            in_progress.append({
-                "course_id": course.id,
-                "course_title": course.title,
-                "progress_pct": pct,
-                "completed_topics": done,
-                "total_topics": total,
-                "next_module_title": next_module,
-            })
+        # First module that still has incomplete topics
+        next_module = None
+        for module in course.modules:
+            mod_topic_ids = [t.id for t in module.topics]
+            if mod_topic_ids and not all(tid in completed_set for tid in mod_topic_ids):
+                next_module = module.title
+                break
+
+        in_progress.append({
+            "course_id": course.id,
+            "course_title": course.title,
+            "progress_pct": pct,
+            "completed_topics": done,
+            "total_topics": total,
+            "next_module_title": next_module,
+        })
 
     total_seconds = (
         db.query(func.sum(models.UserTopicProgress.time_spent_seconds))
