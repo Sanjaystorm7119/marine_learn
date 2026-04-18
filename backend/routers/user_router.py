@@ -29,6 +29,38 @@ router = APIRouter(prefix="/users", tags=["Users"])
 def read_users_me(current_user: models.User = Depends(get_current_user)):
     return current_user
 
+# <-- NEW ENDPOINT FOR SETTINGS PAGE -->
+@router.put("/me", response_model=schemas.UserResponse)
+def update_user_me(
+    profile_data: schemas.UserProfileUpdate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    if profile_data.phone is not None:
+        current_user.phone = profile_data.phone
+    if profile_data.vessel is not None:
+        current_user.vessel = profile_data.vessel
+        
+    db.commit()
+    db.refresh(current_user)
+    return current_user
+
+@router.put("/me/password")
+def update_password(
+    pass_data: schemas.UserPasswordUpdate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    # 1. Verify the current password is correct
+    if not crud.verify_password(pass_data.current_password, current_user.hashed_password):
+        raise HTTPException(status_code=400, detail="Incorrect current password")
+    
+    # 2. Hash and save the new password
+    current_user.hashed_password = crud.hash_password(pass_data.new_password)
+    db.commit()
+    
+    return {"message": "Password updated successfully"}
+
 
 # ── Admin-only user management ────────────────────────────────────────────────
 
@@ -37,8 +69,9 @@ def get_all_users(
     db: Session = Depends(get_db),
     _: models.User = Depends(require_admin),
 ):
-    users = db.query(models.User).all()
-    return [
+    # Added order_by to sort IDs from 1 upwards
+    users = db.query(models.User).order_by(models.User.id.asc()).all()
+    return[
         {"id": u.id, "full_name": u.full_name, "email": u.email, "role": u.role}
         for u in users
     ]
@@ -106,6 +139,15 @@ def delete_user(
     user = db.query(models.User).filter(models.User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+    
+    # 1. Delete all related records first to prevent Foreign Key database crashes
+    db.query(models.UserTopicProgress).filter(models.UserTopicProgress.user_id == user_id).delete()
+    db.query(models.UserQuizAttempt).filter(models.UserQuizAttempt.user_id == user_id).delete()
+    db.query(models.UserCourseAssignment).filter(models.UserCourseAssignment.user_id == user_id).delete()
+    db.query(models.Certificate).filter(models.Certificate.user_id == user_id).delete()
+    db.query(models.Notification).filter(models.Notification.user_id == user_id).delete()
+    
+    # 2. Now it is safe to delete the user
     db.delete(user)
     db.commit()
     return {"message": "User deleted successfully"}

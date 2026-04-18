@@ -27,11 +27,20 @@ class UserResponse(BaseModel):
     email: EmailStr
     role: str
     role_lead: str = "Will be assigned by admin"
+    phone: str | None = None      # <-- NEW
+    vessel: str | None = None    # <-- NEW
 
     class Config:
         from_attributes = True
 
+# <-- NEW SCHEMA FOR SETTINGS PAGE -->
+class UserProfileUpdate(BaseModel):
+    phone: str | None = None
+    vessel: str | None = None
 
+class UserPasswordUpdate(BaseModel):
+    current_password: str
+    new_password: str    
 # ── Admin ─────────────────────────────────────────────────────────────────────
 
 class AdminUserCreate(BaseModel):

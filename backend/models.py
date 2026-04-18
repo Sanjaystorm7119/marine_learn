@@ -14,6 +14,8 @@ class User(Base):
     hashed_password = Column(String)
     role = Column(String, default="crew")
     role_lead = Column(String, default="Will be assigned by admin") # <-- ADDED THIS
+    phone = Column(String, nullable=True)    # <-- NEW
+    vessel = Column(String, nullable=True)  # <-- NEW
 
 
 class Course(Base):

@@ -378,3 +378,12 @@
   .settings-form-grid { grid-template-columns: 1fr; }
   .form-group.full-width { grid-column: 1; }
 }
+/* FROM: (nothing) */
+
+/* TO: */
+.input-readonly {
+  background: #f3f4f6 !important;
+  color: #9ca3af !important;
+  cursor: not-allowed !important;
+  border-color: #e5e7eb !important;
+}

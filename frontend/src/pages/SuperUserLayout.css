@@ -1,0 +1,556 @@
+/* =====================
+   SuperUserLayout.css
+   ===================== */
+
+/* nav-gradient utility (mirrors index.css) */
+.nav-gradient {
+  background: linear-gradient(135deg, hsl(207, 52%, 40%), hsl(201, 53%, 56%));
+}
+
+/* Root shell */
+.sul-root {
+  min-height: 100vh;
+  background: #f0f4f8;
+  display: flex;
+}
+
+/* =====================
+   Sidebar
+   ===================== */
+.sul-sidebar {
+  display: none;
+  flex-direction: column;
+  border-right: 1px solid #e8eef4;
+  background: #ffffff;
+  transition: width 0.3s ease;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+@media (min-width: 1024px) {
+  .sul-sidebar {
+    display: flex;
+  }
+}
+
+.sul-sidebar--open {
+  width: 240px;
+}
+
+.sul-sidebar--collapsed {
+  width: 72px;
+}
+
+.sul-sidebar-inner {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* Logo */
+.sul-sidebar-logo {
+  padding: 1rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.sul-logo-link {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+}
+
+.sul-logo-icon {
+  width: 1.75rem;
+  height: 1.75rem;
+  color: hsl(207, 52%, 40%);
+  flex-shrink: 0;
+}
+
+.sul-logo-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1;
+}
+
+.sul-logo-title {
+  font-size: 0.9375rem;
+  font-weight: 800;
+  color: #1a2e42;
+  letter-spacing: -0.02em;
+}
+
+.sul-logo-sub {
+  font-size: 0.5625rem;
+  color: #6b7f96;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-top: 0.125rem;
+}
+
+/* Nav */
+.sul-nav {
+  flex: 1;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.sul-nav-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 0.75rem;
+  border: none;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: #6b7f96;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.sul-nav-btn:hover {
+  color: #1a2e42;
+  background: #f0f4f8;
+}
+
+.sul-nav-btn--active {
+  background: hsl(207, 52%, 40%);
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(58, 124, 189, 0.3);
+}
+
+.sul-nav-btn--active:hover {
+  background: hsl(207, 52%, 36%);
+  color: #ffffff;
+}
+
+.sul-nav-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+}
+
+/* Sidebar footer / user area */
+.sul-sidebar-footer {
+  padding: 0.75rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.sul-user-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+}
+
+.sul-user-avatar {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  background: hsl(207, 52%, 90%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sul-user-avatar-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: hsl(207, 52%, 40%);
+}
+
+.sul-user-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.sul-user-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #1a2e42;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sul-user-role {
+  font-size: 0.75rem;
+  color: #6b7f96;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sul-logout-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #6b7f96;
+  padding: 0.25rem;
+  border-radius: 0.375rem;
+  display: flex;
+  align-items: center;
+  transition: color 0.2s;
+}
+
+.sul-logout-btn:hover {
+  color: #e53e3e;
+}
+
+.sul-logout-icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+/* =====================
+   Mobile sidebar
+   ===================== */
+.sul-mobile-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+}
+
+@media (min-width: 1024px) {
+  .sul-mobile-overlay {
+    display: none;
+  }
+}
+
+.sul-mobile-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(26, 46, 66, 0.3);
+  backdrop-filter: blur(4px);
+}
+
+.sul-mobile-sidebar {
+  position: relative;
+  width: 240px;
+  height: 100%;
+  background: #ffffff;
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.12);
+}
+
+/* =====================
+   Main area
+   ===================== */
+.sul-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* =====================
+   Header
+   ===================== */
+.sul-header {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  height: 4rem;
+  display: flex;
+  align-items: center;
+  padding: 0 1rem;
+  gap: 1rem;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
+}
+
+@media (min-width: 1024px) {
+  .sul-header {
+    padding: 0 1.5rem;
+  }
+}
+
+.sul-menu-btn {
+  padding: 0.5rem;
+  border: none;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.9);
+  cursor: pointer;
+  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.sul-menu-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.sul-menu-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+/* Search */
+.sul-search-wrap {
+  flex: 1;
+  max-width: 28rem;
+}
+
+.sul-search-inner {
+  position: relative;
+}
+
+.sul-search-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1rem;
+  height: 1rem;
+  color: rgba(255, 255, 255, 0.5);
+  pointer-events: none;
+}
+
+.sul-search-input {
+  width: 100%;
+  padding: 0.5rem 1rem 0.5rem 2.5rem;
+  border: none;
+  border-radius: 0.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  font-size: 0.875rem;
+  outline: none;
+  transition: box-shadow 0.2s;
+  box-sizing: border-box;
+}
+
+.sul-search-input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.sul-search-input:focus {
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
+}
+
+/* Header actions */
+.sul-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+/* Notification bell */
+.sul-notif-btn {
+  position: relative;
+  padding: 0.5rem;
+  border: none;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.9);
+  cursor: pointer;
+  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+}
+
+.sul-notif-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.sul-notif-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.sul-notif-dot {
+  position: absolute;
+  top: 0.375rem;
+  right: 0.375rem;
+  width: 0.5rem;
+  height: 0.5rem;
+  background: #e53e3e;
+  border-radius: 50%;
+}
+
+/* Profile */
+.sul-profile-wrap {
+  position: relative;
+}
+
+.sul-profile-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem;
+  border: none;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.9);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.sul-profile-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.sul-profile-avatar {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
+}
+
+.sul-profile-avatar-icon {
+  width: 1rem;
+  height: 1rem;
+  color: #ffffff;
+}
+
+.sul-chevron {
+  width: 0.875rem;
+  height: 0.875rem;
+  transition: transform 0.2s;
+}
+
+.sul-chevron--open {
+  transform: rotate(180deg);
+}
+
+/* Dropdown */
+.sul-dropdown {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.5rem);
+  width: 18rem;
+  background: #ffffff;
+  border: 1px solid #e8eef4;
+  border-radius: 0.75rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  z-index: 50;
+  overflow: hidden;
+}
+
+.sul-dropdown-header {
+  padding: 1rem 1.25rem;
+}
+
+.sul-dropdown-user {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.sul-dropdown-avatar {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
+  flex-shrink: 0;
+}
+
+.sul-dropdown-avatar-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: #ffffff;
+}
+
+.sul-dropdown-name {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+}
+
+.sul-dropdown-email {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0;
+}
+
+.sul-dropdown-body {
+  padding: 1rem 1.25rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.sul-dropdown-role-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sul-dropdown-role-label {
+  font-size: 0.75rem;
+  color: #6b7f96;
+  font-weight: 500;
+}
+
+.sul-dropdown-role-badge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  background: hsl(207, 52%, 90%);
+  color: hsl(207, 52%, 40%);
+}
+
+.sul-dropdown-actions {
+  padding-top: 0.5rem;
+  border-top: 1px solid #e8eef4;
+}
+
+.sul-signout-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.5rem 0.75rem;
+  border: none;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: #1a2e42;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background 0.2s;
+  text-align: left;
+}
+
+.sul-signout-btn:hover {
+  background: #f0f4f8;
+}
+
+.sul-signout-icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+/* =====================
+   Content area
+   ===================== */
+.sul-content {
+  flex: 1;
+  padding: 1rem;
+  overflow-y: auto;
+}
+
+@media (min-width: 1024px) {
+  .sul-content {
+    padding: 1.5rem;
+  }
+}
