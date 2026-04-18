@@ -23,7 +23,11 @@ import StudyMaterials from "./components/StudyMaterials";
 import AdminRole from "./components/AdminRole"; 
 import AdminCourse from "./components/AdminCourse";
 import { CourseForm as AdminCourseForm } from "./components/AdminCourse";
-import AdminUserCourse from "./components/AdminUserCourse";  // 👈 ADD THIS
+import AdminUserCourse from "./components/AdminUserCourse";
+import AuditsPage from "./components/Audits";
+import PhishingDrillPage from "./components/Phishingdrillpage";  // 👈 ADD THIS
+import SuperuserLayout from "./components/SuperUserLayout";
+import TeamsMeetPage from "./components/TeamsMeetPage";
 import "./index.css";
 
 // Wrapper to hide standard Navbar & Footer on auth pages AND admin pages
@@ -40,6 +44,9 @@ const PublicLayout = ({ children }) => {
       "/study-materials",
       "/settings",
       "/help",
+      "/audits",              // ✅ ADD THIS
+      "/phishing-drill",
+      "/teams-meet",
     ].includes(location.pathname) || location.pathname.startsWith("/admin");
 
   return (
@@ -80,6 +87,32 @@ function App() {
                 />
                 {/* <Route path="/mycourses" element={<MyCourses />} /> */}
                 <Route path="/study-materials" element={<StudyMaterials />} />
+
+                {/* ✅ Superuser routes wrapped in SuperuserLayout */}
+                <Route
+                  path="/audits"
+                  element={
+                    <SuperuserLayout>
+                      <AuditsPage />
+                    </SuperuserLayout>
+                  }
+                />
+                <Route
+                  path="/phishing-drill"
+                  element={
+                    <SuperuserLayout>
+                      <PhishingDrillPage />
+                    </SuperuserLayout>
+                  }
+                />
+                <Route
+  path="/teams-meet"
+  element={
+    <SuperuserLayout>
+      <TeamsMeetPage />
+    </SuperuserLayout>
+  }
+/>
               </Routes>
             </PublicLayout>
           }

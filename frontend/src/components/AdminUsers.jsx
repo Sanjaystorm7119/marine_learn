@@ -10,7 +10,7 @@ const AdminUsers = () => {
   const [updateMessage, setUpdateMessage] = useState(null);
   const navigate = useNavigate();
 
-  const roles = ["crews", "officers", "department head", "admin"];
+  const roles = ["crews", "officers", "super user", "admin"];
 
   useEffect(() => {
     fetchUsers();

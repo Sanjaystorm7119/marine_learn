@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 import "../pages/settings.css";
@@ -7,14 +7,118 @@ const Settings = () => {
   const [activeTab, setActiveTab] = useState("profile");
   const navigate = useNavigate();
 
+  // --- NEW: State for Profile Data ---
+  const[userData, setUserData] = useState(null);
+  const [formData, setFormData] = useState({ phone: "", vessel: "" });
+  const [saveMessage, setSaveMessage] = useState("");
+
+  // --- NEW: Fetch User Data on Load ---
+  useEffect(() => {
+    const fetchProfile = async () => {
+      const token = localStorage.getItem("token") || localStorage.getItem("access_token");
+      if (!token) {
+        navigate("/login");
+        return;
+      }
+      try {
+        const res = await fetch("http://127.0.0.1:8000/users/me", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setUserData(data);
+          setFormData({
+            phone: data.phone || "",
+            vessel: data.vessel || "",
+          });
+        }
+      } catch (err) {
+        console.error("Failed to fetch profile", err);
+      }
+    };
+    fetchProfile();
+  }, [navigate]);
+
+  // --- NEW: Save Profile Data ---
+  // --- NEW: Save Profile Data ---
+  const handleSaveProfile = async () => {
+    const token = localStorage.getItem("token") || localStorage.getItem("access_token");
+    try {
+      const res = await fetch("http://127.0.0.1:8000/users/me", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (res.ok) {
+        const updatedData = await res.json();
+        setUserData(updatedData);
+        setSaveMessage("Profile updated successfully!");
+        setTimeout(() => setSaveMessage(""), 3000);
+      } else {
+        setSaveMessage("Failed to update profile.");
+        setTimeout(() => setSaveMessage(""), 3000);
+      }
+    } catch (err) {
+      console.error("Failed to save profile", err);
+    }
+  };
+
+  // --- NEW: Password State & Logic ---
+  const[passwords, setPasswords] = useState({ current: "", new: "", confirm: "" });
+  const[passMessage, setPassMessage] = useState({ text: "", type: "" });
+
+  const handleUpdatePassword = async () => {
+    if (passwords.new !== passwords.confirm) {
+      setPassMessage({ text: "New passwords do not match!", type: "error" });
+      setTimeout(() => setPassMessage({ text: "", type: "" }), 3000);
+      return;
+    }
+    if (passwords.new.length < 6) {
+      setPassMessage({ text: "Password must be at least 6 characters.", type: "error" });
+      setTimeout(() => setPassMessage({ text: "", type: "" }), 3000);
+      return;
+    }
+
+    const token = localStorage.getItem("token") || localStorage.getItem("access_token");
+    try {
+      const res = await fetch("http://127.0.0.1:8000/users/me/password", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          current_password: passwords.current,
+          new_password: passwords.new
+        }),
+      });
+
+      if (res.ok) {
+        setPassMessage({ text: "Password updated successfully!", type: "success" });
+        setPasswords({ current: "", new: "", confirm: "" }); // Clear form
+      } else {
+        const errData = await res.json();
+        setPassMessage({ text: errData.detail || "Failed to update password.", type: "error" });
+      }
+      setTimeout(() => setPassMessage({ text: "", type: "" }), 3000);
+    } catch (err) {
+      console.error("Failed to update password", err);
+    }
+  };
+
   const handleSignOut = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("access_token");
     localStorage.removeItem("role");
     localStorage.removeItem("full_name");
     navigate("/login");
   };
 
-  const userName = localStorage.getItem("full_name") || "User";
+  const userName = userData?.full_name || localStorage.getItem("full_name") || "User";
   const userInitials = userName.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
   const [toggles, setToggles] = useState({
     courseUpdates: true,
@@ -124,38 +228,55 @@ const Settings = () => {
                     </div>
                     <div>
                       <p className="profile-name">{userName}</p>
-                      <p className="profile-role">Maritime Professional</p>
+                      <p className="profile-role" style={{ textTransform: "capitalize" }}>
+                        {userData?.role || "Maritime Professional"}
+                      </p>
                     </div>
                   </div>
                   <hr className="settings-divider" />
-                  <div className="settings-form-grid">
-                    <div className="form-group">
-                      <label>First Name</label>
-                      <input type="text" defaultValue="John" />
+                  {saveMessage && (
+                    <div style={{ padding: "10px", backgroundColor: "#dcfce7", color: "#065f46", borderRadius: "6px", fontSize: "13px", fontWeight: "500", marginBottom: "15px" }}>
+                      {saveMessage}
                     </div>
-                    <div className="form-group">
-                      <label>Last Name</label>
-                      <input type="text" defaultValue="Doe" />
+                  )}
+
+                  <div className="settings-form-grid">
+                    {/* Read-Only Fields */}
+                    <div className="form-group full-width">
+                      <label>Full Name</label>
+                      <input type="text" value={userData?.full_name || ""} readOnly className="input-readonly" style={{ backgroundColor: "#f3f4f6", color: "#6b7280", cursor: "not-allowed" }} />
                     </div>
                     <div className="form-group">
                       <label>Email</label>
-                      <input type="email" defaultValue="john.doe@maritime.com" />
+                      <input type="email" value={userData?.email || ""} readOnly className="input-readonly" style={{ backgroundColor: "#f3f4f6", color: "#6b7280", cursor: "not-allowed" }} />
                     </div>
                     <div className="form-group">
-                      <label>Phone</label>
-                      <input type="text" defaultValue="+1 234 567 890" />
+                      <label>Role</label>
+                      <input type="text" value={userData?.role || ""} readOnly className="input-readonly" style={{ backgroundColor: "#f3f4f6", color: "#6b7280", cursor: "not-allowed", textTransform: "capitalize" }} />
                     </div>
-                    <div className="form-group full-width">
-                      <label>Designation / Rank</label>
-                      <input type="text" defaultValue="Third Officer" />
+
+                    {/* Editable Fields */}
+                    <div className="form-group">
+                      <label>Phone</label>
+                      <input 
+                        type="text" 
+                        value={formData.phone} 
+                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })} 
+                        placeholder="+1 234 567 890" 
+                      />
                     </div>
                     <div className="form-group full-width">
                       <label>Company / Vessel</label>
-                      <input type="text" defaultValue="Pacific Shipping Lines" />
+                      <input 
+                        type="text" 
+                        value={formData.vessel} 
+                        onChange={(e) => setFormData({ ...formData, vessel: e.target.value })} 
+                        placeholder="e.g. Pacific Shipping Lines" 
+                      />
                     </div>
                   </div>
                   <div className="settings-form-actions">
-                    <button className="btn-primary">
+                    <button className="btn-primary" onClick={handleSaveProfile}>
                       <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
                       </svg>
@@ -194,26 +315,60 @@ const Settings = () => {
               </div>
             )}
 
-            {activeTab === "security" && (
+           {activeTab === "security" && (
               <div className="settings-card">
                 <div className="settings-card-header">
                   <h2>Security Settings</h2>
                   <p>Manage your password and account security.</p>
                 </div>
                 <div className="settings-card-body">
+                  
+                  {passMessage.text && (
+                    <div style={{ 
+                      padding: "10px", 
+                      backgroundColor: passMessage.type === "success" ? "#dcfce7" : "#fee2e2", 
+                      color: passMessage.type === "success" ? "#065f46" : "#991b1b", 
+                      borderRadius: "6px", fontSize: "13px", fontWeight: "500", marginBottom: "10px" 
+                    }}>
+                      {passMessage.text}
+                    </div>
+                  )}
+
                   <div className="form-group">
                     <label>Current Password</label>
-                    <input type="password" placeholder="Enter current password" />
+                    <input 
+                      type="password" 
+                      placeholder="Enter current password" 
+                      value={passwords.current}
+                      onChange={(e) => setPasswords({...passwords, current: e.target.value})}
+                    />
                   </div>
                   <div className="form-group">
                     <label>New Password</label>
-                    <input type="password" placeholder="Enter new password" />
+                    <input 
+                      type="password" 
+                      placeholder="Enter new password" 
+                      value={passwords.new}
+                      onChange={(e) => setPasswords({...passwords, new: e.target.value})}
+                    />
                   </div>
                   <div className="form-group">
                     <label>Confirm New Password</label>
-                    <input type="password" placeholder="Confirm new password" />
+                    <input 
+                      type="password" 
+                      placeholder="Confirm new password" 
+                      value={passwords.confirm}
+                      onChange={(e) => setPasswords({...passwords, confirm: e.target.value})}
+                    />
                   </div>
-                  <button className="btn-primary">Update Password</button>
+                  <button 
+                    className="btn-primary" 
+                    style={{ width: "fit-content" }}
+                    onClick={handleUpdatePassword}
+                    disabled={!passwords.current || !passwords.new || !passwords.confirm}
+                  >
+                    Update Password
+                  </button>
                   <hr className="settings-divider" />
                   {[
                     { key: "twoFactor", title: "Two-Factor Authentication", desc: "Add an extra layer of security to your account." },

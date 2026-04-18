@@ -33,7 +33,7 @@ const AdminLayout = ({ children }) => {
   const navItems = [
     { name: 'Dashboard', path: '/admin', icon: LayoutDashboard },
     { name: 'User Management', path: '/admin/users', icon: Users },
-    { name: 'User Info',   path: '/admin/user-courses', icon: GraduationCap },
+    { name: 'User Info', path: '/admin/user-courses', icon: GraduationCap },
     { name: 'Role Management', path: '/admin/roles', icon: ShieldCheck }, 
     { name: 'Course Management', path: '/admin/courses', icon: BookOpen },
     { name: 'System Settings', path: '/admin/settings', icon: Settings },
