@@ -10,7 +10,7 @@ const AdminUsers = () => {
   const [updateMessage, setUpdateMessage] = useState(null);
   const navigate = useNavigate();
 
-  const roles = ["crews", "officers", "super user", "admin"];
+  const roles = ["crew", "officers", "super user", "admin"];
 
   useEffect(() => {
     fetchUsers();
@@ -86,7 +86,7 @@ const AdminUsers = () => {
     full_name: "",
     email: "",
     password: "",
-    role: "crews",
+    role: "crew",
     department: "",
   });
 
@@ -121,7 +121,7 @@ const AdminUsers = () => {
         full_name: "",
         email: "",
         password: "",
-        role: "crews",
+        role: "crew",
         department: "",
       });
       setTimeout(() => setUpdateMessage(null), 3000);
