@@ -102,7 +102,7 @@ class StudyTopicResponse(BaseModel):
     module_id: int
     title: str
     content: str | None = None
-    duration: str = "15min"
+    duration: str | None = "15min"  
     video_url: str | None = None
     order_num: int
 
@@ -167,8 +167,8 @@ class CourseResponse(BaseModel):
     id: int
     title: str
     description: str | None = None
-    icon: str = "📘"
-    total_duration: str = ""
+    icon: str | None = "📘"          # <-- CHANGED THIS LINE
+    total_duration: str | None = ""  # <-- CHANGED THIS LINE
     order_num: int
     modules: list[StudyModuleResponse]
 

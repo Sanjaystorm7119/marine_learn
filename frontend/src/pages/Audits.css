@@ -555,3 +555,258 @@
   flex: 1;
   justify-content: center;
 }
+/* =====================
+   VAPT — Upload modal category grid
+   ===================== */
+
+.vapt-cat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.vapt-cat-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #dce6ef;
+  border-radius: 0.5rem;
+  background: #f0f4f8;
+  color: #6b7f96;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s;
+}
+.vapt-cat-btn:hover { background: #dce6ef; }
+.vapt-cat-btn--active {
+  border-color: #3a7cbd;
+  background: #e8f1f9;
+  color: #1a2e42;
+}
+
+/* =====================
+   VAPT — Tab content wrapper
+   ===================== */
+
+.audits-vapt-content {
+  padding: 1rem 1.25rem 1.25rem;
+}
+
+/* =====================
+   VAPT — Vessel grid
+   ===================== */
+
+.vapt-vessel-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+@media (min-width: 640px) {
+  .vapt-vessel-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (min-width: 1024px) {
+  .vapt-vessel-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+.vapt-vessel-card {
+  text-align: left;
+  border: 1px solid #e8eef4;
+  border-radius: 0.75rem;
+  background: #f7f9fb;
+  padding: 1.25rem;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  width: 100%;
+}
+.vapt-vessel-card:hover {
+  border-color: #3a7cbd80;
+  background: #edf4fb;
+}
+
+.vapt-vessel-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.vapt-vessel-icon-wrap {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 0.75rem;
+  background: #e8f1f9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.vapt-vessel-ship-icon { color: #3a7cbd; }
+
+.vapt-flagged-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  padding: 0.2rem 0.5rem;
+  border-radius: 9999px;
+  background: #fde8e8;
+  color: #e53e3e;
+}
+
+.vapt-vessel-name {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #1a2e42;
+  margin: 0 0 0.25rem;
+}
+.vapt-vessel-sub {
+  font-size: 0.75rem;
+  color: #6b7f96;
+  margin: 0 0 0.75rem;
+}
+
+.vapt-vessel-indicators {
+  display: flex;
+  gap: 0.375rem;
+}
+.vapt-indicator {
+  flex: 1;
+  height: 2.25rem;
+  border-radius: 0.375rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  transition: background 0.2s;
+}
+.vapt-indicator--filled {
+  background: #e8f1f9;
+  border-color: #3a7cbd40;
+}
+.vapt-indicator--empty {
+  background: #ffffff;
+  border-color: #e8eef4;
+}
+
+/* =====================
+   VAPT — Per-vessel detail view
+   ===================== */
+
+.vapt-detail { display: flex; flex-direction: column; gap: 1rem; }
+
+.vapt-detail-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.vapt-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.875rem;
+  color: #6b7f96;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.2s;
+}
+.vapt-back-btn:hover { color: #1a2e42; }
+
+.vapt-vessel-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 0.375rem 0.875rem;
+  border-radius: 9999px;
+  background: #e8f1f9;
+  color: #3a7cbd;
+}
+
+.vapt-cat-cards-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+@media (min-width: 768px) {
+  .vapt-cat-cards-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+.vapt-cat-card {
+  border: 1px solid #e8eef4;
+  border-radius: 0.75rem;
+  background: #f7f9fb;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  transition: border-color 0.2s;
+}
+.vapt-cat-card:hover { border-color: #3a7cbd60; }
+
+.vapt-cat-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.vapt-cat-card-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.vapt-cat-card-icon-wrap {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.5rem;
+  background: #ffffff;
+  border: 1px solid #e8eef4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.vapt-cat-card-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #1a2e42;
+  margin: 0;
+}
+.vapt-cat-card-sub {
+  font-size: 0.75rem;
+  color: #6b7f96;
+  margin: 0;
+}
+
+.vapt-cat-card-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+.vapt-action-btn {
+  flex: 1;
+  justify-content: center;
+  padding: 0.375rem 0.5rem;
+  font-size: 0.8125rem;
+}
+.vapt-upload-btn {
+  width: 100%;
+  justify-content: center;
+  font-size: 0.8125rem;
+}
+
+/* =====================
+   VAPT icon colour helpers
+   ===================== */
+
+.vapt-cat-icon { flex-shrink: 0; }
+.vapt-icon--sky     { color: #38bdf8; }
+.vapt-icon--violet  { color: #a78bfa; }
+.vapt-icon--amber   { color: #fbbf24; }
+.vapt-icon--emerald { color: #34d399; }
+.vapt-icon--muted   { color: #b0bec5; opacity: 0.5; }
