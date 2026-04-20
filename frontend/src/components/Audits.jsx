@@ -2,9 +2,10 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import {
   FileText, Upload, Download, Trash2, Eye, Search,
-  CheckCircle2, AlertTriangle, Shield, Clock, Ship
+  CheckCircle2, AlertTriangle, Shield, Clock, Ship, Video
 } from "lucide-react";
 import "../pages/Audits.css";
+import TeamsMeetSection from "./TeamsMeetSection";
 
 const mockReports = [
   { id: "TR001", title: "Q1 2026 Safety Training Compliance", type: "training", uploadedBy: "Admin", uploadDate: "2026-03-15", fileSize: "2.4 MB", status: "reviewed", vessel: "MV Ocean Star" },
@@ -107,9 +108,11 @@ const AuditsPage = () => {
           </h1>
           <p className="audits-subtitle">Manage and review all compliance and security reports vessel-wise</p>
         </div>
-        <button className="audits-btn-primary" onClick={() => setUploadOpen(true)}>
-          <Upload size={16} /> Upload Report
-        </button>
+        {activeTab !== "teamsmeet" ? (
+          <button className="audits-btn-primary" onClick={() => setUploadOpen(true)}>
+            <Upload size={16} /> Upload Report
+          </button>
+        ) : null}
       </motion.div>
 
       {/* Upload Modal */}
@@ -243,6 +246,7 @@ const AuditsPage = () => {
                 { key: "training", Icon: FileText, label: "Training" },
                 { key: "vapt", Icon: Shield, label: "VAPT" },
                 { key: "phishing", Icon: AlertTriangle, label: "Phishing Drill" },
+                { key: "teamsmeet", Icon: Video, label: "Teams Meet" },
               ].map(({ key, Icon, label }) => (
                 <button
                   key={key}
@@ -253,7 +257,7 @@ const AuditsPage = () => {
                 </button>
               ))}
             </div>
-            <div className="audits-filters">
+            {activeTab !== "teamsmeet" && <div className="audits-filters">
               <div className="audits-search-wrap">
                 <Search size={16} className="audits-search-icon" />
                 <input
@@ -273,11 +277,15 @@ const AuditsPage = () => {
                   <option key={v} value={v}>{v}</option>
                 ))}
               </select>
-            </div>
+            </div>}
           </div>
         </div>
 
-        <div className="audits-table-wrap">
+        {activeTab === "teamsmeet" ? (
+          <TeamsMeetSection showToast={showToast} />
+        ) : null}
+
+        {activeTab !== "teamsmeet" && <div className="audits-table-wrap">
           <table className="audits-table">
             <thead>
               <tr className="audits-thead-row">
@@ -345,7 +353,7 @@ const AuditsPage = () => {
               )}
             </tbody>
           </table>
-        </div>
+        </div>}
       </motion.div>
 
       {/* Preview Modal */}
