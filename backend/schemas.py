@@ -1,4 +1,5 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, field_validator
+from datetime import datetime
 
 
 # ── Auth ──────────────────────────────────────────────────────────────────────
@@ -303,3 +304,66 @@ class CourseInput(BaseModel):
     order_num: int = 0
     modules: list[ModuleInput] = []
     quiz_questions: list[QuizInput] = []
+
+
+# ── Teams / Microsoft Graph ────────────────────────────────────────────────────
+
+class TeamsCredentialsCreate(BaseModel):
+    tenant_id: str
+    client_id: str
+    client_secret_value: str
+    secret_id: str
+    organizer_user_id: str        # UPN or Azure object-id of the organizer mailbox
+    organizer_display_name: str
+
+
+class TeamsCredentialsStatus(BaseModel):
+    configured: bool
+    tenant_masked: str | None = None
+    client_id_masked: str | None = None
+    secret_id_masked: str | None = None
+    organizer_user_id: str | None = None
+    organizer_display_name: str | None = None
+    updated_at: str | None = None
+
+
+class TeamsMeetingCreate(BaseModel):
+    title: str
+    description: str | None = None
+    start_time: datetime
+    end_time: datetime
+    participants: list[EmailStr]
+
+    @field_validator("participants")
+    @classmethod
+    def at_least_one_participant(cls, v: list) -> list:
+        if not v:
+            raise ValueError("At least one participant email is required.")
+        if len(v) > 100:
+            raise ValueError("Maximum 100 participants per meeting.")
+        return v
+
+    @field_validator("end_time")
+    @classmethod
+    def end_after_start(cls, v: datetime, info) -> datetime:
+        start = info.data.get("start_time")
+        if start and v <= start:
+            raise ValueError("end_time must be after start_time.")
+        return v
+
+
+class TeamsMeetingResponse(BaseModel):
+    id: int
+    title: str
+    description: str | None = None
+    start_time: str
+    end_time: str
+    join_url: str | None = None
+    organizer_user_id: str
+    status: str
+    participants: list
+    email_status: str
+    created_at: str
+
+    class Config:
+        from_attributes = True

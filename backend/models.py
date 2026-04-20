@@ -131,6 +131,41 @@ class UserCourseAssignment(Base):
     __table_args__ = (UniqueConstraint("user_id", "module_id", name="uq_user_module_assign"),)
 
 
+class TeamsCredentials(Base):
+    """Single-row table — stores encrypted Azure AD credentials."""
+    __tablename__ = "teams_credentials"
+
+    id = Column(Integer, primary_key=True, default=1)
+    tenant_id_enc = Column(Text, nullable=False)
+    client_id_enc = Column(Text, nullable=False)
+    client_secret_value_enc = Column(Text, nullable=False)
+    secret_id_enc = Column(Text, nullable=False)
+    organizer_user_id = Column(String, nullable=False)       # UPN or object-id
+    organizer_display_name = Column(String, nullable=False)
+    created_by_user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc),
+                        onupdate=lambda: datetime.now(timezone.utc))
+
+
+class TeamsMeeting(Base):
+    __tablename__ = "teams_meetings"
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String, nullable=False)
+    description = Column(Text, nullable=True)
+    start_time = Column(DateTime(timezone=True), nullable=False)
+    end_time = Column(DateTime(timezone=True), nullable=False)
+    join_url = Column(Text, nullable=True)
+    graph_meeting_id = Column(String, nullable=True)
+    organizer_user_id = Column(String, nullable=False)
+    created_by_user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    status = Column(String, default="scheduled")             # scheduled | cancelled
+    participants = Column(JSONB, default=list)               # list of email strings
+    email_status = Column(String, default="pending")         # pending | sent | failed
+
+
 class Notification(Base):
     __tablename__ = "notifications"
 

@@ -3,9 +3,10 @@ import { motion } from "framer-motion";
 import {
   FileText, Upload, Download, Trash2, Eye, Search,
   CheckCircle2, AlertTriangle, Shield, Clock, Ship, ArrowLeft,
-  FileSpreadsheet, FileCheck2, ClipboardList, Briefcase
+  FileSpreadsheet, FileCheck2, ClipboardList, Briefcase, Video
 } from "lucide-react";
 import "../pages/Audits.css";
+import TeamsMeetSection from "./TeamsMeetSection";
 
 // ── VAPT category definitions (NEW) ──────────────────────────────────────────
 const vaptCategories = [
@@ -163,9 +164,11 @@ const AuditsPage = () => {
           </h1>
           <p className="audits-subtitle">Manage and review all compliance and security reports vessel-wise</p>
         </div>
-        <button className="audits-btn-primary" onClick={() => setUploadOpen(true)}>
-          <Upload size={16} /> Upload Report
-        </button>
+        {activeTab !== "teamsmeet" ? (
+          <button className="audits-btn-primary" onClick={() => setUploadOpen(true)}>
+            <Upload size={16} /> Upload Report
+          </button>
+        ) : null}
       </motion.div>
 
       {/* Upload Modal — VAPT category section added, rest unchanged */}
@@ -328,9 +331,10 @@ const AuditsPage = () => {
           <div className="audits-toolbar">
             <div className="audits-tabs">
               {[
-                { key: "training", Icon: FileText,      label: "Training" },
-                { key: "vapt",     Icon: Shield,         label: "VAPT" },
-                { key: "phishing", Icon: AlertTriangle,  label: "Phishing Drill" },
+                { key: "training",  Icon: FileText,      label: "Training" },
+                { key: "vapt",      Icon: Shield,         label: "VAPT" },
+                { key: "phishing",  Icon: AlertTriangle,  label: "Phishing Drill" },
+                { key: "teamsmeet", Icon: Video,          label: "Teams Meet" },
               ].map(({ key, Icon, label }) => (
                 <button
                   key={key}
@@ -341,8 +345,7 @@ const AuditsPage = () => {
                 </button>
               ))}
             </div>
-            <div className="audits-filters">
-              {/* Search hidden on VAPT tab (NEW behaviour matches TSX) */}
+            {activeTab !== "teamsmeet" && <div className="audits-filters">
               {activeTab !== "vapt" && (
                 <div className="audits-search-wrap">
                   <Search size={16} className="audits-search-icon" />
@@ -364,11 +367,15 @@ const AuditsPage = () => {
                   <option key={v} value={v}>{v}</option>
                 ))}
               </select>
-            </div>
+            </div>}
           </div>
         </div>
 
-        {/* ── VAPT tab content (NEW) ──────────────────────────────────────── */}
+        {activeTab === "teamsmeet" ? (
+          <TeamsMeetSection showToast={showToast} />
+        ) : null}
+
+        {/* ── VAPT tab content ──────────────────────────────────────── */}
         {activeTab === "vapt" ? (
           <div className="audits-vapt-content">
             {selectedVaptVessel ? (
@@ -575,6 +582,76 @@ const AuditsPage = () => {
             </table>
           </div>
         )}
+
+        {activeTab !== "teamsmeet" && activeTab !== "vapt" && <div className="audits-table-wrap">
+          <table className="audits-table">
+            <thead>
+              <tr className="audits-thead-row">
+                <th>Report ID</th>
+                <th>Title</th>
+                <th><span className="audits-th-vessel"><Ship size={14} /> Vessel</span></th>
+                <th>Uploaded By</th>
+                <th>Date</th>
+                <th>Size</th>
+                <th>Status</th>
+                <th className="audits-th-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredReports.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="audits-empty-cell">
+                    <FileText size={40} className="audits-empty-icon" />
+                    <p>No reports found</p>
+                  </td>
+                </tr>
+              ) : (
+                filteredReports.map((report, i) => {
+                  const st = statusConfig[report.status];
+                  const StIcon = st.Icon;
+                  return (
+                    <motion.tr
+                      key={report.id}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.05 }}
+                      className="audits-tr"
+                    >
+                      <td className="audits-td-mono">{report.id}</td>
+                      <td className="audits-td-title">{report.title}</td>
+                      <td>
+                        <span className="audits-vessel-badge">
+                          <Ship size={12} /> {report.vessel}
+                        </span>
+                      </td>
+                      <td className="audits-td-muted">{report.uploadedBy}</td>
+                      <td className="audits-td-muted">{report.uploadDate}</td>
+                      <td className="audits-td-muted">{report.fileSize}</td>
+                      <td>
+                        <span className={`audits-status-badge ${st.colorClass}`}>
+                          <StIcon size={12} /> {st.label}
+                        </span>
+                      </td>
+                      <td className="audits-td-actions">
+                        <div className="audits-action-btns">
+                          <button onClick={() => setPreviewReport(report)} className="audits-action-btn">
+                            <Eye size={16} />
+                          </button>
+                          <button className="audits-action-btn">
+                            <Download size={16} />
+                          </button>
+                          <button onClick={() => handleDelete(report)} className="audits-action-btn audits-action-btn--danger">
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </td>
+                    </motion.tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>}
       </motion.div>
 
       {/* Preview Modal — unchanged */}
