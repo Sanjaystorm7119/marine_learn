@@ -8,7 +8,7 @@ from slowapi.util import get_remote_address
 
 import models
 from database import engine
-from routers import auth_router, user_router, admin_router, study_router, notification_router
+from routers import auth_router, user_router, admin_router, study_router, notification_router, teams_router
 
 limiter = Limiter(key_func=get_remote_address)
 
@@ -45,6 +45,7 @@ app.include_router(user_router.router)
 app.include_router(admin_router.router)
 app.include_router(study_router.router)
 app.include_router(notification_router.router)
+app.include_router(teams_router.router)
 
 
 @app.get("/")

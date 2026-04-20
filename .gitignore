@@ -8,6 +8,11 @@ __pycache__/
 *.pyo
 .pytest_cache/
 
+# Node
+node_modules/
+dist/
+.cache/
+
 # Backup
 bk1/
 
@@ -23,3 +28,5 @@ CLAUDE.md
 
 # Playwright MCP artifacts
 .playwright-mcp/
+
+ms_creds.md
