@@ -306,6 +306,58 @@ class CourseInput(BaseModel):
     quiz_questions: list[QuizInput] = []
 
 
+# ── Phishing ──────────────────────────────────────────────────────────────────
+
+class PhishingTemplateCreate(BaseModel):
+    name: str
+    subject: str
+    html_body: str
+
+
+class PhishingTemplateResponse(BaseModel):
+    id: int
+    name: str
+    subject: str
+    html_body: str
+    is_builtin: bool
+    created_at: str
+
+    class Config:
+        from_attributes = True
+
+
+class PhishingCampaignCreate(BaseModel):
+    name: str
+    template_id: int
+
+
+class PhishingTargetResult(BaseModel):
+    user_id: int
+    full_name: str
+    email: str
+    role: str
+    email_status: str
+    sent_at: str | None
+    clicked: bool
+    clicked_at: str | None
+    tracking_url: str | None = None
+
+
+class PhishingCampaignResponse(BaseModel):
+    id: int
+    name: str
+    template_name: str
+    status: str
+    created_at: str
+    total_sent: int
+    total_clicked: int
+    click_rate: float
+
+
+class PhishingCampaignDetail(PhishingCampaignResponse):
+    targets: list[PhishingTargetResult]
+
+
 # ── Teams / Microsoft Graph ────────────────────────────────────────────────────
 
 class TeamsCredentialsCreate(BaseModel):

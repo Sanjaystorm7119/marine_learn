@@ -554,3 +554,107 @@
     padding: 1.5rem;
   }
 }
+
+/* =====================
+   Notification bell
+   ===================== */
+.sul-notif-wrap {
+  position: relative;
+}
+
+.sul-notif-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: #e94560;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  border-radius: 99px;
+  min-width: 17px;
+  height: 17px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 3px;
+  pointer-events: none;
+}
+
+.sul-notif-dropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 340px;
+  background: #1e2a3a;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+  z-index: 200;
+  overflow: hidden;
+}
+
+.sul-notif-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #e2e8f0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sul-notif-read-all {
+  background: none;
+  border: none;
+  color: #60a5fa;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 0;
+}
+.sul-notif-read-all:hover { text-decoration: underline; }
+
+.sul-notif-list {
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.sul-notif-empty {
+  padding: 20px 16px;
+  font-size: 13px;
+  color: #64748b;
+  text-align: center;
+  margin: 0;
+}
+
+.sul-notif-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.sul-notif-item:hover { background: rgba(255, 255, 255, 0.04); }
+.sul-notif-item--unread { background: rgba(99, 179, 237, 0.06); }
+.sul-notif-item--unread:hover { background: rgba(99, 179, 237, 0.1); }
+
+.sul-notif-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #e2e8f0;
+  margin: 0 0 3px;
+}
+
+.sul-notif-msg {
+  font-size: 12px;
+  color: #94a3b8;
+  margin: 0;
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
