@@ -1,30 +1,17 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Send, Search, Mail, MousePointer,
   ShieldAlert, Target, BarChart3,
-  CheckCircle2, XCircle, Plus, X
+  CheckCircle2, XCircle, Plus, X, Trash2, FileText,
+  Copy, Eye,
 } from "lucide-react";
 import "../pages/Phishingdrillpage.css";
 
-const mockCampaigns = [
-  { id: "PD001", name: "March Security Awareness", status: "completed", sentDate: "2026-03-15", targetGroup: "All Crew", totalSent: 150, opened: 120, clicked: 35, reported: 85, template: "Fake IT Password Reset" },
-  { id: "PD002", name: "Officer Spear Phishing", status: "completed", sentDate: "2026-03-08", targetGroup: "Officers", totalSent: 45, opened: 40, clicked: 12, reported: 28, template: "Port Authority Notice" },
-  { id: "PD003", name: "Engine Dept Social Engineering", status: "active", sentDate: "2026-03-22", targetGroup: "Engine Crew", totalSent: 60, opened: 42, clicked: 18, reported: 20, template: "Fuel Supplier Invoice" },
-  { id: "PD004", name: "April Awareness Campaign", status: "scheduled", sentDate: "2026-04-01", targetGroup: "All Crew", totalSent: 0, opened: 0, clicked: 0, reported: 0, template: "Crew Bonus Notification" },
-];
-
-const mockUserResults = [
-  { id: "U1", name: "James Miller", email: "james@marine.com", role: "Officer", opened: true, clicked: false, reported: true, responseTime: "2 min" },
-  { id: "U2", name: "Sarah Chen", email: "sarah@marine.com", role: "Officer", opened: true, clicked: true, reported: false, responseTime: "15 min" },
-  { id: "U3", name: "Raj Patel", email: "raj@marine.com", role: "Crew", opened: true, clicked: true, reported: false, responseTime: "8 min" },
-  { id: "U4", name: "Maria Santos", email: "maria@marine.com", role: "Crew", opened: false, clicked: false, reported: false, responseTime: "-" },
-  { id: "U5", name: "David Kim", email: "david@marine.com", role: "Officer", opened: true, clicked: false, reported: true, responseTime: "5 min" },
-  { id: "U6", name: "Anna Wong", email: "anna@marine.com", role: "Crew", opened: true, clicked: true, reported: false, responseTime: "22 min" },
-];
+const API = "http://127.0.0.1:8000";
 
 const Toast = ({ message, onClose }) => (
-  <div className="pd-toast">
+  <div className={`pd-toast ${message.type === "error" ? "pd-toast--error" : ""}`}>
     <div className="pd-toast-content">
       <strong>{message.title}</strong>
       <p>{message.description}</p>
@@ -34,34 +21,151 @@ const Toast = ({ message, onClose }) => (
 );
 
 const PhishingDrillPage = () => {
+  const getHeaders = () => ({ Authorization: `Bearer ${localStorage.getItem("token")}` });
+
+  const [campaigns, setCampaigns] = useState([]);
+  const [templates, setTemplates] = useState([]);
+  const [campaignDetail, setCampaignDetail] = useState(null);
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [previewTemplate, setPreviewTemplate] = useState(null);
+
   const [activeTab, setActiveTab] = useState("campaigns");
-  const [selectedCampaign, setSelectedCampaign] = useState(null);
   const [createOpen, setCreateOpen] = useState(false);
+  const [templateOpen, setTemplateOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [toast, setToast] = useState(null);
+  const [launching, setLaunching] = useState(false);
 
-  const totalSent = mockCampaigns.reduce((s, c) => s + c.totalSent, 0);
-  const totalClicked = mockCampaigns.reduce((s, c) => s + c.clicked, 0);
-  const totalReported = mockCampaigns.reduce((s, c) => s + c.reported, 0);
-  const clickRate = totalSent ? Math.round((totalClicked / totalSent) * 100) : 0;
-  const reportRate = totalSent ? Math.round((totalReported / totalSent) * 100) : 0;
+  const [form, setForm] = useState({ name: "", template_id: "" });
+  const [templateForm, setTemplateForm] = useState({ name: "", subject: "", html_body: "" });
 
-  const handleLaunchDrill = () => {
-    setToast({ title: "Drill Launched 🚀", description: "Phishing drill campaign has been scheduled." });
-    setCreateOpen(false);
-    setTimeout(() => setToast(null), 3500);
+  useEffect(() => {
+    fetchCampaigns();
+    fetchTemplates();
+  }, []);
+
+  const showToast = (title, description, type = "success") => {
+    setToast({ title, description, type });
+    setTimeout(() => setToast(null), 4000);
   };
+
+  const fetchCampaigns = async () => {
+    try {
+      const res = await fetch(`${API}/phishing/campaigns`, { headers: getHeaders() });
+      if (res.ok) setCampaigns(await res.json());
+    } catch {
+      showToast("Error", "Failed to load campaigns", "error");
+    }
+  };
+
+  const fetchTemplates = async () => {
+    try {
+      const res = await fetch(`${API}/phishing/templates`, { headers: getHeaders() });
+      if (res.ok) setTemplates(await res.json());
+    } catch { /* non-critical */ }
+  };
+
+  const openCampaignDetail = async (campaign) => {
+    setDetailOpen(true);
+    setDetailLoading(true);
+    setCampaignDetail(null);
+    try {
+      const res = await fetch(`${API}/phishing/campaigns/${campaign.id}`, { headers: getHeaders() });
+      if (res.ok) setCampaignDetail(await res.json());
+    } catch {
+      showToast("Error", "Failed to load campaign details", "error");
+    } finally {
+      setDetailLoading(false);
+    }
+  };
+
+  const closeDetail = () => { setDetailOpen(false); setCampaignDetail(null); };
+
+  const handleLaunchDrill = async () => {
+    if (!form.name.trim() || !form.template_id) {
+      showToast("Missing fields", "Campaign name and template are required", "error");
+      return;
+    }
+    setLaunching(true);
+    try {
+      const res = await fetch(`${API}/phishing/campaigns`, {
+        method: "POST",
+        headers: { ...getHeaders(), "Content-Type": "application/json" },
+        body: JSON.stringify({ name: form.name.trim(), template_id: parseInt(form.template_id) }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.detail || "Launch failed");
+      }
+      const created = await res.json();
+      setCampaigns(prev => [created, ...prev]);
+      showToast("Campaign Launched 🚀", `Drill emails sent to ${created.total_sent} users`);
+      setCreateOpen(false);
+      setForm({ name: "", template_id: "" });
+    } catch (e) {
+      showToast("Launch Failed", e.message, "error");
+    } finally {
+      setLaunching(false);
+    }
+  };
+
+  const handleCreateTemplate = async () => {
+    if (!templateForm.name.trim() || !templateForm.subject.trim() || !templateForm.html_body.trim()) {
+      showToast("Missing fields", "All template fields are required", "error");
+      return;
+    }
+    try {
+      const res = await fetch(`${API}/phishing/templates`, {
+        method: "POST",
+        headers: { ...getHeaders(), "Content-Type": "application/json" },
+        body: JSON.stringify(templateForm),
+      });
+      if (!res.ok) throw new Error("Failed to create template");
+      const created = await res.json();
+      setTemplates(prev => [...prev, created]);
+      showToast("Template Created", `"${created.name}" is ready to use`);
+      setTemplateOpen(false);
+      setTemplateForm({ name: "", subject: "", html_body: "" });
+    } catch (e) {
+      showToast("Error", e.message, "error");
+    }
+  };
+
+  const handleDeleteTemplate = async (id, isBuiltin) => {
+    if (isBuiltin) {
+      showToast("Cannot Delete", "Built-in templates cannot be removed", "error");
+      return;
+    }
+    try {
+      const res = await fetch(`${API}/phishing/templates/${id}`, {
+        method: "DELETE",
+        headers: getHeaders(),
+      });
+      if (!res.ok) throw new Error("Delete failed");
+      setTemplates(prev => prev.filter(t => t.id !== id));
+      showToast("Deleted", "Template removed");
+    } catch (e) {
+      showToast("Error", e.message, "error");
+    }
+  };
+
+  const totalSent = campaigns.reduce((s, c) => s + c.total_sent, 0);
+  const totalClicked = campaigns.reduce((s, c) => s + c.total_clicked, 0);
+  const clickRate = totalSent ? Math.round((totalClicked / totalSent) * 100) : 0;
 
   const stats = [
     { label: "Total Emails Sent", value: totalSent, icon: Send, colorClass: "icon-primary", bgClass: "bg-primary-soft" },
     { label: "Click Rate", value: `${clickRate}%`, icon: MousePointer, colorClass: "icon-destructive", bgClass: "bg-destructive-soft", sub: `${totalClicked} clicked` },
-    { label: "Report Rate", value: `${reportRate}%`, icon: ShieldAlert, colorClass: "icon-emerald", bgClass: "bg-emerald-soft", sub: `${totalReported} reported` },
-    { label: "Active Campaigns", value: mockCampaigns.filter(c => c.status === "active").length, icon: Target, colorClass: "icon-amber", bgClass: "bg-amber-soft" },
+    { label: "Active Campaigns", value: campaigns.filter(c => c.status === "active").length, icon: Target, colorClass: "icon-amber", bgClass: "bg-amber-soft" },
+    { label: "Total Campaigns", value: campaigns.length, icon: BarChart3, colorClass: "icon-emerald", bgClass: "bg-emerald-soft" },
   ];
+
+  const filteredCampaigns = campaigns.filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase()));
+  const filteredTemplates = templates.filter(t => t.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
   return (
     <div className="pd-page">
-      {/* Toast */}
       <AnimatePresence>
         {toast && (
           <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
@@ -104,143 +208,137 @@ const PhishingDrillPage = () => {
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="pd-card">
         <div className="pd-tabs-header">
           <div className="pd-tabs-list">
-            <button
-              className={`pd-tab ${activeTab === "campaigns" ? "pd-tab-active" : ""}`}
-              onClick={() => setActiveTab("campaigns")}
-            >
+            <button className={`pd-tab ${activeTab === "campaigns" ? "pd-tab-active" : ""}`} onClick={() => setActiveTab("campaigns")}>
               <Target size={14} /> Campaigns
             </button>
-            <button
-              className={`pd-tab ${activeTab === "results" ? "pd-tab-active" : ""}`}
-              onClick={() => setActiveTab("results")}
-            >
-              <BarChart3 size={14} /> User Results
+            <button className={`pd-tab ${activeTab === "templates" ? "pd-tab-active" : ""}`} onClick={() => setActiveTab("templates")}>
+              <FileText size={14} /> Templates
             </button>
           </div>
           <div className="pd-search-wrap">
             <Search className="pd-search-icon" size={16} />
-            <input
-              className="pd-search"
-              placeholder="Search..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+            <input className="pd-search" placeholder="Search..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
           </div>
         </div>
 
         {/* Campaigns Tab */}
         {activeTab === "campaigns" && (
           <div className="pd-table-wrap">
-            <table className="pd-table">
-              <thead>
-                <tr className="pd-table-header-row">
-                  <th>Campaign</th>
-                  <th>Target</th>
-                  <th>Template</th>
-                  <th>Sent</th>
-                  <th>Opened</th>
-                  <th>Clicked</th>
-                  <th>Reported</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {mockCampaigns.filter(c => c.name.toLowerCase().includes(searchQuery.toLowerCase())).map((c, i) => (
-                  <motion.tr
-                    key={c.id}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.05 }}
-                    className="pd-table-row"
-                    onClick={() => setSelectedCampaign(c)}
-                  >
-                    <td>
-                      <p className="pd-cell-title">{c.name}</p>
-                      <p className="pd-cell-sub">{c.sentDate}</p>
-                    </td>
-                    <td className="pd-cell-muted">{c.targetGroup}</td>
-                    <td className="pd-cell-muted">{c.template}</td>
-                    <td className="pd-cell-bold">{c.totalSent}</td>
-                    <td>
-                      <span className="pd-cell-default">{c.opened}</span>
-                      {c.totalSent > 0 && <span className="pd-cell-pct">({Math.round((c.opened / c.totalSent) * 100)}%)</span>}
-                    </td>
-                    <td>
-                      <span className="pd-cell-red">{c.clicked}</span>
-                      {c.totalSent > 0 && <span className="pd-cell-pct">({Math.round((c.clicked / c.totalSent) * 100)}%)</span>}
-                    </td>
-                    <td>
-                      <span className="pd-cell-green">{c.reported}</span>
-                      {c.totalSent > 0 && <span className="pd-cell-pct">({Math.round((c.reported / c.totalSent) * 100)}%)</span>}
-                    </td>
-                    <td>
-                      <span className={`pd-badge ${c.status === "completed" ? "pd-badge-green" : c.status === "active" ? "pd-badge-blue" : "pd-badge-amber"}`}>
-                        {c.status.charAt(0).toUpperCase() + c.status.slice(1)}
-                      </span>
-                    </td>
-                  </motion.tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {/* User Results Tab */}
-        {activeTab === "results" && (
-          <div className="pd-table-wrap">
-            <table className="pd-table">
-              <thead>
-                <tr className="pd-table-header-row">
-                  <th>User</th>
-                  <th>Role</th>
-                  <th className="text-center">Opened</th>
-                  <th className="text-center">Clicked Link</th>
-                  <th className="text-center">Reported</th>
-                  <th>Response Time</th>
-                  <th>Risk Level</th>
-                </tr>
-              </thead>
-              <tbody>
-                {mockUserResults.filter(u => u.name.toLowerCase().includes(searchQuery.toLowerCase())).map((u, i) => {
-                  const risk = u.clicked && !u.reported ? "High" : u.clicked && u.reported ? "Medium" : "Low";
-                  return (
+            {filteredCampaigns.length === 0 ? (
+              <div className="pd-empty">
+                <ShieldAlert size={36} className="pd-empty-icon" />
+                <p>{campaigns.length === 0 ? "No campaigns yet. Launch your first drill." : "No campaigns match your search."}</p>
+              </div>
+            ) : (
+              <table className="pd-table">
+                <thead>
+                  <tr className="pd-table-header-row">
+                    <th>Campaign</th>
+                    <th>Template</th>
+                    <th>Sent</th>
+                    <th>Clicked</th>
+                    <th>Click Rate</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredCampaigns.map((c, i) => (
                     <motion.tr
-                      key={u.id}
+                      key={c.id}
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: i * 0.05 }}
+                      transition={{ delay: i * 0.04 }}
                       className="pd-table-row"
+                      onClick={() => openCampaignDetail(c)}
                     >
                       <td>
-                        <p className="pd-cell-title">{u.name}</p>
-                        <p className="pd-cell-sub">{u.email}</p>
+                        <p className="pd-cell-title">{c.name}</p>
+                        <p className="pd-cell-sub">{new Date(c.created_at).toLocaleDateString()}</p>
                       </td>
-                      <td><span className="pd-role-badge">{u.role}</span></td>
-                      <td className="text-center">
-                        {u.opened ? <CheckCircle2 className="pd-check-amber mx-auto" size={20} /> : <XCircle className="pd-check-muted mx-auto" size={20} />}
-                      </td>
-                      <td className="text-center">
-                        {u.clicked ? <CheckCircle2 className="pd-check-red mx-auto" size={20} /> : <XCircle className="pd-check-muted mx-auto" size={20} />}
-                      </td>
-                      <td className="text-center">
-                        {u.reported ? <CheckCircle2 className="pd-check-green mx-auto" size={20} /> : <XCircle className="pd-check-muted mx-auto" size={20} />}
-                      </td>
-                      <td className="pd-cell-muted">{u.responseTime}</td>
+                      <td className="pd-cell-muted">{c.template_name}</td>
+                      <td className="pd-cell-bold">{c.total_sent}</td>
+                      <td><span className="pd-cell-red">{c.total_clicked}</span></td>
+                      <td className="pd-cell-bold">{c.click_rate}%</td>
                       <td>
-                        <span className={`pd-badge ${risk === "High" ? "pd-badge-red" : risk === "Medium" ? "pd-badge-amber" : "pd-badge-green"}`}>
-                          {risk}
+                        <span className={`pd-badge ${c.status === "completed" ? "pd-badge-green" : "pd-badge-blue"}`}>
+                          {c.status.charAt(0).toUpperCase() + c.status.slice(1)}
                         </span>
                       </td>
                     </motion.tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        )}
+
+        {/* Templates Tab */}
+        {activeTab === "templates" && (
+          <div className="pd-table-wrap">
+            <div className="pd-templates-actions">
+              <button className="pd-btn-primary pd-btn-sm" onClick={() => setTemplateOpen(true)}>
+                <Plus size={14} /> New Template
+              </button>
+            </div>
+            {filteredTemplates.length === 0 ? (
+              <div className="pd-empty">
+                <Mail size={36} className="pd-empty-icon" />
+                <p>No templates yet. Create one to get started.</p>
+              </div>
+            ) : (
+              <table className="pd-table">
+                <thead>
+                  <tr className="pd-table-header-row">
+                    <th>Template Name</th>
+                    <th>Subject</th>
+                    <th>Type</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredTemplates.map((t, i) => (
+                    <motion.tr
+                      key={t.id}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.04 }}
+                      className="pd-table-row"
+                    >
+                      <td><p className="pd-cell-title">{t.name}</p></td>
+                      <td className="pd-cell-muted">{t.subject}</td>
+                      <td>
+                        <span className={`pd-badge ${t.is_builtin ? "pd-badge-amber" : "pd-badge-blue"}`}>
+                          {t.is_builtin ? "Built-in" : "Custom"}
+                        </span>
+                      </td>
+                      <td className="pd-action-cell">
+                        <button
+                          className="pd-icon-btn"
+                          title="Preview template"
+                          onClick={e => { e.stopPropagation(); setPreviewTemplate(t); }}
+                        >
+                          <Eye size={15} />
+                        </button>
+                        {!t.is_builtin && (
+                          <button
+                            className="pd-icon-btn"
+                            title="Delete template"
+                            onClick={e => { e.stopPropagation(); handleDeleteTemplate(t.id, t.is_builtin); }}
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        )}
+                      </td>
+                    </motion.tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
         )}
       </motion.div>
 
-      {/* Create Campaign Dialog */}
+      {/* Launch Campaign Dialog */}
       <AnimatePresence>
         {createOpen && (
           <div className="pd-overlay" onClick={() => setCreateOpen(false)}>
@@ -249,43 +347,134 @@ const PhishingDrillPage = () => {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               className="pd-dialog"
-              onClick={(e) => e.stopPropagation()}
+              onClick={e => e.stopPropagation()}
             >
               <div className="pd-dialog-header">
-                <h2 className="pd-dialog-title">Create Phishing Campaign</h2>
+                <h2 className="pd-dialog-title">Launch Phishing Campaign</h2>
                 <button className="pd-dialog-close" onClick={() => setCreateOpen(false)}><X size={18} /></button>
               </div>
               <div className="pd-dialog-body">
                 <div className="pd-field">
                   <label className="pd-label">Campaign Name</label>
-                  <input className="pd-input" placeholder="e.g., April Security Test" />
-                </div>
-                <div className="pd-field">
-                  <label className="pd-label">Target Group</label>
-                  <div className="pd-group-btns">
-                    {["All Crew", "Officers", "Engine Crew", "Deck Crew"].map(g => (
-                      <button key={g} className="pd-group-btn">{g}</button>
-                    ))}
-                  </div>
+                  <input
+                    className="pd-input"
+                    placeholder="e.g., April Security Awareness"
+                    value={form.name}
+                    onChange={e => setForm(prev => ({ ...prev, name: e.target.value }))}
+                  />
                 </div>
                 <div className="pd-field">
                   <label className="pd-label">Email Template</label>
-                  <div className="pd-template-list">
-                    {["Fake Password Reset", "Port Authority Notice", "Salary Update", "IT System Alert"].map(t => (
-                      <div key={t} className="pd-template-item">
-                        <Mail size={16} className="pd-template-icon" />
-                        <span className="pd-template-text">{t}</span>
-                      </div>
+                  <select
+                    className="pd-input"
+                    value={form.template_id}
+                    onChange={e => setForm(prev => ({ ...prev, template_id: e.target.value }))}
+                  >
+                    <option value="">Select a template...</option>
+                    {templates.map(t => (
+                      <option key={t.id} value={t.id}>{t.name}</option>
                     ))}
-                  </div>
+                  </select>
+                </div>
+                <div className="pd-info-box">
+                  <ShieldAlert size={14} />
+                  <span>This will send a simulated phishing email to <strong>all users</strong> (crew, admin, and superusers).</span>
+                </div>
+                <button className="pd-btn-primary pd-btn-full" onClick={handleLaunchDrill} disabled={launching}>
+                  {launching ? "Launching..." : <><Send size={16} /> Launch Campaign</>}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Create Template Dialog */}
+      <AnimatePresence>
+        {templateOpen && (
+          <div className="pd-overlay" onClick={() => setTemplateOpen(false)}>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="pd-dialog pd-dialog--wide"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="pd-dialog-header">
+                <h2 className="pd-dialog-title">Create Email Template</h2>
+                <button className="pd-dialog-close" onClick={() => setTemplateOpen(false)}><X size={18} /></button>
+              </div>
+              <div className="pd-dialog-body">
+                <div className="pd-field">
+                  <label className="pd-label">Template Name</label>
+                  <input
+                    className="pd-input"
+                    placeholder="e.g., Fuel Invoice Alert"
+                    value={templateForm.name}
+                    onChange={e => setTemplateForm(prev => ({ ...prev, name: e.target.value }))}
+                  />
                 </div>
                 <div className="pd-field">
-                  <label className="pd-label">Schedule Date</label>
-                  <input type="date" className="pd-input" />
+                  <label className="pd-label">Email Subject</label>
+                  <input
+                    className="pd-input"
+                    placeholder="e.g., Urgent: Verify your invoice"
+                    value={templateForm.subject}
+                    onChange={e => setTemplateForm(prev => ({ ...prev, subject: e.target.value }))}
+                  />
                 </div>
-                <button className="pd-btn-primary pd-btn-full" onClick={handleLaunchDrill}>
-                  <Send size={16} /> Launch Campaign
+                <div className="pd-field">
+                  <label className="pd-label">HTML Body</label>
+                  <p className="pd-label-hint">
+                    Use <code>{"{{tracking_url}}"}</code> for the bait link and <code>{"{{recipient_name}}"}</code> for the recipient's name.
+                  </p>
+                  <textarea
+                    className="pd-input pd-textarea"
+                    placeholder="<html>...</html>"
+                    rows={10}
+                    value={templateForm.html_body}
+                    onChange={e => setTemplateForm(prev => ({ ...prev, html_body: e.target.value }))}
+                  />
+                </div>
+                <button className="pd-btn-primary pd-btn-full" onClick={handleCreateTemplate}>
+                  <Plus size={16} /> Save Template
                 </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Template Preview Modal */}
+      <AnimatePresence>
+        {previewTemplate && (
+          <div className="pd-overlay" onClick={() => setPreviewTemplate(null)}>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="pd-dialog pd-dialog--wide"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="pd-dialog-header">
+                <div>
+                  <h2 className="pd-dialog-title">{previewTemplate.name}</h2>
+                  <p className="pd-cell-muted" style={{ margin: 0, fontSize: "0.8rem" }}>Subject: {previewTemplate.subject}</p>
+                </div>
+                <button className="pd-dialog-close" onClick={() => setPreviewTemplate(null)}><X size={18} /></button>
+              </div>
+              <div className="pd-dialog-body">
+                <p className="pd-label-hint" style={{ marginBottom: "0.5rem" }}>
+                  Preview shows template with placeholder values. Actual emails will have personalised tracking links.
+                </p>
+                <iframe
+                  className="pd-preview-frame"
+                  title="Template Preview"
+                  srcDoc={previewTemplate.html_body
+                    .replace(/\{\{tracking_url\}\}/g, "#phishing-drill-preview")
+                    .replace(/\{\{recipient_name\}\}/g, "John Doe")}
+                  sandbox="allow-same-origin"
+                />
               </div>
             </motion.div>
           </div>
@@ -294,56 +483,112 @@ const PhishingDrillPage = () => {
 
       {/* Campaign Detail Dialog */}
       <AnimatePresence>
-        {selectedCampaign && (
-          <div className="pd-overlay" onClick={() => setSelectedCampaign(null)}>
+        {detailOpen && (
+          <div className="pd-overlay" onClick={closeDetail}>
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="pd-dialog"
-              onClick={(e) => e.stopPropagation()}
+              className="pd-dialog pd-dialog--wide"
+              onClick={e => e.stopPropagation()}
             >
               <div className="pd-dialog-header">
                 <h2 className="pd-dialog-title">Campaign Details</h2>
-                <button className="pd-dialog-close" onClick={() => setSelectedCampaign(null)}><X size={18} /></button>
+                <button className="pd-dialog-close" onClick={closeDetail}><X size={18} /></button>
               </div>
               <div className="pd-dialog-body">
-                <h3 className="pd-detail-name">{selectedCampaign.name}</h3>
-                <div className="pd-detail-grid">
-                  {[
-                    { label: "Emails Sent", value: selectedCampaign.totalSent },
-                    { label: "Opened", value: `${selectedCampaign.opened} (${selectedCampaign.totalSent ? Math.round((selectedCampaign.opened / selectedCampaign.totalSent) * 100) : 0}%)` },
-                    { label: "Clicked (Failed)", value: `${selectedCampaign.clicked} (${selectedCampaign.totalSent ? Math.round((selectedCampaign.clicked / selectedCampaign.totalSent) * 100) : 0}%)` },
-                    { label: "Reported (Passed)", value: `${selectedCampaign.reported} (${selectedCampaign.totalSent ? Math.round((selectedCampaign.reported / selectedCampaign.totalSent) * 100) : 0}%)` },
-                  ].map((item, i) => (
-                    <div key={i} className="pd-detail-item">
-                      <p className="pd-detail-item-label">{item.label}</p>
-                      <p className="pd-detail-item-value">{item.value}</p>
+                {detailLoading || !campaignDetail ? (
+                  <p className="pd-cell-muted">Loading...</p>
+                ) : (
+                  <>
+                    <h3 className="pd-detail-name">{campaignDetail.name}</h3>
+                    <div className="pd-detail-grid">
+                      {[
+                        { label: "Template", value: campaignDetail.template_name },
+                        { label: "Emails Sent", value: campaignDetail.total_sent },
+                        { label: "Clicked", value: `${campaignDetail.total_clicked} (${campaignDetail.click_rate}%)` },
+                        { label: "Date", value: new Date(campaignDetail.created_at).toLocaleDateString() },
+                      ].map((item, i) => (
+                        <div key={i} className="pd-detail-item">
+                          <p className="pd-detail-item-label">{item.label}</p>
+                          <p className="pd-detail-item-value">{item.value}</p>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-                {selectedCampaign.totalSent > 0 && (
-                  <div className="pd-progress-section">
-                    <p className="pd-progress-label-top">Click vs Report Rate</p>
-                    <div className="pd-progress-row">
-                      <div className="pd-progress-meta">
-                        <span className="pd-progress-text-red">Clicked (Vulnerable)</span>
-                        <span className="pd-progress-pct">{Math.round((selectedCampaign.clicked / selectedCampaign.totalSent) * 100)}%</span>
+
+                    {campaignDetail.total_sent > 0 && (
+                      <div className="pd-progress-section">
+                        <p className="pd-progress-label-top">Click vs Safe Rate</p>
+                        <div className="pd-progress-row">
+                          <div className="pd-progress-meta">
+                            <span className="pd-progress-text-red">Clicked (Vulnerable)</span>
+                            <span className="pd-progress-pct">{campaignDetail.click_rate}%</span>
+                          </div>
+                          <div className="pd-progress-bar-bg">
+                            <div className="pd-progress-bar pd-progress-bar-red" style={{ width: `${campaignDetail.click_rate}%` }} />
+                          </div>
+                        </div>
                       </div>
-                      <div className="pd-progress-bar-bg">
-                        <div className="pd-progress-bar pd-progress-bar-red" style={{ width: `${Math.round((selectedCampaign.clicked / selectedCampaign.totalSent) * 100)}%` }} />
+                    )}
+
+                    {campaignDetail.targets?.length > 0 && (
+                      <div className="pd-table-wrap pd-detail-table">
+                        <table className="pd-table">
+                          <thead>
+                            <tr className="pd-table-header-row">
+                              <th>User</th>
+                              <th>Role</th>
+                              <th>Email</th>
+                              <th className="text-center">Clicked</th>
+                              <th className="text-center">Tracking Link</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {campaignDetail.targets.map((t, i) => (
+                              <motion.tr
+                                key={t.user_id}
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ delay: i * 0.02 }}
+                                className="pd-table-row"
+                              >
+                                <td>
+                                  <p className="pd-cell-title">{t.full_name}</p>
+                                  <p className="pd-cell-sub">{t.email}</p>
+                                </td>
+                                <td><span className="pd-role-badge">{t.role}</span></td>
+                                <td>
+                                  <span className={`pd-badge ${t.email_status === "sent" ? "pd-badge-green" : t.email_status === "failed" ? "pd-badge-red" : "pd-badge-amber"}`}>
+                                    {t.email_status}
+                                  </span>
+                                </td>
+                                <td className="text-center">
+                                  {t.clicked
+                                    ? <CheckCircle2 className="pd-check-red mx-auto" size={18} />
+                                    : <XCircle className="pd-check-muted mx-auto" size={18} />
+                                  }
+                                </td>
+                                <td className="text-center">
+                                  {t.tracking_url && (
+                                    <button
+                                      className="pd-icon-btn"
+                                      title="Copy tracking link"
+                                      onClick={() => {
+                                        navigator.clipboard.writeText(t.tracking_url);
+                                        showToast("Copied", "Tracking link copied to clipboard");
+                                      }}
+                                    >
+                                      <Copy size={14} />
+                                    </button>
+                                  )}
+                                </td>
+                              </motion.tr>
+                            ))}
+                          </tbody>
+                        </table>
                       </div>
-                    </div>
-                    <div className="pd-progress-row">
-                      <div className="pd-progress-meta">
-                        <span className="pd-progress-text-green">Reported (Aware)</span>
-                        <span className="pd-progress-pct">{Math.round((selectedCampaign.reported / selectedCampaign.totalSent) * 100)}%</span>
-                      </div>
-                      <div className="pd-progress-bar-bg">
-                        <div className="pd-progress-bar pd-progress-bar-green" style={{ width: `${Math.round((selectedCampaign.reported / selectedCampaign.totalSent) * 100)}%` }} />
-                      </div>
-                    </div>
-                  </div>
+                    )}
+                  </>
                 )}
               </div>
             </motion.div>
