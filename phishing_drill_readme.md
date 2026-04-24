@@ -195,3 +195,115 @@ Current filter patterns: `barracuda`, `proofpoint`, `mimecast`, `symantec`, `mic
 | `GET` | `/phishing/campaigns` | Superuser | List own campaigns |
 | `GET` | `/phishing/campaigns/{id}` | Superuser | Campaign detail + per-user targets |
 | `GET` | `/phishing/click/{token}` | **Public** | Track click, redirect to landing page |
+
+--------------------------------------------------------------------------------------
+
+Sample - create template steps :
+Step 1 — Open the dialog                                                                          
+  Templates tab → New Template button (top-right of the templates table)                         
+  
+  ---
+  Step 2 — Fill each field
+
+  Template Name
+
+  Vessel Safety Drill Reminder
+
+  Email Subject
+
+  Mandatory: Complete your emergency drill sign-off by Friday
+
+  HTML Body — paste this entire block
+
+  <html>
+  <body style="font-family:Arial,sans-serif;max-width:600px;margin:auto;padding:0;">
+
+    <div style="background:#1a1a2e;padding:22px;text-align:center;">
+      <h2 style="color:#e2c95e;margin:0;">SAFETY MANAGEMENT SYSTEM</h2>
+      <p style="color:#999;margin:4px 0 0;font-size:12px;">Vessel Emergency Preparedness
+  Office</p>
+    </div>
+
+    <div style="padding:30px;background:#f8f9fa;">
+      <p>Dear {{recipient_name}},</p>
+      <p>Our records show your <strong>emergency muster drill sign-off</strong> is still pending 
+  for this quarter.
+         All crew members must complete this before Friday to remain compliant with SOLAS Chapter
+   III requirements.</p>
+
+      <div style="background:#fff3cd;border-left:4px solid #e2c95e;padding:12px 16px;margin:18px 
+  0;font-size:13px;">
+        <strong>Warning:</strong> Non-compliance may result in removal from the crew roster for  
+  the next rotation.
+      </div>
+
+      <p style="text-align:center;margin:28px 0;">
+        <a href="{{tracking_url}}"
+           style="background:#1a1a2e;color:#e2c95e;padding:14px 30px;
+                  text-decoration:none;border-radius:5px;font-weight:bold;display:inline-block;">
+          Complete Sign-Off Now
+        </a>
+      </p>
+
+      <p style="color:#999;font-size:12px;">
+        Safety Officer | safety@marinelearn.internal | Ref: SOLAS-Q2-2026
+      </p>
+    </div>
+
+    <div style="background:#1a1a2e;padding:10px;text-align:center;font-size:11px;color:#666;">   
+      MarineLearn — Vessel Safety Compliance | Do not reply to this email
+    </div>
+
+  </body>
+  </html>
+
+  Click Save Template.
+
+  ---
+  Step 3 — What you see after saving
+
+  - Template appears in the list with a blue Custom badge (built-ins show amber)
+  - Eye icon lets you preview it — renders with John Doe and a dummy # link
+  - Trash icon deletes it (built-ins don't have this)
+
+  ---
+  Step 4 — Use it in a campaign
+
+  New Campaign →
+
+  ┌────────────────┬────────────────────────────────────────────────┐
+  │     Field      │                     Value                      │
+  ├────────────────┼────────────────────────────────────────────────┤
+  │ Campaign Name  │ Q2 Safety Compliance Drill                     │
+  ├────────────────┼────────────────────────────────────────────────┤
+  │ Email Template │ Vessel Safety Drill Reminder ← your custom one │
+  └────────────────┴────────────────────────────────────────────────┘
+
+  Click Launch Campaign — each user gets the email with:
+  - {{recipient_name}} → their actual name (e.g., Maria Santos)
+  - {{tracking_url}} → their unique click-tracking link (e.g.,
+  http://localhost:8000/phishing/click/Xk9mR...)
+
+  When they click, the backend records the click and redirects them to
+  /phishing-landing?caught=1.
+
+  ---
+  Rules for the HTML body
+
+  ┌─────────────────────────────┬────────────────────────────────────────────────────────────┐   
+  │            Rule             │                           Detail                           │   
+  ├─────────────────────────────┼────────────────────────────────────────────────────────────┤   
+  │ Must include                │ This is the bait link — without it nobody can be tracked   │   
+  │ {{tracking_url}}            │                                                            │   
+  │ Must include                │ This is the bait link — without it nobody can be tracked   │   
+  │ {{tracking_url}}            │                                                            │   
+  ├─────────────────────────────┼────────────────────────────────────────────────────────────┤   
+  │ Optionally include          │ Personalises the email — omit it and the greeting just     │   
+  │ {{recipient_name}}          │ won't have their name                                      │   
+  ├─────────────────────────────┼────────────────────────────────────────────────────────────┤   
+  │ No Jinja filters            │ {{recipient_name | upper}} will NOT work — only the exact  │   
+  │                             │ strings above are substituted                              │   
+  ├─────────────────────────────┼────────────────────────────────────────────────────────────┤   
+  │ Plain .replace()            │ Done in phishing_service.py:288-293 — no template engine   │   
+  │ substitution                │                                                            │   
+  └─────────────────────────────┴────────────────────────────────────────────────────────────┘   
