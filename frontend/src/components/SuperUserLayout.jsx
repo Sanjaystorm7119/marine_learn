@@ -18,15 +18,48 @@ const SuperuserLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const[mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
   const profileRef = useRef(null);
+  const notifRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
 
-  // 1. Fetch real user data from localStorage
-  const userName = localStorage.getItem("full_name") || "Super User";
+  const displayName = localStorage.getItem("full_name") || "Super User";
   const userRole = localStorage.getItem("role") || "super_user";
+  const unreadCount = notifications.filter(n => !n.is_read).length;
 
-  // 2. Proper Logout Function
+  const getHeaders = () => ({
+    Authorization: `Bearer ${localStorage.getItem("token")}`,
+  });
+
+  const fetchNotifications = async () => {
+    try {
+      const res = await fetch("http://127.0.0.1:8000/notifications/", { headers: getHeaders() });
+      if (res.ok) setNotifications(await res.json());
+    } catch { /* silent */ }
+  };
+
+  const markRead = async (id) => {
+    try {
+      await fetch(`http://127.0.0.1:8000/notifications/${id}/read`, {
+        method: "POST",
+        headers: getHeaders(),
+      });
+      setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
+    } catch { /* silent */ }
+  };
+
+  const markAllRead = async () => {
+    try {
+      await fetch("http://127.0.0.1:8000/notifications/read-all", {
+        method: "POST",
+        headers: getHeaders(),
+      });
+      setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+    } catch { /* silent */ }
+  };
+
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("role");
@@ -35,9 +68,17 @@ const SuperuserLayout = ({ children }) => {
   };
 
   useEffect(() => {
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 30000);
+    return () => clearInterval(interval);
+  }, []);
+  useEffect(() => {
     const handleClickOutside = (e) => {
       if (profileRef.current && !profileRef.current.contains(e.target)) {
         setProfileOpen(false);
+      }
+      if (notifRef.current && !notifRef.current.contains(e.target)) {
+        setNotifOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -88,7 +129,7 @@ const SuperuserLayout = ({ children }) => {
           {sidebarOpen && (
             <>
               <div className="sul-user-info">
-                <p className="sul-user-name">{userName}</p>
+                <p className="sul-user-name">{displayName}</p>
                 <p className="sul-user-role">{userRole}</p>
               </div>
               <button className="sul-logout-btn" onClick={handleLogout}>
@@ -147,10 +188,49 @@ const SuperuserLayout = ({ children }) => {
           </div>
 
           <div className="sul-header-actions">
-            <button className="sul-notif-btn">
-              <Bell className="sul-notif-icon" />
-              <span className="sul-notif-dot" />
-            </button>
+            <div className="sul-notif-wrap" ref={notifRef}>
+              <button className="sul-notif-btn" onClick={() => setNotifOpen(o => !o)}>
+                <Bell className="sul-notif-icon" />
+                {unreadCount > 0 && (
+                  <span className="sul-notif-badge">{unreadCount > 9 ? "9+" : unreadCount}</span>
+                )}
+              </button>
+
+              <AnimatePresence>
+                {notifOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8, scale: 0.96 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 8, scale: 0.96 }}
+                    transition={{ duration: 0.18 }}
+                    className="sul-notif-dropdown"
+                  >
+                    <div className="sul-notif-header">
+                      <span>Notifications</span>
+                      {unreadCount > 0 && (
+                        <button className="sul-notif-read-all" onClick={markAllRead}>Mark all read</button>
+                      )}
+                    </div>
+                    <div className="sul-notif-list">
+                      {notifications.length === 0 ? (
+                        <p className="sul-notif-empty">No notifications</p>
+                      ) : (
+                        notifications.slice(0, 10).map(n => (
+                          <button
+                            key={n.id}
+                            className={`sul-notif-item ${!n.is_read ? "sul-notif-item--unread" : ""}`}
+                            onClick={() => markRead(n.id)}
+                          >
+                            <p className="sul-notif-title">{n.title}</p>
+                            <p className="sul-notif-msg">{n.message}</p>
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
 
             <div className="sul-profile-wrap" ref={profileRef}>
               <button
@@ -180,8 +260,8 @@ const SuperuserLayout = ({ children }) => {
                           <User className="sul-dropdown-avatar-icon" />
                         </div>
                         <div>
-                          <p className="sul-dropdown-name">{userName}</p>
-                          <p className="sul-dropdown-email">{userRole}</p>
+                          <p className="sul-dropdown-name">{displayName}</p>
+                          <p className="sul-dropdown-email">{localStorage.getItem("email") || ""}</p>
                         </div>
                       </div>
                     </div>

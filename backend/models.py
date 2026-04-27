@@ -180,3 +180,53 @@ class Notification(Base):
     related_course_title = Column(String, nullable=True)
 
     user = relationship("User", backref="notifications")
+
+
+class PhishingTemplate(Base):
+    __tablename__ = "phishing_templates"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False)
+    subject = Column(String, nullable=False)
+    html_body = Column(Text, nullable=False)
+    is_builtin = Column(Boolean, default=False)
+    created_by_user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+
+class PhishingCampaign(Base):
+    __tablename__ = "phishing_campaigns"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False)
+    template_id = Column(Integer, ForeignKey("phishing_templates.id"), nullable=False)
+    created_by_user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    status = Column(String, default="active")
+    email_sent_count = Column(Integer, default=0)
+
+    template = relationship("PhishingTemplate")
+    targets = relationship("PhishingTarget", back_populates="campaign")
+    creator = relationship("User", foreign_keys=[created_by_user_id])
+
+
+class PhishingTarget(Base):
+    __tablename__ = "phishing_targets"
+
+    id = Column(Integer, primary_key=True, index=True)
+    campaign_id = Column(Integer, ForeignKey("phishing_campaigns.id"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    email_snapshot = Column(String, nullable=False)
+    full_name_snapshot = Column(String, nullable=False)
+    role_snapshot = Column(String, nullable=False)
+    tracking_token = Column(String, unique=True, index=True, nullable=False)
+    sent_at = Column(DateTime, nullable=True)
+    clicked_at = Column(DateTime, nullable=True)
+    click_ip = Column(String, nullable=True)
+    click_user_agent = Column(Text, nullable=True)
+    email_status = Column(String, default="pending")
+
+    campaign = relationship("PhishingCampaign", back_populates="targets")
+    user = relationship("User")
+
+    __table_args__ = (UniqueConstraint("campaign_id", "user_id", name="uq_phishing_campaign_user"),)

@@ -25,7 +25,8 @@ import AdminCourse from "./components/AdminCourse";
 import { CourseForm as AdminCourseForm } from "./components/AdminCourse";
 import AdminUserCourse from "./components/AdminUserCourse";
 import AuditsPage from "./components/Audits";
-import PhishingDrillPage from "./components/Phishingdrillpage";  // 👈 ADD THIS
+import PhishingDrillPage from "./components/Phishingdrillpage";
+import PhishingLanding from "./components/PhishingLanding";
 import SuperuserLayout from "./components/SuperUserLayout";
 import TeamsMeetPage from "./components/TeamsMeetPage";
 import "./index.css";
@@ -44,8 +45,9 @@ const PublicLayout = ({ children }) => {
       "/study-materials",
       "/settings",
       "/help",
-      "/audits",              // ✅ ADD THIS
+      "/audits",
       "/phishing-drill",
+      "/phishing-landing",
       "/teams-meet",
     ].includes(location.pathname) || location.pathname.startsWith("/admin");
 
@@ -87,8 +89,9 @@ function App() {
                 />
                 {/* <Route path="/mycourses" element={<MyCourses />} /> */}
                 <Route path="/study-materials" element={<StudyMaterials />} />
+                <Route path="/phishing-landing" element={<PhishingLanding />} />
 
-                {/* ✅ Superuser routes wrapped in SuperuserLayout */}
+                {/* Superuser routes wrapped in SuperuserLayout */}
                 <Route
                   path="/audits"
                   element={
