@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState,useEffect  } from "react";
 import { motion } from "framer-motion";
 import {
   Video, Plus, Calendar, Clock, Ship, Users, Send,
@@ -14,60 +14,7 @@ const vesselList = [
   "MV Indian Explorer",
 ];
 
-const mockMeetings = [
-  {
-    id: "MTG001",
-    title: "Safety Compliance Review",
-    vessel: "MV Ocean Star",
-    date: "2026-04-15",
-    startTime: "10:00",
-    endTime: "11:00",
-    attendees: ["Capt. James", "Chief Officer Raj", "Safety Officer Lee"],
-    status: "scheduled",
-    meetingLink: "https://teams.microsoft.com/meet/abc123",
-    agenda: "Review Q1 safety training compliance status and plan for Q2 drills.",
-    createdBy: "John Doe",
-  },
-  {
-    id: "MTG002",
-    title: "VAPT Findings Discussion",
-    vessel: "MV Sea Falcon",
-    date: "2026-04-12",
-    startTime: "14:00",
-    endTime: "15:30",
-    attendees: ["IT Officer Smith", "Capt. Williams", "Chief Engineer Davis"],
-    status: "completed",
-    meetingLink: "https://teams.microsoft.com/meet/def456",
-    agenda: "Discuss latest VAPT findings and remediation plan.",
-    createdBy: "John Doe",
-  },
-  {
-    id: "MTG003",
-    title: "Crew Training Schedule Planning",
-    vessel: "MV Pacific Voyager",
-    date: "2026-04-18",
-    startTime: "09:00",
-    endTime: "10:00",
-    attendees: ["HR Manager Chen", "Training Officer Park"],
-    status: "scheduled",
-    meetingLink: "https://teams.microsoft.com/meet/ghi789",
-    agenda: "Plan upcoming crew training schedule for the next quarter.",
-    createdBy: "John Doe",
-  },
-  {
-    id: "MTG004",
-    title: "Engine Room Inspection Debrief",
-    vessel: "MV Atlantic Guardian",
-    date: "2026-04-10",
-    startTime: "11:00",
-    endTime: "12:00",
-    attendees: ["Chief Engineer Thompson", "2nd Engineer Kim"],
-    status: "cancelled",
-    meetingLink: "https://teams.microsoft.com/meet/jkl012",
-    agenda: "Debrief on last inspection findings.",
-    createdBy: "John Doe",
-  },
-];
+
 
 const timeSlots = [
   "08:00", "08:30", "09:00", "09:30", "10:00", "10:30",
@@ -76,8 +23,10 @@ const timeSlots = [
   "17:00", "17:30", "18:00",
 ];
 
+// (Delete the mockMeetings array completely)
+
 const TeamsMeetPage = () => {
-  const [meetings, setMeetings] = useState(mockMeetings);
+  const[meetings, setMeetings] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [vesselFilter, setVesselFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -92,6 +41,56 @@ const TeamsMeetPage = () => {
   const [newEndTime, setNewEndTime] = useState("");
   const [newAttendees, setNewAttendees] = useState("");
   const [newAgenda, setNewAgenda] = useState("");
+
+  // --- NEW CODE STARTS HERE ---
+  // This runs automatically when the page loads/refreshes
+  useEffect(() => {
+    fetchMeetings();
+  },[]);
+
+  const fetchMeetings = async () => {
+    try {
+      const rawToken = localStorage.getItem("access_token") || localStorage.getItem("token");
+      if (!rawToken) return;
+      const cleanToken = rawToken.replace(/^"|"$/g, '');
+
+      const response = await fetch("http://127.0.0.1:8000/teams/meetings", {
+        headers: {
+          "Authorization": `Bearer ${cleanToken}`
+        }
+      });
+
+      if (!response.ok) throw new Error("Failed to fetch meetings");
+      
+      const data = await response.json();
+      
+      // Convert backend data format to match what the frontend table expects
+      const formattedMeetings = data.map(m => {
+        const startDate = new Date(m.start_time);
+        const endDate = new Date(m.end_time);
+        
+        return {
+          id: m.id, 
+          title: m.title,
+          vessel: "Assigned Vessel", // Note: Your backend DB doesn't have a vessel column yet!
+          date: startDate.toISOString().split("T")[0],
+          startTime: startDate.toTimeString().slice(0, 5),
+          endTime: endDate.toTimeString().slice(0, 5),
+          attendees: m.participants ||[],
+          status: m.status,
+          meetingLink: m.join_url,
+          agenda: m.description || "",
+        };
+      });
+
+      // Update the state with the data from the database
+      setMeetings(formattedMeetings);
+    } catch (error) {
+      console.error("Error fetching meetings:", error);
+      showToast("Error", "Failed to load meetings from server.", "destructive");
+    }
+  };
+  // --- NEW CODE ENDS HERE ---
 
   const showToast = (title, description, variant = "default") => {
     setToast({ title, description, variant });
@@ -111,35 +110,121 @@ const TeamsMeetPage = () => {
   const completedCount = meetings.filter((m) => m.status === "completed").length;
   const cancelledCount = meetings.filter((m) => m.status === "cancelled").length;
 
-  const handleScheduleMeeting = () => {
-    if (!newTitle || !newVessel || !newDate || !newStartTime || !newEndTime) {
-      showToast("Missing Fields", "Please fill all required fields.", "destructive");
+
+const handleScheduleMeeting = async () => {
+    if (!newTitle || !newVessel || !newDate || !newStartTime || !newEndTime || !newAttendees) {
+      showToast("Missing Fields", "Please fill all required fields including Attendees.", "destructive");
       return;
     }
-    const meeting = {
-      id: `MTG${String(meetings.length + 1).padStart(3, "0")}`,
+
+    const startDateTime = new Date(`${newDate}T${newStartTime}:00`).toISOString();
+    const endDateTime = new Date(`${newDate}T${newEndTime}:00`).toISOString();
+    const participantList = newAttendees.split(",").map((a) => a.trim()).filter(Boolean);
+
+    const payload = {
       title: newTitle,
-      vessel: newVessel,
-      date: newDate,
-      startTime: newStartTime,
-      endTime: newEndTime,
-      attendees: newAttendees.split(",").map((a) => a.trim()).filter(Boolean),
-      status: "scheduled",
-      meetingLink: `https://teams.microsoft.com/meet/${Math.random().toString(36).slice(2, 10)}`,
-      agenda: newAgenda,
-      createdBy: "John Doe",
+      description: newAgenda || `Meeting for ${newVessel}`,
+      start_time: startDateTime,
+      end_time: endDateTime,
+      participants: participantList
     };
-    setMeetings([meeting, ...meetings]);
-    setDialogOpen(false);
-    setNewTitle(""); setNewVessel(""); setNewDate("");
-    setNewStartTime(""); setNewEndTime(""); setNewAttendees(""); setNewAgenda("");
-    showToast("Meeting Scheduled", `"${meeting.title}" scheduled for ${meeting.vessel} on ${meeting.date}.`);
+
+    try {
+      // 1. Get the raw token
+      const rawToken = localStorage.getItem("access_token") || localStorage.getItem("token"); 
+      console.log("1. Raw Token from browser:", rawToken);
+      
+      if (!rawToken) {
+        showToast("Auth Error", "You are not logged in! Please log in first.", "destructive");
+        return;
+      }
+
+      // 2. CLEAN THE TOKEN (Removes accidental extra quotes)
+      const cleanToken = rawToken.replace(/^"|"$/g, '');
+      console.log("2. Clean Token being sent:", cleanToken);
+      
+      // 3. Call the FastAPI backend
+      const response = await fetch("http://127.0.0.1:8000/teams/meetings", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${cleanToken}` // Using the clean token!
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Backend Error Details:", errorData);
+        throw new Error(errorData.detail || "Failed to schedule meeting");
+      }
+
+      const newMeeting = await response.json();
+      console.log("Success! Meeting created:", newMeeting);
+
+      const formattedMeeting = {
+        id: `MTG${newMeeting.id}`,
+        title: newMeeting.title,
+        vessel: newVessel, 
+        date: newDate,
+        startTime: newStartTime,
+        endTime: newEndTime,
+        attendees: newMeeting.participants,
+        status: newMeeting.status,
+        meetingLink: newMeeting.join_url,
+        agenda: newMeeting.description,
+      };
+
+      setMeetings([formattedMeeting, ...meetings]);
+      setDialogOpen(false);
+      
+      setNewTitle(""); setNewVessel(""); setNewDate("");
+      setNewStartTime(""); setNewEndTime(""); setNewAttendees(""); setNewAgenda("");
+      
+      showToast("Meeting Scheduled", `Invites sent successfully for ${newTitle}.`);
+      
+    } catch (error) {
+      console.error("Catch Error:", error);
+      showToast("Error", error.message || "Could not schedule the meeting.", "destructive");
+    }
   };
 
-  const handleCancel = (id) => {
-    setMeetings(meetings.map((m) => m.id === id ? { ...m, status: "cancelled" } : m));
-    showToast("Meeting Cancelled", "The meeting has been cancelled.");
+  const handleCancel = async (id) => {
+    // 1. Ask for confirmation before cancelling
+    if (!window.confirm("Are you sure you want to cancel this meeting?")) return;
+
+    try {
+      // 2. Get the auth token
+      const rawToken = localStorage.getItem("access_token") || localStorage.getItem("token");
+      if (!rawToken) {
+        showToast("Auth Error", "You are not logged in!", "destructive");
+        return;
+      }
+      const cleanToken = rawToken.replace(/^"|"$/g, '');
+
+      // 3. Call the backend DELETE endpoint
+      const response = await fetch(`http://127.0.0.1:8000/teams/meetings/${id}`, {
+        method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${cleanToken}`
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || "Failed to cancel meeting");
+      }
+
+      // 4. If successful, update the UI to show the "Cancelled" badge
+      setMeetings(meetings.map((m) => m.id === id ? { ...m, status: "cancelled" } : m));
+      showToast("Meeting Cancelled", "The meeting has been cancelled successfully.");
+      
+    } catch (error) {
+      console.error("Error cancelling meeting:", error);
+      showToast("Error", error.message || "Could not cancel the meeting.", "destructive");
+    }
   };
+ 
 
   const getStatusBadge = (status) => {
     switch (status) {
