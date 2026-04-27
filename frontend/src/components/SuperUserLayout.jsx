@@ -16,7 +16,7 @@ const sidebarItems = [
 
 const SuperuserLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const[mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
@@ -26,6 +26,7 @@ const SuperuserLayout = ({ children }) => {
   const location = useLocation();
 
   const displayName = localStorage.getItem("full_name") || "Super User";
+  const userRole = localStorage.getItem("role") || "super_user";
   const unreadCount = notifications.filter(n => !n.is_read).length;
 
   const getHeaders = () => ({
@@ -59,12 +60,18 @@ const SuperuserLayout = ({ children }) => {
     } catch { /* silent */ }
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("role");
+    localStorage.removeItem("full_name");
+    navigate("/login");
+  };
+
   useEffect(() => {
     fetchNotifications();
     const interval = setInterval(fetchNotifications, 30000);
     return () => clearInterval(interval);
   }, []);
-
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (profileRef.current && !profileRef.current.contains(e.target)) {
@@ -92,7 +99,7 @@ const SuperuserLayout = ({ children }) => {
         </Link>
       </div>
 
-      <nav className="sul-nav">
+     <nav className="sul-nav">
         {sidebarItems.map((item) => {
           const isActive = location.pathname === item.href;
           return (
@@ -109,26 +116,26 @@ const SuperuserLayout = ({ children }) => {
             </button>
           );
         })}
+        
+        {/* Logout Button moved right below Teams Meet */}
+       
       </nav>
 
-      <div className="sul-sidebar-footer">
+     <div className="sul-sidebar-footer">
         <div className="sul-user-row">
           <div className="sul-user-avatar">
             <User className="sul-user-avatar-icon" />
           </div>
           {sidebarOpen && (
-            <div className="sul-user-info">
-              <p className="sul-user-name">{displayName}</p>
-              <p className="sul-user-role">Super User</p>
-            </div>
-          )}
-          {sidebarOpen && (
-            <button
-              onClick={() => navigate("/login")}
-              className="sul-logout-btn"
-            >
-              <LogOut className="sul-logout-icon" />
-            </button>
+            <>
+              <div className="sul-user-info">
+                <p className="sul-user-name">{displayName}</p>
+                <p className="sul-user-role">{userRole}</p>
+              </div>
+              <button className="sul-logout-btn" onClick={handleLogout}>
+                <LogOut className="sul-logout-icon" />
+              </button>
+            </>
           )}
         </div>
       </div>
@@ -261,13 +268,13 @@ const SuperuserLayout = ({ children }) => {
                     <div className="sul-dropdown-body">
                       <div className="sul-dropdown-role-row">
                         <span className="sul-dropdown-role-label">Role</span>
-                        <span className="sul-dropdown-role-badge">Super User</span>
+                        <span className="sul-dropdown-role-badge">{userRole}</span>
                       </div>
                       <div className="sul-dropdown-actions">
                         <button
                           onClick={() => {
                             setProfileOpen(false);
-                            navigate("/login");
+                            handleLogout();
                           }}
                           className="sul-signout-btn"
                         >

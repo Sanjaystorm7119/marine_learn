@@ -26,7 +26,8 @@ from services import teams_service
 def require_admin_or_superuser(
     current_user: models.User = Depends(get_current_user),
 ) -> models.User:
-    if current_user.role not in ("admin", "super_user"):
+    # We added "super user" with a space to match your database!
+    if current_user.role not in ("admin", "super_user", "super user"):
         raise HTTPException(status_code=403, detail="Access denied.")
     return current_user
 
@@ -71,20 +72,19 @@ def create_meeting(
 ):
     tenant_id, client_id, client_secret, organizer_id, organizer_name = _load_creds()
 
-    # Teams online meeting creation — uncomment when OnlineMeetings.ReadWrite.All is granted:
-    # try:
-    #     graph_meeting = teams_service.create_online_meeting(
-    #         tenant_id=tenant_id, client_id=client_id, client_secret=client_secret,
-    #         organizer_user_id=organizer_id, subject=payload.title,
-    #         start_iso=payload.start_time.isoformat(), end_iso=payload.end_time.isoformat(),
-    #     )
-    #     join_url = graph_meeting.get("joinWebUrl") or graph_meeting.get("joinUrl")
-    #     graph_id = graph_meeting.get("id")
-    # except (ValueError, PermissionError, RuntimeError):
-    #     join_url = graph_id = None
-    join_url = None
-    graph_id = None
+    # 1. Create the actual Teams Meeting via Graph API
+    try:
+        graph_meeting = teams_service.create_online_meeting(
+            tenant_id=tenant_id, client_id=client_id, client_secret=client_secret,
+            organizer_user_id=organizer_id, subject=payload.title,
+            start_iso=payload.start_time.isoformat(), end_iso=payload.end_time.isoformat(),
+        )
+        join_url = graph_meeting.get("joinWebUrl") or graph_meeting.get("joinUrl")
+        graph_id = graph_meeting.get("id")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to create Teams meeting: {str(e)}")
 
+    # 2. Save to Database
     meeting = models.TeamsMeeting(
         title=payload.title,
         description=payload.description,
@@ -94,7 +94,7 @@ def create_meeting(
         graph_meeting_id=graph_id,
         organizer_user_id=organizer_id,
         created_by_user_id=admin.id,
-        status="email_only",
+        status="scheduled",
         participants=[str(e) for e in payload.participants],
         email_status="pending",
     )
@@ -102,20 +102,22 @@ def create_meeting(
     db.commit()
     db.refresh(meeting)
 
+    # 3. Send Email with the real Join Link
     email_status = "sent"
     try:
         start_fmt = payload.start_time.strftime("%B %d, %Y at %I:%M %p UTC")
         end_fmt = payload.end_time.strftime("%I:%M %p UTC")
         html_body = f"""
         <html><body style="font-family:Arial,sans-serif;color:#1a1a2e;">
-          <h2 style="color:#0f3460;">&#128197; You're invited to a meeting</h2>
+          <h2 style="color:#0f3460;">&#128197; You're invited to a MarineLearn Meeting</h2>
           <p><strong>{payload.title}</strong></p>
           {"<p>" + (payload.description or "") + "</p>" if payload.description else ""}
           <p>&#128336; <strong>{start_fmt}</strong> &ndash; {end_fmt}</p>
           <p>Organizer: {organizer_name}</p>
-          <p style="color:#888;font-size:13px;margin-top:16px;">
-            The meeting link will be shared separately.
-          </p>
+          <br/>
+          <a href="{join_url}" style="background-color:#0f3460;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;display:inline-block;margin-top:10px;">
+            Click here to Join Teams Meeting
+          </a>
         </body></html>
         """
         teams_service.send_invitation_email(

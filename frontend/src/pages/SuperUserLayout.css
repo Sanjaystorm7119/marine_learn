@@ -12,6 +12,7 @@
   min-height: 100vh;
   background: #f0f4f8;
   display: flex;
+  
 }
 
 /* =====================
@@ -25,6 +26,7 @@
   transition: width 0.3s ease;
   overflow: hidden;
   flex-shrink: 0;
+  
 }
 
 @media (min-width: 1024px) {
@@ -90,7 +92,7 @@
 
 /* Nav */
 .sul-nav {
-  flex: 1;
+  
   padding: 0.75rem;
   display: flex;
   flex-direction: column;
@@ -140,7 +142,7 @@
 /* Sidebar footer / user area */
 .sul-sidebar-footer {
   padding: 0.75rem;
-  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  
 }
 
 .sul-user-row {

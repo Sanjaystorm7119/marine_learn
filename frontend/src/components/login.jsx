@@ -35,10 +35,13 @@ const Login = () => {
         localStorage.setItem("full_name", data.full_name);
 
         // Redirect based on role
+       // Redirect based on role
         if (data.role === "admin") {
           navigate("/admin"); // → Admin dashboard
+        } else if (data.role === "super user" || data.role === "super_user") {
+          navigate("/teams-meet"); // → Super User dashboard (You can change this to "/audits" if you prefer)
         } else {
-          navigate("/dashboard"); // → Normal user dashboard
+          navigate("/dashboard"); // → Normal crew dashboard
         }
       } else {
         const errorData = await response.json();
