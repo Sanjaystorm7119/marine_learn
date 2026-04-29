@@ -64,7 +64,8 @@ const Navbar = () => {
               Get Started
             </Link>
           </div>
-
+ 
+ 
           {/* Mobile toggle */}
           <button
             onClick={() => setIsOpen(!isOpen)}
@@ -110,3 +111,4 @@ const Navbar = () => {
 };
 
 export default Navbar;
+

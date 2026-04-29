@@ -20,10 +20,13 @@ import AdminUserDetails from "./components/AdminUserDetails";
 import AdminLayout from "./components/AdminLayout";
 import MyCourses from "./components/mycourse";
 import StudyMaterials from "./components/StudyMaterials";
+import SystemSettings from "./components/SystemSettings";
+import PhishingDrillPage from "./components/Phishingdrillpage";
+import Superuserlayout from "./components/Superuserlayout";
+
 
 import "./index.css";
 
-// Wrapper to hide standard Navbar & Footer on auth pages AND admin pages
 const PublicLayout = ({ children }) => {
   const location = useLocation();
   const hideLayout =
@@ -35,7 +38,10 @@ const PublicLayout = ({ children }) => {
       "/certificates",
       "/mycourses",
       "/study-materials",
-    ].includes(location.pathname) || location.pathname.startsWith("/admin");
+      "/Phishingdrillpage",
+    ].includes(location.pathname) ||
+    location.pathname.startsWith("/Admin") ||
+    location.pathname.startsWith("/superuser");
 
   return (
     <>
@@ -50,6 +56,7 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
+
         {/* Public / Student Routes */}
         <Route
           path="/*"
@@ -65,37 +72,49 @@ function App() {
                 <Route path="/help" element={<Help />} />
                 <Route path="/coursepage" element={<CoursesCatalog />} />
                 <Route path="/settings" element={<Settings />} />
-                <Route
-                  path="/learn/:departmentId/:courseId"
-                  element={<LearningPage />}
-                />
-                <Route
-                  path="/course/:departmentId/:courseId"
-                  element={<CoursePage />}
-                />
+                <Route path="/Phishingdrillpage" element={<PhishingDrillPage />} />
+                <Route path="/learn/:departmentId/:courseId" element={<LearningPage />} />
+                <Route path="/course/:departmentId/:courseId" element={<CoursePage />} />
                 <Route path="/mycourses" element={<MyCourses />} />
                 <Route path="/study-materials" element={<StudyMaterials />} />
+                <Route path="/superuserlayout" element={<Superuserlayout />} />
               </Routes>
             </PublicLayout>
           }
         />
 
-        {/* Admin Routes with Dedicated Layout */}
+        {/* Admin Routes */}
         <Route
-          path="/admin/*"
+          path="/Admin/*"
           element={
             <AdminLayout>
               <Routes>
                 <Route path="/" element={<AdminDashboard />} />
                 <Route path="/users" element={<AdminUsers />} />
                 <Route path="/users/:id" element={<AdminUserDetails />} />
+                <Route path="/settings" element={<SystemSettings />} />
+                <Route path="/phishing-drill" element={<PhishingDrillPage />} />
+                <Route path="/superuserlayout" element={<Superuserlayout />} />
+
+
               </Routes>
             </AdminLayout>
           }
         />
+        {/* Superuser Routes */}
+        <Route
+          path="/superuser/phishing-drill"
+          element={
+            <Superuserlayout>
+              <PhishingDrillPage />
+            </Superuserlayout>
+          }
+        /> 
+
       </Routes>
     </BrowserRouter>
   );
 }
 
 export default App;
+

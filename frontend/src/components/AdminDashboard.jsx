@@ -7,7 +7,6 @@ const AdminDashboard = () => {
     const [stats, setStats] = useState({ totalUsers: 0, loading: true, error: null, usersByRole: [] });
     const navigate = useNavigate();
 
-    // Theme matching colors
     const COLORS = ['hsl(207, 52%, 40%)', '#00C49F', '#FFBB28', '#FF8042'];
 
     useEffect(() => {
@@ -19,7 +18,7 @@ const AdminDashboard = () => {
             }
 
             try {
-                const response = await fetch('http://127.0.0.1:8000/admin/stats', {
+                const response = await fetch('http://127.0.0.1:8000/admin/stats', {  // ✅ FIXED
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
@@ -76,7 +75,6 @@ const AdminDashboard = () => {
                         {stats.loading ? '...' : stats.totalUsers}
                     </div>
                 </div>
-                {/* Future stats can go here */}
                 <div className="admin-stat-card">
                     <div className="stat-card-title">Platform Status</div>
                     <div className="stat-card-value" style={{color: '#4CAF50', fontSize: '1.5rem', marginTop: '1rem'}}>
@@ -85,7 +83,6 @@ const AdminDashboard = () => {
                 </div>
             </div>
 
-            {/* Charts Section */}
             {!stats.loading && stats.usersByRole.length > 0 && (
                 <div className="admin-stats-grid" style={{ marginTop: '2rem', gap: '2rem' }}>
                     <div className="admin-stat-card" style={{ padding: '2rem 1rem' }}>

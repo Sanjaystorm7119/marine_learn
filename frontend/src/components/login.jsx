@@ -3,6 +3,8 @@ import { motion } from "framer-motion";
 import { Mail, Lock, ArrowRight, ArrowLeft } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import "../pages/login.css";
+import '../pages/admin.css';
+
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -13,8 +15,8 @@ const Login = () => {
     e.preventDefault();
 
     try {
-      // 1. Send email and password to FastAPI
-      const response = await fetch("http://localhost:8000/login", {
+      // 1. Send email and password to FastAPI  
+        const response = await fetch('http://127.0.0.1:8000/login', {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -35,7 +37,7 @@ const Login = () => {
         localStorage.setItem("full_name", data.full_name);
 
         // Redirect based on role
-        if (data.role === "admin") {
+        if (data.role?.toLowerCase() === "admin") {
           navigate("/admin"); // → Admin dashboard
         } else {
           navigate("/dashboard"); // → Normal user dashboard

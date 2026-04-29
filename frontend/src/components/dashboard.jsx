@@ -33,6 +33,8 @@ import {
   Star,
   Layers,
   BookOpenCheck,
+  
+  ShieldAlert, 
 } from "lucide-react";
 
 import "../pages/dashboard.css";
@@ -285,6 +287,7 @@ const sidebarItems = [
   { label: "Reports", icon: BarChart3, href: "/dashboard" },
   { label: "Settings", icon: Settings, href: "/settings" },
   { label: "Help", icon: HelpCircle, href: "/help" },
+  { label: "Phishing Drill", icon: ShieldAlert, href: "/Phishingdrillpage" },
 ];
 
 const Dashboard = () => {
