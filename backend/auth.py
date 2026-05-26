@@ -7,7 +7,7 @@ SECRET_KEY = os.environ.get("JWT_SECRET_KEY")
 if not SECRET_KEY:
     raise RuntimeError("JWT_SECRET_KEY environment variable is not set. Add it to backend/.env")
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 # Token expires in 1 hour
+ACCESS_TOKEN_EXPIRE_MINUTES = 540 # Token expires in 1 hour
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 

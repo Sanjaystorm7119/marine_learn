@@ -23,7 +23,7 @@ _BUILTIN_TEMPLATES = [
     # ── General IT / HR ──────────────────────────────────────────────────
     {
         "name": "Fake IT Password Reset",
-        "subject": "Action Required: Your MarineLearn password will expire in 24 hours",
+        "subject":  '["Action Required: Your MarineLearn password will expire in 24 hours", "Security Alert: Password Expiry Notice", "Urgent: Update your MarineLearn credentials immediately", "Mandatory Password Rotation Required", "Your account access will be suspended in 12 hours", "IT Helpdesk: Password Reset Confirmation", "Final Notice: Update your login credentials", "MarineLearn System Update: Please reset your password", "Action Needed: Your password has expired", "Security Update: Secure your MarineLearn account now"]',
         "html_body": """<!-- SIMULATION -->
 <html><body style="font-family:Arial,sans-serif;color:#1a1a2e;max-width:600px;margin:auto;padding:0;">
 <div style="background:#0f3460;padding:24px;text-align:center;">
@@ -42,7 +42,7 @@ _BUILTIN_TEMPLATES = [
     },
     {
         "name": "IT Security Alert",
-        "subject": "Security Alert: Unauthorized login attempt detected on your account",
+        "subject": '["Security Alert: Unauthorized login attempt detected on your account", "Action Required: Verify your recent login", "Suspicious activity on your MarineLearn account", "Urgent: Unrecognized device signed into your account", "Security Warning: Account access temporarily restricted", "Did you just sign in from a new location?", "Critical Alert: Multiple failed login attempts", "IT Security: Please verify your identity", "Immediate Action Required: Account compromise detected", "MarineLearn Security: Review recent account activity"]',
         "html_body": """<!-- SIMULATION -->
 <html><body style="font-family:Arial,sans-serif;color:#1a1a2e;max-width:600px;margin:auto;padding:0;">
 <div style="background:#c0392b;padding:24px;text-align:center;">
@@ -62,7 +62,7 @@ _BUILTIN_TEMPLATES = [
     },
     {
         "name": "Crew Salary Update",
-        "subject": "Your payslip for this month is ready — includes a salary adjustment",
+        "subject": '["Your payslip for this month is ready — includes a salary adjustment", "HR Notification: Updated Salary and Bonus Structure", "Confidential: Your revised compensation package", "Action Required: Review your monthly payslip", "Payroll Alert: Discrepancy in your recent salary deposit", "Important: Changes to your upcoming payroll", "Your performance bonus has been processed", "HR Payroll: Please confirm your bank details", "Notice: Delay in salary processing - Action Required", "View your updated payslip and tax deductions"]',
         "html_body": """<!-- SIMULATION -->
 <html><body style="font-family:Arial,sans-serif;color:#1a1a2e;max-width:600px;margin:auto;padding:0;">
 <div style="background:#27ae60;padding:24px;text-align:center;">
@@ -82,7 +82,7 @@ _BUILTIN_TEMPLATES = [
     # ── Maritime / Regulatory ────────────────────────────────────────────
     {
         "name": "Port Authority Document Check",
-        "subject": "Urgent: Port inspection — vessel documentation verification required",
+        "subject": '["Urgent: Port inspection — vessel documentation verification required", "Port Authority Notice: Pre-arrival compliance check", "Immediate Action: Verify vessel documents for port entry", "Warning: Missing documentation for upcoming port call", "Port Control: Submit required clearance documents", "Final Notice: Vessel inspection scheduled", "Action Required: Update your maritime compliance records", "Port Authority: Discrepancy in submitted documents", "Urgent Clearance Required: Port entry at risk", "Official Notice: Maritime Safety Compliance Verification"]',
         "html_body": """<!-- SIMULATION -->
 <html><body style="font-family:Arial,sans-serif;color:#1a1a2e;max-width:600px;margin:auto;padding:0;">
 <div style="background:#1a1a2e;padding:24px;text-align:center;">
@@ -106,7 +106,7 @@ _BUILTIN_TEMPLATES = [
     },
     {
         "name": "STCW Certificate Renewal",
-        "subject": "Action Required: Your STCW certificate expires in 7 days — renew now",
+        "subject": '["Action Required: Your STCW certificate expires in 7 days — renew now", "Warning: STCW Certification Expiry Notice", "Urgent: Renew your Basic Safety Training certificate", "Compliance Alert: Missing STCW documentation", "Final Reminder: Your maritime certificates are expiring", "Important: Update your STCW records immediately", "Notice of Suspension: Expired STCW certificate", "Action Needed: Upload your renewed STCW documents", "Maritime Training Registry: Certificate Validation Required", "Urgent: Your eligibility to serve is at risk"]',
         "html_body": """<!-- SIMULATION -->
 <html><body style="font-family:Arial,sans-serif;color:#1a1a2e;max-width:600px;margin:auto;padding:0;">
 <div style="background:#0f3460;padding:24px;text-align:center;">
@@ -130,7 +130,7 @@ _BUILTIN_TEMPLATES = [
     },
     {
         "name": "ISM Safety Management Audit",
-        "subject": "ISM Audit Notification: Complete your annual safety declaration",
+        "subject": '["ISM Audit Notification: Complete your annual safety declaration", "Action Required: Annual ISM Safety Compliance", "Urgent: Overdue Safety Management System Declaration", "Mandatory: Review updated SMS Policy", "ISM Compliance: Verify your safety equipment inspection", "Important: Crew Compliance Portal - Action Needed", "Audit Alert: Missing safety declaration in your file", "Final Notice: Complete your ISM Code requirements", "Safety Management Audit: Your input is required", "Urgent: Acknowledge Emergency Muster Procedures"]',
         "html_body": """<!-- SIMULATION -->
 <html><body style="font-family:Arial,sans-serif;color:#1a1a2e;max-width:600px;margin:auto;padding:0;">
 <div style="background:#2c3e50;padding:24px;text-align:center;">
@@ -155,7 +155,7 @@ _BUILTIN_TEMPLATES = [
     },
     {
         "name": "Fuel Supplier Invoice",
-        "subject": "Overdue Invoice #INV-2026-0318 — Immediate payment confirmation required",
+        "subject":  '["Overdue Invoice #INV-2026-0318 — Immediate payment confirmation required", "Urgent: Unpaid Bunker Fuel Invoice", "Final Notice: Account suspension due to unpaid invoice", "Action Required: Update payment details for Invoice #INV-2026-0318", "Payment Overdue: Global Marine Fuel Suppliers Ltd.", "Important: Discrepancy in recent fuel payment", "Invoice #INV-2026-0318: Payment Confirmation Needed", "Urgent: Late payment penalty applied to your account", "Accounts Payable: Please review attached invoice", "Notice of Service Suspension: Unpaid Fuel Delivery"]',
         "html_body": """<!-- SIMULATION -->
 <html><body style="font-family:Arial,sans-serif;color:#1a1a2e;max-width:600px;margin:auto;padding:0;">
 <div style="background:#e67e22;padding:24px;text-align:center;">
@@ -180,7 +180,7 @@ _BUILTIN_TEMPLATES = [
     },
     {
         "name": "Manning Agency Contract Update",
-        "subject": "Your employment contract has been updated — review and sign by Friday",
+        "subject": '["Your employment contract has been updated — review and sign by Friday", "Urgent: Revised Crew Contract Terms", "Action Required: Sign your updated employment agreement", "Important: Changes to your leave and medical coverage", "Manning Agency Notice: Contract renewal required", "Final Reminder: Unsigned contract holding up your rotation", "Confidential: Review your new contract terms", "SeaForce Crewing: Immediate signature required", "Action Needed: Acknowledge updated repatriation allowances", "Urgent: Your upcoming rotation is at risk - Sign Contract"]',
         "html_body": """<!-- SIMULATION -->
 <html><body style="font-family:Arial,sans-serif;color:#1a1a2e;max-width:600px;margin:auto;padding:0;">
 <div style="background:#1a5276;padding:24px;text-align:center;">
@@ -203,7 +203,7 @@ _BUILTIN_TEMPLATES = [
     },
     {
         "name": "Vessel VPN / Remote Access Reset",
-        "subject": "Your shipboard VPN access will be revoked — verify credentials to retain access",
+        "subject": '["Your shipboard VPN access will be revoked — verify credentials to retain access", "Urgent: Remote Access Security Token Expiring", "Action Required: Renew your vessel VPN credentials", "IT Security: Annual VPN Access Audit", "Warning: Unauthorized access attempt on your VPN", "Important: Update your remote access token immediately", "Final Notice: VPN access suspension in 12 hours", "Fleet IT: Verify your identity for continued access", "Action Needed: Generate new VPN access token", "Security Alert: Your remote access has been compromised"]',
         "html_body": """<!-- SIMULATION -->
 <html><body style="font-family:Arial,sans-serif;color:#1a1a2e;max-width:600px;margin:auto;padding:0;">
 <div style="background:#117a65;padding:24px;text-align:center;">
@@ -226,7 +226,7 @@ _BUILTIN_TEMPLATES = [
     },
     {
         "name": "Company Travel Booking Confirmation",
-        "subject": "Your travel itinerary is ready — confirm your details to complete booking",
+        "subject": '["Your travel itinerary is ready — confirm your details to complete booking", "Urgent: Flight cancellation risk - Confirm details", "Action Required: Review your upcoming crew rotation travel", "Important: Missing passport information for your flight", "Travel Booking Confirmation: ML-TRAVEL-2026-CR047", "Final Reminder: Confirm travel details within 24 hours", "Urgent: Changes to your departure schedule", "Corporate Travel: Please verify your itinerary", "Action Needed: Approve your travel arrangements", "Flight Itinerary Update: Singapore to Rotterdam"]',
         "html_body": """<!-- SIMULATION -->
 <html><body style="font-family:Arial,sans-serif;color:#1a1a2e;max-width:600px;margin:auto;padding:0;">
 <div style="background:#6c3483;padding:24px;text-align:center;">
@@ -253,18 +253,31 @@ _BUILTIN_TEMPLATES = [
 
 
 def seed_builtin_templates(db: Session) -> None:
-    existing_names = {
-        row.name
-        for row in db.query(models.PhishingTemplate.name).filter_by(is_builtin=True).all()
+    # Fetch existing templates as full objects
+    existing_templates = {
+        t.name: t
+        for t in db.query(models.PhishingTemplate).filter_by(is_builtin=True).all()
     }
+    
     added = 0
-    for t in _BUILTIN_TEMPLATES:
-        if t["name"] not in existing_names:
-            db.add(models.PhishingTemplate(is_builtin=True, **t))
+    updated = 0
+    
+    for t_data in _BUILTIN_TEMPLATES:
+        if t_data["name"] not in existing_templates:
+            # Create new if it doesn't exist
+            db.add(models.PhishingTemplate(is_builtin=True, **t_data))
             added += 1
-    if added:
+        else:
+            # Update existing if the subject or body has changed in the code
+            existing = existing_templates[t_data["name"]]
+            if existing.subject != t_data["subject"] or existing.html_body != t_data["html_body"]:
+                existing.subject = t_data["subject"]
+                existing.html_body = t_data["html_body"]
+                updated += 1
+                
+    if added or updated:
         db.commit()
-        logger.info("Seeded %d new built-in phishing templates", added)
+        logger.info("Seeded %d new, updated %d built-in phishing templates", added, updated)
 
 
 def generate_tracking_token() -> str:

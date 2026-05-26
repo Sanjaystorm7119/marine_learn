@@ -38,7 +38,7 @@ const PhishingDrillPage = () => {
   const [launching, setLaunching] = useState(false);
 
   const [form, setForm] = useState({ name: "", template_id: "" });
-  const [templateForm, setTemplateForm] = useState({ name: "", subject: "", html_body: "" });
+  const [templateForm, setTemplateForm] = useState({ name: "", subject: [""], html_body: "" });
 
   useEffect(() => {
     fetchCampaigns();
@@ -111,8 +111,8 @@ const PhishingDrillPage = () => {
   };
 
   const handleCreateTemplate = async () => {
-    if (!templateForm.name.trim() || !templateForm.subject.trim() || !templateForm.html_body.trim()) {
-      showToast("Missing fields", "All template fields are required", "error");
+     if (!templateForm.name.trim() || templateForm.subject.some(s => !s.trim()) || !templateForm.html_body.trim()) {
+      showToast("Missing fields", "All template fields and subjects are required", "error");
       return;
     }
     try {
@@ -126,7 +126,7 @@ const PhishingDrillPage = () => {
       setTemplates(prev => [...prev, created]);
       showToast("Template Created", `"${created.name}" is ready to use`);
       setTemplateOpen(false);
-      setTemplateForm({ name: "", subject: "", html_body: "" });
+      setTemplateForm({ name: "", subject: [""], html_body: "" });
     } catch (e) {
       showToast("Error", e.message, "error");
     }
@@ -305,7 +305,10 @@ const PhishingDrillPage = () => {
                       className="pd-table-row"
                     >
                       <td><p className="pd-cell-title">{t.name}</p></td>
-                      <td className="pd-cell-muted">{t.subject}</td>
+                      <td className="pd-cell-muted">
+                        {t.subject[0]} 
+                        {t.subject.length > 1 && <span style={{marginLeft: '8px', fontSize: '11px', background: '#e2e8f0', padding: '2px 6px', borderRadius: '10px'}}>+{t.subject.length - 1}</span>}
+                      </td>
                       <td>
                         <span className={`pd-badge ${t.is_builtin ? "pd-badge-amber" : "pd-badge-blue"}`}>
                           {t.is_builtin ? "Built-in" : "Custom"}
@@ -415,13 +418,41 @@ const PhishingDrillPage = () => {
                   />
                 </div>
                 <div className="pd-field">
-                  <label className="pd-label">Email Subject</label>
-                  <input
-                    className="pd-input"
-                    placeholder="e.g., Urgent: Verify your invoice"
-                    value={templateForm.subject}
-                    onChange={e => setTemplateForm(prev => ({ ...prev, subject: e.target.value }))}
-                  />
+                  <label className="pd-label">Email Subjects (Variants)</label>
+                  <p className="pd-label-hint" style={{marginBottom: "8px"}}>Add multiple subjects to randomize them during the drill.</p>
+                  {templateForm.subject.map((sub, idx) => (
+                    <div key={idx} style={{ display: "flex", gap: "8px", marginBottom: "8px" }}>
+                      <input
+                        className="pd-input"
+                        placeholder="e.g., Urgent: Verify your invoice"
+                        value={sub}
+                        onChange={e => {
+                          const newSubs = [...templateForm.subject];
+                          newSubs[idx] = e.target.value;
+                          setTemplateForm(prev => ({ ...prev, subject: newSubs }));
+                        }}
+                      />
+                      {templateForm.subject.length > 1 && (
+                        <button 
+                          className="pd-icon-btn" 
+                          style={{ color: "#ef4444" }}
+                          onClick={() => {
+                            const newSubs = templateForm.subject.filter((_, i) => i !== idx);
+                            setTemplateForm(prev => ({ ...prev, subject: newSubs }));
+                          }}
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  <button 
+                    className="pd-btn-secondary pd-btn-sm" 
+                    style={{ marginTop: "4px", background: "transparent", border: "1px dashed #cbd5e1", width: "100%" }}
+                    onClick={() => setTemplateForm(prev => ({ ...prev, subject: [...prev.subject, ""] }))}
+                  >
+                    <Plus size={14} /> Add Subject Variant
+                  </button>
                 </div>
                 <div className="pd-field">
                   <label className="pd-label">HTML Body</label>
@@ -459,7 +490,7 @@ const PhishingDrillPage = () => {
               <div className="pd-dialog-header">
                 <div>
                   <h2 className="pd-dialog-title">{previewTemplate.name}</h2>
-                  <p className="pd-cell-muted" style={{ margin: 0, fontSize: "0.8rem" }}>Subject: {previewTemplate.subject}</p>
+                  <p className="pd-cell-muted" style={{ margin: 0, fontSize: "0.8rem" }}>Subject Preview: {previewTemplate.subject[0]}</p>
                 </div>
                 <button className="pd-dialog-close" onClick={() => setPreviewTemplate(null)}><X size={18} /></button>
               </div>
@@ -537,8 +568,8 @@ const PhishingDrillPage = () => {
                           <thead>
                             <tr className="pd-table-header-row">
                               <th>User</th>
-                              <th>Role</th>
-                              <th>Email</th>
+                              <th>Subject Used</th>
+                              <th>Email Status</th>
                               <th className="text-center">Clicked</th>
                               <th className="text-center">Tracking Link</th>
                             </tr>
@@ -556,7 +587,7 @@ const PhishingDrillPage = () => {
                                   <p className="pd-cell-title">{t.full_name}</p>
                                   <p className="pd-cell-sub">{t.email}</p>
                                 </td>
-                                <td><span className="pd-role-badge">{t.role}</span></td>
+                                <td><p className="pd-cell-muted" style={{fontSize: '12px'}}>{t.subject_used || "N/A"}</p></td>
                                 <td>
                                   <span className={`pd-badge ${t.email_status === "sent" ? "pd-badge-green" : t.email_status === "failed" ? "pd-badge-red" : "pd-badge-amber"}`}>
                                     {t.email_status}

@@ -2,7 +2,7 @@ import { useState,useEffect  } from "react";
 import { motion } from "framer-motion";
 import {
   Video, Plus, Calendar, Clock, Ship, Users, Send,
-  Search, Trash2, CheckCircle2, XCircle
+  Search, Trash2, CheckCircle2, XCircle, Download
 } from "lucide-react";
 import "../pages/TeamsMeetPage.css";
 
@@ -39,8 +39,9 @@ const TeamsMeetPage = () => {
   const [newDate, setNewDate] = useState("");
   const [newStartTime, setNewStartTime] = useState("");
   const [newEndTime, setNewEndTime] = useState("");
-  const [newAttendees, setNewAttendees] = useState("");
+
   const [newAgenda, setNewAgenda] = useState("");
+  const [fetchingId, setFetchingId] = useState(null);
 
   // --- NEW CODE STARTS HERE ---
   // This runs automatically when the page loads/refreshes
@@ -65,21 +66,29 @@ const TeamsMeetPage = () => {
       const data = await response.json();
       
       // Convert backend data format to match what the frontend table expects
-      const formattedMeetings = data.map(m => {
+     const formattedMeetings = data.map(m => {
         const startDate = new Date(m.start_time);
         const endDate = new Date(m.end_time);
+        const now = new Date(); // <--- Get current time
+        
+        // <--- Check if meeting is over
+        let displayStatus = m.status;
+        if (displayStatus !== "cancelled" && endDate < now) {
+          displayStatus = "completed";
+        }
         
         return {
           id: m.id, 
           title: m.title,
-          vessel: "Assigned Vessel", // Note: Your backend DB doesn't have a vessel column yet!
+          vessel: m.vessel || "Unknown Vessel",  // Note: Your backend DB doesn't have a vessel column yet!
           date: startDate.toISOString().split("T")[0],
           startTime: startDate.toTimeString().slice(0, 5),
           endTime: endDate.toTimeString().slice(0, 5),
           attendees: m.participants ||[],
-          status: m.status,
+          status: displayStatus,
           meetingLink: m.join_url,
           agenda: m.description || "",
+          recording_url: m.recording_url,
         };
       });
 
@@ -112,22 +121,24 @@ const TeamsMeetPage = () => {
 
 
 const handleScheduleMeeting = async () => {
-    if (!newTitle || !newVessel || !newDate || !newStartTime || !newEndTime || !newAttendees) {
-      showToast("Missing Fields", "Please fill all required fields including Attendees.", "destructive");
+    // ✅ Removed !newAttendees
+    if (!newTitle || !newVessel || !newDate || !newStartTime || !newEndTime) {
+      showToast("Missing Fields", "Please fill all required fields.", "destructive");
       return;
     }
 
     const startDateTime = new Date(`${newDate}T${newStartTime}:00`).toISOString();
     const endDateTime = new Date(`${newDate}T${newEndTime}:00`).toISOString();
-    const participantList = newAttendees.split(",").map((a) => a.trim()).filter(Boolean);
+    
+    // ✅ Removed participantList line completely
 
-    const payload = {
-      title: newTitle,
-      description: newAgenda || `Meeting for ${newVessel}`,
-      start_time: startDateTime,
-      end_time: endDateTime,
-      participants: participantList
-    };
+   const payload = {
+  title: newTitle,
+  description: newAgenda || `Meeting for ${newVessel}`,
+  start_time: startDateTime,
+  end_time: endDateTime,
+  vessel: newVessel
+};
 
     try {
       // 1. Get the raw token
@@ -217,14 +228,45 @@ const handleScheduleMeeting = async () => {
 
       // 4. If successful, update the UI to show the "Cancelled" badge
       setMeetings(meetings.map((m) => m.id === id ? { ...m, status: "cancelled" } : m));
-      showToast("Meeting Cancelled", "The meeting has been cancelled successfully.");
+       showToast("Meeting Cancelled", "The meeting has been cancelled successfully.");
       
     } catch (error) {
       console.error("Error cancelling meeting:", error);
       showToast("Error", error.message || "Could not cancel the meeting.", "destructive");
     }
   };
- 
+
+  const handleFetchRecording = async (id) => {
+    setFetchingId(id);
+    try {
+      const rawToken = localStorage.getItem("access_token") || localStorage.getItem("token");
+      if (!rawToken) {
+        showToast("Auth Error", "You are not logged in!", "destructive");
+        return;
+      }
+      const cleanToken = rawToken.replace(/^"|"$/g, '');
+
+      showToast("Processing", "Fetching recording from OneDrive to SharePoint... This may take a minute.");
+
+      const response = await fetch(`http://127.0.0.1:8000/teams/meetings/${id}/fetch-recording`, {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${cleanToken}` }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || "Failed to fetch recording");
+      }
+
+      showToast("Success", "Recording successfully uploaded to SharePoint!");
+      fetchMeetings(); // Refresh table to show the View button
+    } catch (error) {
+      console.error("Error fetching recording:", error);
+      showToast("Error", error.message || "Could not fetch the recording.", "destructive");
+    } finally {
+      setFetchingId(null);
+    }
+  };
 
   const getStatusBadge = (status) => {
     switch (status) {
@@ -351,16 +393,7 @@ const handleScheduleMeeting = async () => {
                   </select>
                 </div>
               </div>
-              <div className="tm-form-group">
-                <label className="tm-label">Attendees</label>
-                <input
-                  className="tm-input"
-                  placeholder="Comma-separated names (e.g. Capt. James, Officer Raj)"
-                  value={newAttendees}
-                  onChange={(e) => setNewAttendees(e.target.value)}
-                />
-                <p className="tm-hint">Separate names with commas</p>
-              </div>
+             
               <div className="tm-form-group">
                 <label className="tm-label">Agenda</label>
                 <textarea
@@ -524,13 +557,14 @@ const handleScheduleMeeting = async () => {
                       <p className="tm-td-attendees-list">{meeting.attendees.join(", ")}</p>
                     </td>
                     <td>{getStatusBadge(meeting.status)}</td>
-                    <td className="tm-td-actions">
+                     <td className="tm-td-actions">
                       <div className="tm-action-btns">
                         {meeting.status === "scheduled" && (
                           <>
                             <button
                               className="tm-action-btn tm-action-btn--primary"
                               title="Join Meeting"
+                              onClick={() => window.open(meeting.meetingLink, "_blank")}
                             >
                               <Video className="tm-action-icon" />
                             </button>
@@ -541,6 +575,30 @@ const handleScheduleMeeting = async () => {
                             >
                               <Trash2 className="tm-action-icon" />
                             </button>
+                          </>
+                        )}
+                        {meeting.status === "completed" && (
+                          <>
+                            {!meeting.recording_url ? (
+                              <button
+                                className="tm-action-btn tm-action-btn--primary"
+                                title="Fetch Recording to SharePoint"
+                                onClick={() => handleFetchRecording(meeting.id)}
+                                disabled={fetchingId === meeting.id}
+                                style={{ opacity: fetchingId === meeting.id ? 0.5 : 1 }}
+                              >
+                                <Download className="tm-action-icon" />
+                              </button>
+                            ) : (
+                              <button
+                                className="tm-action-btn tm-action-btn--green"
+                                title="View Recording"
+                                onClick={() => window.open(meeting.recording_url, "_blank")}
+                                style={{ backgroundColor: "#10b981", color: "white" }}
+                              >
+                                <Video className="tm-action-icon" />
+                              </button>
+                            )}
                           </>
                         )}
                       </div>

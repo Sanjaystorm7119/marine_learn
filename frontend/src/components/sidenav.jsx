@@ -1,9 +1,10 @@
 import { Anchor, User, LogOut } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate,useLocation } from "react-router-dom";
 import "../pages/sidenav.css";
 
 const Sidenav = ({ sidebarOpen, sidebarItems }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const userName = localStorage.getItem("full_name") || "User";
   const userRole = localStorage.getItem("role") || "Crew";
 
@@ -37,7 +38,7 @@ const Sidenav = ({ sidebarOpen, sidebarItems }) => {
           <Link
             key={item.label}
             to={item.href}
-            className={`sidebar-nav-item${item.active ? " sidebar-nav-item--active" : ""}`}
+            className={`sidebar-nav-item${location.pathname === item.href ? " sidebar-nav-item--active" : ""}`}
           >
             <item.icon className="sidebar-nav-icon" />
             {sidebarOpen && <span>{item.label}</span>}

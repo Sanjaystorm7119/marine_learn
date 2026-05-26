@@ -28,6 +28,15 @@
   flex-shrink: 0;
   
 }
+.sul-nav-btn--sub {
+  padding-left: 2.5rem;   /* indent under parent */
+  font-size: 0.8125rem;
+}
+
+.sul-nav-btn:focus,
+.sul-nav-btn:focus-visible {
+  outline: none;
+}
 
 @media (min-width: 1024px) {
   .sul-sidebar {

@@ -93,6 +93,9 @@ def create_online_meeting(
         "subject": subject,
         "startDateTime": start_iso,
         "endDateTime": end_iso,
+        "lobbyBypassSettings": {
+            "scope": "organizer"  # <--- Forces everyone except the organizer to wait in the lobby
+        }
     }
     resp = httpx.post(
         url,

@@ -15,13 +15,13 @@ from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-
+import httpx
 import models
 import schemas
 from database import get_db
 from middlewares.auth_middleware import get_current_user
 from services import teams_service
-
+from services import recording_service
 
 def require_admin_or_superuser(
     current_user: models.User = Depends(get_current_user),
@@ -58,8 +58,10 @@ def _meeting_to_response(m: models.TeamsMeeting) -> schemas.TeamsMeetingResponse
         join_url=m.join_url,
         organizer_user_id=m.organizer_user_id,
         status=m.status,
+        vessel=m.vessel,
         participants=m.participants or [],
         email_status=m.email_status,
+        recording_url=m.recording_url,
         created_at=m.created_at.isoformat(),
     )
 
@@ -72,7 +74,14 @@ def create_meeting(
 ):
     tenant_id, client_id, client_secret, organizer_id, organizer_name = _load_creds()
 
-    # 1. Create the actual Teams Meeting via Graph API
+    # 1. Fetch users assigned to this vessel
+    vessel_users = db.query(models.User).filter(models.User.vessel == payload.vessel).all()
+    participant_emails =[u.email for u in vessel_users if u.email]
+
+    if not participant_emails:
+        raise HTTPException(status_code=400, detail=f"No users found for vessel: {payload.vessel}")
+
+    # 2. Create the actual Teams Meeting via Graph API (THIS WAS MISSING!)
     try:
         graph_meeting = teams_service.create_online_meeting(
             tenant_id=tenant_id, client_id=client_id, client_secret=client_secret,
@@ -83,8 +92,8 @@ def create_meeting(
         graph_id = graph_meeting.get("id")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to create Teams meeting: {str(e)}")
-
-    # 2. Save to Database
+    
+    # 3. Save to Database
     meeting = models.TeamsMeeting(
         title=payload.title,
         description=payload.description,
@@ -95,14 +104,15 @@ def create_meeting(
         organizer_user_id=organizer_id,
         created_by_user_id=admin.id,
         status="scheduled",
-        participants=[str(e) for e in payload.participants],
+        vessel=payload.vessel,
+        participants=participant_emails,   
         email_status="pending",
     )
     db.add(meeting)
     db.commit()
     db.refresh(meeting)
 
-    # 3. Send Email with the real Join Link
+    # 4. Send Email with the real Join Link
     email_status = "sent"
     try:
         start_fmt = payload.start_time.strftime("%B %d, %Y at %I:%M %p UTC")
@@ -128,7 +138,7 @@ def create_meeting(
             organizer_display_name=organizer_name,
             subject=f"Meeting Invitation: {payload.title}",
             html_body=html_body,
-            recipient_emails=[str(e) for e in payload.participants],
+            recipient_emails=participant_emails, # <-- Updated to use the fetched emails
         )
     except Exception:
         email_status = "failed"
@@ -146,9 +156,7 @@ def list_meetings(
     db: Session = Depends(get_db),
     _: models.User = Depends(require_admin_or_superuser),
 ):
-    query = db.query(models.TeamsMeeting).filter(
-        models.TeamsMeeting.status != "cancelled"
-    )
+    query = db.query(models.TeamsMeeting)
     now = datetime.now(timezone.utc)
     if filter == "upcoming":
         query = query.filter(models.TeamsMeeting.start_time >= now)
@@ -170,3 +178,68 @@ def cancel_meeting(
     meeting.status = "cancelled"
     db.commit()
     return {"detail": "Meeting cancelled."}
+
+@router.post("/meetings/{meeting_id}/fetch-recording")
+def fetch_recording(
+    meeting_id: int,
+    db: Session = Depends(get_db),
+    _: models.User = Depends(require_admin_or_superuser),
+):
+    meeting = db.query(models.TeamsMeeting).filter_by(id=meeting_id).first()
+    if not meeting:
+        raise HTTPException(status_code=404, detail="Meeting not found.")
+    
+    if not meeting.graph_meeting_id:
+        raise HTTPException(status_code=400, detail="No Graph Meeting ID found for this meeting.")
+
+    tenant_id, client_id, client_secret, organizer_id, _ = _load_creds()
+    
+    # <-- CHANGED THIS TO DRIVE_ID -->
+    drive_id = os.getenv("SHAREPOINT_DRIVE_ID") 
+    
+    if not drive_id:
+        raise HTTPException(status_code=500, detail="SHAREPOINT_DRIVE_ID is missing in .env file.")
+
+    # Call the service to Download -> Upload -> Get URL
+    embed_url = recording_service.fetch_and_upload_recording(
+        tenant_id=tenant_id,
+        client_id=client_id,
+        client_secret=client_secret,
+        organizer_id=organizer_id,
+        graph_meeting_id=meeting.graph_meeting_id,
+        drive_id=drive_id, # <-- CHANGED THIS
+        meeting_title=meeting.title,
+        vessel_name=meeting.vessel
+    )
+    
+    # Save to database
+    meeting.recording_url = embed_url
+    db.commit()
+    db.refresh(meeting)
+    
+    return {"detail": "Recording fetched and uploaded successfully!", "recording_url": embed_url}
+
+@router.get("/test-containers")
+def test_containers():
+    tenant_id, client_id, client_secret, _, _ = _load_creds()
+
+    token = teams_service._get_app_token(
+        tenant_id,
+        client_id,
+        client_secret
+    )
+
+    headers = {
+        "Authorization": f"Bearer {token}"
+    }
+
+    url = "https://graph.microsoft.com/beta/storage/fileStorage/containerTypes"
+
+    resp = httpx.get(url, headers=headers)
+
+    return {
+        "status": resp.status_code,
+        "response": resp.json()
+    }
+
+     
