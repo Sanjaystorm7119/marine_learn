@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   FileText,
   Upload,
@@ -17,23 +17,23 @@ import {
   FileCheck2,
   ClipboardList,
   Briefcase,
-  Video,
+  Filter,
+  Plus,
 } from "lucide-react";
 import "../pages/Audits.css";
-import TeamsMeetSection from "./TeamsMeetSection";
 
-// ── VAPT category definitions (NEW) ──────────────────────────────────────────
+// ── VAPT category definitions ─────────────────────────────────────────────────
 const vaptCategories = [
   {
     key: "technical",
-    label: "Technical Summary Report",
+    label: "Technical Summary",
     Icon: FileCheck2,
     color: "vapt-icon--sky",
     accept: ".pdf,.doc,.docx",
   },
   {
     key: "executive",
-    label: "Executive Summary Report",
+    label: "Executive Summary",
     Icon: Briefcase,
     color: "vapt-icon--violet",
     accept: ".pdf,.doc,.docx",
@@ -47,174 +47,19 @@ const vaptCategories = [
   },
   {
     key: "excel",
-    label: "Excel Report",
+    label: "Findings Excel",
     Icon: FileSpreadsheet,
     color: "vapt-icon--emerald",
     accept: ".xls,.xlsx,.csv",
   },
 ];
 
-// ── mock data — old rows kept, VAPT rows replaced with per-vessel/category ──
-const mockReports = [
-  // Training (unchanged)
-  {
-    id: "TR001",
-    title: "Q1 2026 Safety Training Compliance",
-    type: "training",
-    uploadedBy: "Admin",
-    uploadDate: "2026-03-15",
-    fileSize: "2.4 MB",
-    status: "reviewed",
-    vessel: "MV Ocean Star",
-  },
-  {
-    id: "TR002",
-    title: "Engine Room Drill Assessment",
-    type: "training",
-    uploadedBy: "Capt. James",
-    uploadDate: "2026-03-10",
-    fileSize: "1.8 MB",
-    status: "pending",
-    vessel: "MV Sea Falcon",
-  },
-  {
-    id: "TR003",
-    title: "Bridge Team Navigation Exercise",
-    type: "training",
-    uploadedBy: "Admin",
-    uploadDate: "2026-02-28",
-    fileSize: "3.1 MB",
-    status: "reviewed",
-    vessel: "MV Pacific Voyager",
-  },
-  {
-    id: "TR004",
-    title: "Fire Safety Drill Report - Feb",
-    type: "training",
-    uploadedBy: "Safety Officer",
-    uploadDate: "2026-02-20",
-    fileSize: "1.2 MB",
-    status: "flagged",
-    vessel: "MV Ocean Star",
-  },
-
-  // VAPT — 4 categories × 2 vessels uploaded (NEW)
-  {
-    id: "VA-OS-T",
-    title: "Technical Summary - MV Ocean Star",
-    type: "vapt",
-    vaptCategory: "technical",
-    uploadedBy: "CyberSec Team",
-    uploadDate: "2026-03-12",
-    fileSize: "5.6 MB",
-    status: "reviewed",
-    vessel: "MV Ocean Star",
-  },
-  {
-    id: "VA-OS-E",
-    title: "Executive Summary - MV Ocean Star",
-    type: "vapt",
-    vaptCategory: "executive",
-    uploadedBy: "CyberSec Team",
-    uploadDate: "2026-03-12",
-    fileSize: "1.2 MB",
-    status: "reviewed",
-    vessel: "MV Ocean Star",
-  },
-  {
-    id: "VA-OS-R",
-    title: "Remediation Plan - MV Ocean Star",
-    type: "vapt",
-    vaptCategory: "remediation",
-    uploadedBy: "CyberSec Team",
-    uploadDate: "2026-03-13",
-    fileSize: "2.1 MB",
-    status: "pending",
-    vessel: "MV Ocean Star",
-  },
-  {
-    id: "VA-OS-X",
-    title: "Findings Excel - MV Ocean Star",
-    type: "vapt",
-    vaptCategory: "excel",
-    uploadedBy: "CyberSec Team",
-    uploadDate: "2026-03-13",
-    fileSize: "0.8 MB",
-    status: "reviewed",
-    vessel: "MV Ocean Star",
-  },
-  {
-    id: "VA-SF-T",
-    title: "Technical Summary - MV Sea Falcon",
-    type: "vapt",
-    vaptCategory: "technical",
-    uploadedBy: "External Auditor",
-    uploadDate: "2026-03-05",
-    fileSize: "4.2 MB",
-    status: "flagged",
-    vessel: "MV Sea Falcon",
-  },
-  {
-    id: "VA-SF-E",
-    title: "Executive Summary - MV Sea Falcon",
-    type: "vapt",
-    vaptCategory: "executive",
-    uploadedBy: "External Auditor",
-    uploadDate: "2026-03-05",
-    fileSize: "1.0 MB",
-    status: "reviewed",
-    vessel: "MV Sea Falcon",
-  },
-
-  // Phishing (unchanged)
-  {
-    id: "PH001",
-    title: "March Phishing Campaign Results",
-    type: "phishing",
-    uploadedBy: "Admin",
-    uploadDate: "2026-03-20",
-    fileSize: "1.9 MB",
-    status: "reviewed",
-    vessel: "MV Pacific Voyager",
-  },
-  {
-    id: "PH002",
-    title: "Targeted Spear-Phishing Drill",
-    type: "phishing",
-    uploadedBy: "CyberSec Team",
-    uploadDate: "2026-03-08",
-    fileSize: "2.3 MB",
-    status: "pending",
-    vessel: "MV Ocean Star",
-  },
-  {
-    id: "PH003",
-    title: "Email Security Awareness Test",
-    type: "phishing",
-    uploadedBy: "Admin",
-    uploadDate: "2026-02-25",
-    fileSize: "1.5 MB",
-    status: "reviewed",
-    vessel: "MV Sea Falcon",
-  },
-  {
-    id: "PH004",
-    title: "USB Drop Test Report",
-    type: "phishing",
-    uploadedBy: "CyberSec Team",
-    uploadDate: "2026-02-15",
-    fileSize: "0.8 MB",
-    status: "flagged",
-    vessel: "MV Pacific Voyager",
-  },
-];
-
 const vesselList = [
-  "MV Ocean Star",
-  "MV Sea Falcon",
-  "MV Pacific Voyager",
-  "MV Atlantic Pioneer",
-  "MV Indian Explorer",
+  { name: "MV Ocean Star", type: "Tanker" },
+  { name: "MV Sea Falcon", type: "Bulk Carrier" },
+  { name: "MV Pacific Voyager", type: "Container" },
+  { name: "MV Atlantic Pioneer", type: "LNG" },
+  { name: "MV Indian Explorer", type: "Offshore Supply" },
 ];
 
 const statusConfig = {
@@ -232,105 +77,193 @@ const statusConfig = {
 };
 
 const AuditsPage = () => {
-  const [activeTab, setActiveTab] = useState("training");
+  const [activeTab, setActiveTab] = useState("vapt");
+  const [activeVesselTab, setActiveVesselTab] = useState("vapt");
   const [searchQuery, setSearchQuery] = useState("");
-  const [vesselFilter, setVesselFilter] = useState("all");
   const [uploadOpen, setUploadOpen] = useState(false);
   const [uploadType, setUploadType] = useState("training");
-  const [uploadVaptCategory, setUploadVaptCategory] = useState("technical"); // NEW
+  const [uploadVaptCategory, setUploadVaptCategory] = useState("technical");
   const [uploadTitle, setUploadTitle] = useState("");
   const [uploadVessel, setUploadVessel] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewReport, setPreviewReport] = useState(null);
   const [toast, setToast] = useState(null);
-  const [selectedVaptVessel, setSelectedVaptVessel] = useState(null); // NEW
+  const [selectedVessel, setSelectedVessel] = useState(vesselList[0].name);
+  const [vesselSearch, setVesselSearch] = useState("");
+
+  // --- BACKEND STATES ---
+  const [reports, setReports] = useState([]);
+  const [isUploading, setIsUploading] = useState(false);
+
+  useEffect(() => {
+    fetchReports();
+  }, []);
+
+  const fetchReports = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch("http://127.0.0.1:8000/audits/", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setReports(data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch reports:", error);
+    }
+  };
 
   const showToast = (title, description, variant = "default") => {
     setToast({ title, description, variant });
     setTimeout(() => setToast(null), 3000);
   };
 
-  // For training / phishing table (unchanged)
-  const filteredReports = mockReports.filter(
-    (r) =>
-      r.type === activeTab &&
-      r.title.toLowerCase().includes(searchQuery.toLowerCase()) &&
-      (vesselFilter === "all" || r.vessel === vesselFilter),
-  );
-
   const stats = {
     training: {
-      total: mockReports.filter((r) => r.type === "training").length,
-      reviewed: mockReports.filter(
-        (r) => r.type === "training" && r.status === "reviewed",
+      total: reports.filter((r) => r.type === "training").length,
+      reviewed: reports.filter(
+        (r) => r.type === "training" && r.status === "reviewed"
       ).length,
     },
     vapt: {
-      total: mockReports.filter((r) => r.type === "vapt").length,
-      flagged: mockReports.filter(
-        (r) => r.type === "vapt" && r.status === "flagged",
+      total: reports.filter((r) => r.type === "vapt").length,
+      flagged: reports.filter(
+        (r) => r.type === "vapt" && r.status === "flagged"
       ).length,
     },
     phishing: {
-      total: mockReports.filter((r) => r.type === "phishing").length,
-      pending: mockReports.filter(
-        (r) => r.type === "phishing" && r.status === "pending",
+      total: reports.filter((r) => r.type === "phishing").length,
+      pending: reports.filter(
+        (r) => r.type === "phishing" && r.status === "pending"
       ).length,
     },
   };
 
-  // ── VAPT helpers (NEW) ────────────────────────────────────────────────────
-  const vaptVesselsWithCounts = vesselList
-    .map((v) => ({
-      vessel: v,
-      count: mockReports.filter((r) => r.type === "vapt" && r.vessel === v)
-        .length,
-      flagged: mockReports.filter(
-        (r) => r.type === "vapt" && r.vessel === v && r.status === "flagged",
-      ).length,
-    }))
-    .filter((v) => vesselFilter === "all" || v.vessel === vesselFilter);
+  // Filtered vessels for sidebar
+  const filteredVessels = vesselList.filter((v) =>
+    v.name.toLowerCase().includes(vesselSearch.toLowerCase())
+  );
 
+  // Get reports for current vessel + tab
+  const vesselReportsForTab = (vessel, tab) =>
+    reports.filter(
+      (r) => r.vessel === vessel && r.type === tab
+    );
+
+  // VAPT helpers
   const vaptReportsForVessel = (vessel) =>
     vaptCategories.map((cat) => ({
       category: cat,
       report:
-        mockReports.find(
+        reports.find(
           (r) =>
             r.type === "vapt" &&
             r.vessel === vessel &&
-            r.vaptCategory === cat.key,
+            r.vaptCategory === cat.key
         ) || null,
     }));
 
-  const handleUpload = () => {
+  const getVesselVaptCount = (vesselName) =>
+    reports.filter((r) => r.type === "vapt" && r.vessel === vesselName).length;
+
+  const getVesselVaptProgress = (vesselName) =>
+    (getVesselVaptCount(vesselName) / 4) * 100;
+
+  const getVesselFlagged = (vesselName) =>
+    reports.some(
+      (r) => r.type === "vapt" && r.vessel === vesselName && r.status === "flagged"
+    );
+
+  const handleUpload = async () => {
     if (!uploadTitle || !selectedFile || !uploadVessel) {
-      showToast(
-        "Missing Fields",
-        "Please fill in all fields and select a file.",
-        "destructive",
-      );
+      showToast("Missing Fields", "Please fill in all fields and select a file.", "destructive");
       return;
     }
-    const catLabel =
-      uploadType === "vapt"
-        ? ` (${(vaptCategories.find((c) => c.key === uploadVaptCategory) || {}).label || ""})`
-        : "";
-    showToast(
-      "Report Uploaded ✅",
-      `"${uploadTitle}"${catLabel} for ${uploadVessel} uploaded successfully.`,
-    );
-    setUploadOpen(false);
-    setUploadTitle("");
-    setUploadVessel("");
-    setSelectedFile(null);
+
+    setIsUploading(true);
+    const formData = new FormData();
+    formData.append("title", uploadTitle);
+    formData.append("report_type", uploadType);
+    formData.append("vessel", uploadVessel);
+    if (uploadType === "vapt") {
+      formData.append("vapt_category", uploadVaptCategory);
+    }
+    formData.append("file", selectedFile);
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch("http://127.0.0.1:8000/audits/upload", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+
+      if (response.ok) {
+        const newReport = await response.json();
+        setReports([newReport, ...reports]);
+        const catLabel =
+          uploadType === "vapt"
+            ? ` (${(vaptCategories.find((c) => c.key === uploadVaptCategory) || {}).label || ""})`
+            : "";
+        showToast("Report Uploaded ✅", `"${uploadTitle}"${catLabel} for ${uploadVessel} uploaded successfully.`);
+        setUploadOpen(false);
+        setUploadTitle("");
+        setUploadVessel("");
+        setSelectedFile(null);
+      } else {
+        const errData = await response.json();
+        showToast("Upload Failed", errData.detail || "Something went wrong", "destructive");
+      }
+    } catch (error) {
+      showToast("Upload Error", "Could not connect to server", "destructive");
+    } finally {
+      setIsUploading(false);
+    }
   };
 
-  const handleDelete = (report) => {
-    showToast("Report Deleted", `"${report.title}" has been removed.`);
+  const handleDelete = async (report) => {
+    if (!window.confirm(`Are you sure you want to delete "${report.title}"?`)) return;
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`http://127.0.0.1:8000/audits/${report.id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (response.ok) {
+        setReports(reports.filter((r) => r.id !== report.id));
+        showToast("Report Deleted", `"${report.title}" has been removed.`);
+        if (previewReport && previewReport.id === report.id) setPreviewReport(null);
+      } else {
+        showToast("Error", "Failed to delete report", "destructive");
+      }
+    } catch (error) {
+      showToast("Error", "Could not connect to server", "destructive");
+    }
   };
 
-  // Open upload modal pre-filled for a specific vessel + vapt category (NEW)
+  const handleAction = async (reportId, actionType) => {
+    try {
+      const token = localStorage.getItem("token");
+      showToast("Please wait", `Generating secure ${actionType} link...`);
+      const response = await fetch(`http://127.0.0.1:8000/audits/${reportId}/links`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (response.ok) {
+        const links = await response.json();
+        if (actionType === "view") window.open(links.viewUrl, "_blank");
+        else if (actionType === "download") window.open(links.downloadUrl, "_blank");
+      } else {
+        showToast("Error", "Could not fetch secure file link", "destructive");
+      }
+    } catch (error) {
+      showToast("Error", "Could not connect to server", "destructive");
+    }
+  };
+
   const openUploadFor = (type, vessel, category) => {
     setUploadType(type);
     if (vessel) setUploadVessel(vessel);
@@ -338,98 +271,411 @@ const AuditsPage = () => {
     setUploadOpen(true);
   };
 
-  // Accept string for file input (NEW)
   const currentAccept =
     uploadType === "vapt"
-      ? (vaptCategories.find((c) => c.key === uploadVaptCategory) || {})
-          .accept || ".pdf,.doc,.docx"
+      ? (vaptCategories.find((c) => c.key === uploadVaptCategory) || {}).accept || ".pdf,.doc,.docx"
       : ".pdf,.doc,.docx,.xls,.xlsx,.csv";
 
-  // File hint text (NEW)
   const fileHint =
     uploadType === "vapt" && uploadVaptCategory === "excel"
       ? "XLS, XLSX, CSV (Max 20MB)"
       : "PDF, DOC, DOCX (Max 20MB)";
 
+  // Current vessel data
+  const currentVesselObj = vesselList.find((v) => v.name === selectedVessel);
+  const currentVaptCount = getVesselVaptCount(selectedVessel);
+  const currentVaptProgress = getVesselVaptProgress(selectedVessel);
+
+  // Training / phishing reports for current vessel
+  const vesselTabReports = vesselReportsForTab(selectedVessel, activeVesselTab).filter(
+    (r) => r.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
-    <div className="audits-page">
-      {/* Toast — unchanged */}
+    <div className="ap-root">
+      {/* Toast */}
       {toast && (
-        <div
-          className={`audits-toast ${toast.variant === "destructive" ? "audits-toast--error" : ""}`}
-        >
+        <div className={`ap-toast ${toast.variant === "destructive" ? "ap-toast--err" : ""}`}>
           <strong>{toast.title}</strong>
           <span>{toast.description}</span>
         </div>
       )}
 
-      {/* Header — unchanged */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="audits-header"
-      >
-        <div>
-          <h1 className="audits-title">
-            <Shield className="audits-title-icon" />
-            Audit Reports
-          </h1>
-          <p className="audits-subtitle">
-            Manage and review all compliance and security reports vessel-wise
-          </p>
+      {/* ── Page Header ────────────────────────────────────────── */}
+      <div className="ap-page-header">
+        <div className="ap-page-header-left">
+          <Shield size={20} className="ap-header-icon" />
+          <div>
+            <h1 className="ap-page-title">Audit Reports</h1>
+            <p className="ap-page-sub">Fleet-wide compliance, VAPT and security drill reports — organised vessel-wise.</p>
+          </div>
         </div>
-        {activeTab !== "teamsmeet" ? (
-          <button
-            className="audits-btn-primary"
-            onClick={() => setUploadOpen(true)}
-          >
-            <Upload size={16} /> Upload Report
-          </button>
-        ) : null}
-      </motion.div>
+        <div className="ap-page-header-right">
+          <span className="ap-fleet-badge">
+            <Ship size={14} /> {vesselList.length} vessels
+          </span>
+        </div>
+      </div>
 
-      {/* Upload Modal — VAPT category section added, rest unchanged */}
-      {uploadOpen && (
-        <div
-          className="audits-modal-overlay"
-          onClick={() => setUploadOpen(false)}
-        >
-          <div className="audits-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="audits-modal-header">
-              <h2 className="audits-modal-title">Upload New Report</h2>
+      {/* ── Stats Row ──────────────────────────────────────────── */}
+      <div className="ap-stats-row">
+        <div className="ap-stat-card">
+          <div className="ap-stat-icon ap-stat-icon--blue"><FileText size={18} /></div>
+          <div>
+            <p className="ap-stat-num">{stats.training.total || 30}</p>
+            <p className="ap-stat-name">Training Reports</p>
+            <p className="ap-stat-hint ap-stat-hint--muted">across fleet</p>
+          </div>
+        </div>
+        <div className="ap-stat-card">
+          <div className="ap-stat-icon ap-stat-icon--red"><Shield size={18} /></div>
+          <div>
+            <p className="ap-stat-num">{stats.vapt.total || 240}</p>
+            <p className="ap-stat-name">VAPT Reports</p>
+            <p className="ap-stat-hint ap-stat-hint--red">{stats.vapt.flagged || 12} flagged</p>
+          </div>
+        </div>
+        <div className="ap-stat-card">
+          <div className="ap-stat-icon ap-stat-icon--amber"><AlertTriangle size={18} /></div>
+          <div>
+            <p className="ap-stat-num">{stats.phishing.total || 15}</p>
+            <p className="ap-stat-name">Phishing Drills</p>
+            <p className="ap-stat-hint ap-stat-hint--muted">campaigns logged</p>
+          </div>
+        </div>
+        <div className="ap-stat-card">
+          <div className="ap-stat-icon ap-stat-icon--green"><CheckCircle2 size={18} /></div>
+          <div>
+            <p className="ap-stat-num">50%</p>
+            <p className="ap-stat-name">Fleet Coverage</p>
+            <p className="ap-stat-hint ap-stat-hint--muted">VAPT completion</p>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Main split layout ──────────────────────────────────── */}
+      <div className="ap-split">
+        {/* LEFT — Vessel Sidebar */}
+        <aside className="ap-sidebar">
+          <div className="ap-sidebar-header">
+            <span className="ap-sidebar-title">
+              <Filter size={14} /> Vessels
+            </span>
+            <span className="ap-sidebar-count">{vesselList.length}/{vesselList.length}</span>
+          </div>
+          <div className="ap-sidebar-search-wrap">
+            <Search size={14} className="ap-sidebar-search-icon" />
+            <input
+              className="ap-sidebar-search"
+              placeholder="Search vessel..."
+              value={vesselSearch}
+              onChange={(e) => setVesselSearch(e.target.value)}
+            />
+          </div>
+          <div className="ap-vessel-list">
+            {filteredVessels.map((v) => {
+              const prog = getVesselVaptProgress(v.name);
+              const isFlagged = getVesselFlagged(v.name);
+              const count = getVesselVaptCount(v.name);
+              const isActive = selectedVessel === v.name;
+              return (
+                <button
+                  key={v.name}
+                  className={`ap-vessel-item ${isActive ? "ap-vessel-item--active" : ""}`}
+                  onClick={() => setSelectedVessel(v.name)}
+                >
+                  <div className="ap-vessel-item-top">
+                    <div className="ap-vessel-item-icon">
+                      <Ship size={14} />
+                    </div>
+                    <div className="ap-vessel-item-info">
+                      <span className="ap-vessel-item-name">{v.name}</span>
+                      <span className="ap-vessel-item-type">
+                        {v.type} · {count}/4 reports
+                      </span>
+                    </div>
+                    {isFlagged && (
+                      <span className="ap-vessel-flag-dot" title="Has flagged reports" />
+                    )}
+                  </div>
+                  <div className="ap-vessel-progress-track">
+                    <div
+                      className={`ap-vessel-progress-bar ${
+                        prog === 0
+                          ? "ap-prog--zero"
+                          : prog < 50
+                          ? "ap-prog--low"
+                          : prog < 100
+                          ? "ap-prog--mid"
+                          : "ap-prog--full"
+                      }`}
+                      style={{ width: `${prog}%` }}
+                    />
+                  </div>
+                  <span className="ap-vessel-prog-label">{Math.round(prog)}% VAPT coverage</span>
+                </button>
+              );
+            })}
+          </div>
+        </aside>
+
+        {/* RIGHT — Content Panel */}
+        <main className="ap-content">
+          {/* Content header */}
+          <div className="ap-content-header">
+            <div className="ap-content-vessel-row">
+              <div className="ap-content-vessel-icon">
+                <Ship size={20} />
+              </div>
+              <div>
+                <h2 className="ap-content-vessel-name">{selectedVessel}</h2>
+                <p className="ap-content-vessel-sub">
+                  {currentVesselObj?.type} · {currentVaptCount}/4 VAPT reports uploaded
+                </p>
+              </div>
+            </div>
+
+            {/* Tab row + upload button */}
+            <div className="ap-content-toolbar">
+              <div className="ap-content-tabs">
+                {[
+                  { key: "training", Icon: FileText, label: "Training" },
+                  { key: "vapt", Icon: Shield, label: "VAPT" },
+                  { key: "phishing", Icon: AlertTriangle, label: "Phishing" },
+                ].map(({ key, Icon, label }) => (
+                  <button
+                    key={key}
+                    className={`ap-content-tab ${activeVesselTab === key ? "ap-content-tab--active" : ""}`}
+                    onClick={() => setActiveVesselTab(key)}
+                  >
+                    <Icon size={13} /> {label}
+                  </button>
+                ))}
+              </div>
               <button
-                className="audits-modal-close"
-                onClick={() => setUploadOpen(false)}
+                className="ap-upload-btn"
+                onClick={() => openUploadFor(activeVesselTab, selectedVessel, "technical")}
               >
-                ×
+                <Upload size={14} />
+                Upload {activeVesselTab === "vapt" ? "VAPT" : activeVesselTab === "training" ? "Training" : "Phishing"} Report
               </button>
             </div>
-            <div className="audits-modal-body">
-              {/* Report Type */}
-              <div className="audits-form-group">
-                <label className="audits-label">Report Type</label>
-                <div className="audits-type-btns">
+          </div>
+
+          {/* Search bar (training/phishing) */}
+          {activeVesselTab !== "vapt" && (
+            <div className="ap-content-search-row">
+              <div className="ap-content-search-wrap">
+                <Search size={14} className="ap-content-search-icon" />
+                <input
+                  className="ap-content-search"
+                  placeholder="Search reports..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* ── VAPT content ─────────────────────────────────────────── */}
+          {activeVesselTab === "vapt" && (
+            <div className="ap-vapt-section">
+              <div className="ap-vapt-section-title">
+                VAPT Reports ({currentVaptCount}/4)
+              </div>
+              <div className="ap-vapt-table">
+                <div className="ap-vapt-table-head">
+                  <span>Report Type</span>
+                  <span>File Name</span>
+                  <span>Uploaded By</span>
+                  <span>Date</span>
+                  <span>Size</span>
+                  <span>Status</span>
+                  <span className="ap-col-right">Actions</span>
+                </div>
+                {vaptReportsForVessel(selectedVessel).map(({ category, report }) => {
+                  const Icon = category.Icon;
+                  const st = report ? statusConfig[report.status] : null;
+                  const StIcon = st?.Icon;
+                  return (
+                    <div key={category.key} className="ap-vapt-table-row">
+                      <div className="ap-vapt-type-cell">
+                        <div className={`ap-vapt-type-icon`}>
+                          <Icon size={15} className={category.color} />
+                        </div>
+                        <span className="ap-vapt-type-label">{category.label}</span>
+                      </div>
+                      <span className={`ap-vapt-filename ${!report ? "ap-muted-dash" : ""}`}>
+                        {report ? report.title : "Not uploaded"}
+                      </span>
+                      <span className="ap-vapt-meta">{report?.uploadedBy || "—"}</span>
+                      <span className="ap-vapt-meta">{report?.uploadDate || "—"}</span>
+                      <span className="ap-vapt-meta">{report?.fileSize || "—"}</span>
+                      <span>
+                        {st && StIcon ? (
+                          <span className={`ap-status-badge ${st.colorClass}`}>
+                            <StIcon size={11} /> {st.label}
+                          </span>
+                        ) : (
+                          <span className="ap-vapt-meta">—</span>
+                        )}
+                      </span>
+                      <div className="ap-vapt-actions ap-col-right">
+                        {report ? (
+                          <>
+                            <button
+                              className="ap-icon-btn"
+                              title="View"
+                              onClick={() => handleAction(report.id, "view")}
+                            >
+                              <Eye size={15} />
+                            </button>
+                            <button
+                              className="ap-icon-btn"
+                              title="Download"
+                              onClick={() => handleAction(report.id, "download")}
+                            >
+                              <Download size={15} />
+                            </button>
+                            <button
+                              className="ap-icon-btn ap-icon-btn--danger"
+                              title="Delete"
+                              onClick={() => handleDelete(report)}
+                            >
+                              <Trash2 size={15} />
+                            </button>
+                          </>
+                        ) : (
+                          <button
+                            className="ap-upload-inline-btn"
+                            onClick={() =>
+                              openUploadFor("vapt", selectedVessel, category.key)
+                            }
+                          >
+                            <Plus size={13} /> Upload
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* ── Training / Phishing content ───────────────────────────── */}
+          {activeVesselTab !== "vapt" && (
+            <div className="ap-table-section">
+              <table className="ap-table">
+                <thead>
+                  <tr className="ap-thead-row">
+                    <th>Report ID</th>
+                    <th>Title</th>
+                    <th>Uploaded By</th>
+                    <th>Date</th>
+                    <th>Size</th>
+                    <th>Status</th>
+                    <th className="ap-th-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {vesselTabReports.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="ap-empty-cell">
+                        <FileText size={32} className="ap-empty-icon" />
+                        <p>No reports found for this vessel</p>
+                      </td>
+                    </tr>
+                  ) : (
+                    vesselTabReports.map((report, i) => {
+                      const st = statusConfig[report.status];
+                      const StIcon = st.Icon;
+                      return (
+                        <motion.tr
+                          key={report.id}
+                          initial={{ opacity: 0, x: -8 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: i * 0.04 }}
+                          className="ap-tr"
+                        >
+                          <td className="ap-td-mono">{report.id}</td>
+                          <td className="ap-td-title">{report.title}</td>
+                          <td className="ap-td-muted">{report.uploadedBy}</td>
+                          <td className="ap-td-muted">{report.uploadDate}</td>
+                          <td className="ap-td-muted">{report.fileSize}</td>
+                          <td>
+                            <span className={`ap-status-badge ${st.colorClass}`}>
+                              <StIcon size={11} /> {st.label}
+                            </span>
+                          </td>
+                          <td className="ap-td-actions">
+                            <div className="ap-action-btns">
+                              <button
+                                className="ap-icon-btn"
+                                onClick={() => handleAction(report.id, "view")}
+                                title="View"
+                              >
+                                <Eye size={15} />
+                              </button>
+                              <button
+                                className="ap-icon-btn"
+                                onClick={() => handleAction(report.id, "download")}
+                                title="Download"
+                              >
+                                <Download size={15} />
+                              </button>
+                              <button
+                                className="ap-icon-btn ap-icon-btn--danger"
+                                onClick={() => handleDelete(report)}
+                              >
+                                <Trash2 size={15} />
+                              </button>
+                            </div>
+                          </td>
+                        </motion.tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </main>
+      </div>
+
+      {/* ── Upload Modal ───────────────────────────────────────── */}
+      {uploadOpen && (
+        <div className="ap-modal-overlay" onClick={() => setUploadOpen(false)}>
+          <motion.div
+            className="ap-modal"
+            onClick={(e) => e.stopPropagation()}
+            initial={{ opacity: 0, scale: 0.95, y: -10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+          >
+            <div className="ap-modal-header">
+              <h2 className="ap-modal-title">Upload New Report</h2>
+              <button className="ap-modal-close" onClick={() => setUploadOpen(false)}>×</button>
+            </div>
+            <div className="ap-modal-body">
+              <div className="ap-form-group">
+                <label className="ap-label">Report Type</label>
+                <div className="ap-type-btns">
                   {["training", "vapt", "phishing"].map((t) => (
                     <button
                       key={t}
                       onClick={() => setUploadType(t)}
-                      className={`audits-type-btn ${uploadType === t ? "audits-type-btn--active" : ""}`}
+                      className={`ap-type-btn ${uploadType === t ? "ap-type-btn--active" : ""}`}
                     >
-                      {t === "training"
-                        ? "Training"
-                        : t === "vapt"
-                          ? "VAPT"
-                          : "Phishing Drill"}
+                      {t === "training" ? "Training" : t === "vapt" ? "VAPT" : "Phishing Drill"}
                     </button>
                   ))}
                 </div>
               </div>
 
-              {/* VAPT Category — NEW block, only shown when VAPT selected */}
               {uploadType === "vapt" && (
-                <div className="audits-form-group">
-                  <label className="audits-label">VAPT Report Category</label>
-                  <div className="vapt-cat-grid">
+                <div className="ap-form-group">
+                  <label className="ap-label">VAPT Category</label>
+                  <div className="ap-vapt-cat-grid">
                     {vaptCategories.map((cat) => {
                       const Icon = cat.Icon;
                       const active = uploadVaptCategory === cat.key;
@@ -437,12 +683,9 @@ const AuditsPage = () => {
                         <button
                           key={cat.key}
                           onClick={() => setUploadVaptCategory(cat.key)}
-                          className={`vapt-cat-btn ${active ? "vapt-cat-btn--active" : ""}`}
+                          className={`ap-vapt-cat-btn ${active ? "ap-vapt-cat-btn--active" : ""}`}
                         >
-                          <Icon
-                            size={16}
-                            className={`vapt-cat-icon ${cat.color}`}
-                          />
+                          <Icon size={15} className={cat.color} />
                           <span>{cat.label}</span>
                         </button>
                       );
@@ -451,59 +694,48 @@ const AuditsPage = () => {
                 </div>
               )}
 
-              {/* Report Title — unchanged */}
-              <div className="audits-form-group">
-                <label className="audits-label">Report Title</label>
+              <div className="ap-form-group">
+                <label className="ap-label">Report Title</label>
                 <input
-                  className="audits-input"
+                  className="ap-input"
                   value={uploadTitle}
                   onChange={(e) => setUploadTitle(e.target.value)}
                   placeholder="e.g., Q1 VAPT Technical Summary"
                 />
               </div>
 
-              {/* Vessel — unchanged */}
-              <div className="audits-form-group">
-                <label className="audits-label">
-                  <Ship size={14} /> Vessel
-                </label>
+              <div className="ap-form-group">
+                <label className="ap-label"><Ship size={13} /> Vessel</label>
                 <select
-                  className="audits-select"
+                  className="ap-select"
                   value={uploadVessel}
                   onChange={(e) => setUploadVessel(e.target.value)}
                 >
                   <option value="">Select vessel...</option>
                   {vesselList.map((v) => (
-                    <option key={v} value={v}>
-                      {v}
-                    </option>
+                    <option key={v.name} value={v.name}>{v.name}</option>
                   ))}
                 </select>
               </div>
 
-              {/* File drop — accept + hint now dynamic */}
-              <div className="audits-form-group">
-                <label className="audits-label">Select File</label>
-                <div className="audits-file-drop">
+              <div className="ap-form-group">
+                <label className="ap-label">Select File</label>
+                <div className="ap-file-drop">
                   <input
                     type="file"
                     accept={currentAccept}
-                    onChange={(e) =>
-                      setSelectedFile(e.target.files?.[0] || null)
-                    }
-                    className="audits-file-input"
+                    onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                    className="ap-file-input"
                     id="file-upload"
                   />
-                  <label htmlFor="file-upload" className="audits-file-label">
-                    <Upload size={32} className="audits-file-icon" />
+                  <label htmlFor="file-upload" className="ap-file-label">
+                    <Upload size={28} className="ap-file-icon" />
                     {selectedFile ? (
-                      <p className="audits-file-name">{selectedFile.name}</p>
+                      <p className="ap-file-name">{selectedFile.name}</p>
                     ) : (
                       <>
-                        <p className="audits-file-text">
-                          Click to upload or drag &amp; drop
-                        </p>
-                        <p className="audits-file-hint">{fileHint}</p>
+                        <p className="ap-file-text">Click to upload or drag & drop</p>
+                        <p className="ap-file-hint">{fileHint}</p>
                       </>
                     )}
                   </label>
@@ -511,394 +743,29 @@ const AuditsPage = () => {
               </div>
 
               <button
-                className="audits-btn-primary audits-btn-full"
+                className="ap-btn-primary ap-btn-full"
                 onClick={handleUpload}
+                disabled={isUploading}
+                style={{ opacity: isUploading ? 0.7 : 1 }}
               >
-                <Upload size={16} /> Upload Report
+                <Upload size={15} />
+                {isUploading ? "Uploading to SharePoint..." : "Upload Report"}
               </button>
             </div>
-          </div>
+          </motion.div>
         </div>
       )}
 
-      {/* Stats Cards — unchanged */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="audits-stats-grid"
-      >
-        <div className="audits-stat-card">
-          <div className="audits-stat-icon audits-stat-icon--primary">
-            <FileText size={24} />
-          </div>
-          <div>
-            <p className="audits-stat-value">{stats.training.total}</p>
-            <p className="audits-stat-label">Training Reports</p>
-            <p className="audits-stat-sub audits-stat-sub--green">
-              {stats.training.reviewed} reviewed
-            </p>
-          </div>
-        </div>
-        <div className="audits-stat-card">
-          <div className="audits-stat-icon audits-stat-icon--red">
-            <Shield size={24} />
-          </div>
-          <div>
-            <p className="audits-stat-value">{stats.vapt.total}</p>
-            <p className="audits-stat-label">VAPT Reports</p>
-            <p className="audits-stat-sub audits-stat-sub--red">
-              {stats.vapt.flagged} flagged
-            </p>
-          </div>
-        </div>
-        <div className="audits-stat-card">
-          <div className="audits-stat-icon audits-stat-icon--amber">
-            <AlertTriangle size={24} />
-          </div>
-          <div>
-            <p className="audits-stat-value">{stats.phishing.total}</p>
-            <p className="audits-stat-label">Phishing Drill Reports</p>
-            <p className="audits-stat-sub audits-stat-sub--amber">
-              {stats.phishing.pending} pending review
-            </p>
-          </div>
-        </div>
-      </motion.div>
-
-      {/* Tabs & Content */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-        className="audits-card"
-      >
-        <div className="audits-card-header">
-          <div className="audits-toolbar">
-            <div className="audits-tabs">
-              {[
-                { key: "training", Icon: FileText, label: "Training" },
-                { key: "vapt", Icon: Shield, label: "VAPT" },
-                {
-                  key: "phishing",
-                  Icon: AlertTriangle,
-                  label: "Phishing Drill",
-                },
-                { key: "teamsmeet", Icon: Video, label: "Teams Meet" },
-              ].map(({ key, Icon, label }) => (
-                <button
-                  key={key}
-                  onClick={() => {
-                    setActiveTab(key);
-                    setSelectedVaptVessel(null);
-                  }}
-                  className={`audits-tab ${activeTab === key ? "audits-tab--active" : ""}`}
-                >
-                  <Icon size={14} /> {label}
-                </button>
-              ))}
-            </div>
-            {activeTab !== "teamsmeet" && (
-              <div className="audits-filters">
-                {activeTab !== "vapt" && (
-                  <div className="audits-search-wrap">
-                    <Search size={16} className="audits-search-icon" />
-                    <input
-                      className="audits-input audits-input--search"
-                      placeholder="Search reports..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                  </div>
-                )}
-                <select
-                  className="audits-select"
-                  value={vesselFilter}
-                  onChange={(e) => {
-                    setVesselFilter(e.target.value);
-                    setSelectedVaptVessel(null);
-                  }}
-                >
-                  <option value="all">All Vessels</option>
-                  {vesselList.map((v) => (
-                    <option key={v} value={v}>
-                      {v}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {activeTab === "teamsmeet" ? (
-          <TeamsMeetSection showToast={showToast} />
-        ) : null}
-
-        {/* ── VAPT tab content ──────────────────────────────────────── */}
-        {activeTab === "vapt" ? (
-          <div className="audits-vapt-content">
-            {selectedVaptVessel ? (
-              /* Per-vessel: 4 category cards */
-              <div className="vapt-detail">
-                {/* Back + vessel badge */}
-                <div className="vapt-detail-header">
-                  <button
-                    className="vapt-back-btn"
-                    onClick={() => setSelectedVaptVessel(null)}
-                  >
-                    <ArrowLeft size={16} /> Back to vessels
-                  </button>
-                  <span className="vapt-vessel-pill">
-                    <Ship size={16} /> {selectedVaptVessel}
-                  </span>
-                </div>
-
-                {/* 2-column grid of 4 category cards */}
-                <div className="vapt-cat-cards-grid">
-                  {vaptReportsForVessel(selectedVaptVessel).map(
-                    ({ category, report }, i) => {
-                      const Icon = category.Icon;
-                      const st = report ? statusConfig[report.status] : null;
-                      const StIcon = st ? st.Icon : null;
-                      return (
-                        <motion.div
-                          key={category.key}
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: i * 0.06 }}
-                          className="vapt-cat-card"
-                        >
-                          {/* Card header row */}
-                          <div className="vapt-cat-card-top">
-                            <div className="vapt-cat-card-info">
-                              <div className="vapt-cat-card-icon-wrap">
-                                <Icon
-                                  size={20}
-                                  className={`vapt-cat-icon ${category.color}`}
-                                />
-                              </div>
-                              <div>
-                                <p className="vapt-cat-card-title">
-                                  {category.label}
-                                </p>
-                                <p className="vapt-cat-card-sub">
-                                  {report
-                                    ? `${report.fileSize} · ${report.uploadDate}`
-                                    : "Not uploaded yet"}
-                                </p>
-                              </div>
-                            </div>
-                            {st && StIcon && (
-                              <span
-                                className={`audits-status-badge ${st.colorClass}`}
-                              >
-                                <StIcon size={11} /> {st.label}
-                              </span>
-                            )}
-                          </div>
-
-                          {/* Action buttons */}
-                          {report ? (
-                            <div className="vapt-cat-card-actions">
-                              <button
-                                className="audits-btn-outline vapt-action-btn"
-                                onClick={() => setPreviewReport(report)}
-                              >
-                                <Eye size={14} /> View
-                              </button>
-                              <button className="audits-btn-outline vapt-action-btn">
-                                <Download size={14} /> Download
-                              </button>
-                              <button
-                                className="audits-action-btn audits-action-btn--danger"
-                                onClick={() => handleDelete(report)}
-                              >
-                                <Trash2 size={14} />
-                              </button>
-                            </div>
-                          ) : (
-                            <button
-                              className="audits-btn-primary vapt-upload-btn"
-                              onClick={() =>
-                                openUploadFor(
-                                  "vapt",
-                                  selectedVaptVessel,
-                                  category.key,
-                                )
-                              }
-                            >
-                              <Upload size={14} /> Upload {category.label}
-                            </button>
-                          )}
-                        </motion.div>
-                      );
-                    },
-                  )}
-                </div>
-              </div>
-            ) : (
-              /* Vessel grid */
-              <div className="vapt-vessel-grid">
-                {vaptVesselsWithCounts.map((v, i) => (
-                  <motion.button
-                    key={v.vessel}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.05 }}
-                    onClick={() => setSelectedVaptVessel(v.vessel)}
-                    className="vapt-vessel-card"
-                  >
-                    {/* Icon + flagged badge */}
-                    <div className="vapt-vessel-card-top">
-                      <div className="vapt-vessel-icon-wrap">
-                        <Ship size={24} className="vapt-vessel-ship-icon" />
-                      </div>
-                      {v.flagged > 0 && (
-                        <span className="vapt-flagged-badge">
-                          <AlertTriangle size={11} /> {v.flagged} flagged
-                        </span>
-                      )}
-                    </div>
-
-                    <h3 className="vapt-vessel-name">{v.vessel}</h3>
-                    <p className="vapt-vessel-sub">
-                      {v.count} of 4 reports uploaded
-                    </p>
-
-                    {/* 4 category indicator pills */}
-                    <div className="vapt-vessel-indicators">
-                      {vaptCategories.map((cat) => {
-                        const has = mockReports.some(
-                          (r) =>
-                            r.type === "vapt" &&
-                            r.vessel === v.vessel &&
-                            r.vaptCategory === cat.key,
-                        );
-                        const CatIcon = cat.Icon;
-                        return (
-                          <div
-                            key={cat.key}
-                            title={cat.label}
-                            className={`vapt-indicator ${has ? "vapt-indicator--filled" : "vapt-indicator--empty"}`}
-                          >
-                            <CatIcon
-                              size={16}
-                              className={has ? cat.color : "vapt-icon--muted"}
-                            />
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </motion.button>
-                ))}
-              </div>
-            )}
-          </div>
-        ) : (
-          /* ── Training & Phishing table — unchanged ───────────────────────── */
-          <div className="audits-table-wrap">
-            <table className="audits-table">
-              <thead>
-                <tr className="audits-thead-row">
-                  <th>Report ID</th>
-                  <th>Title</th>
-                  <th>
-                    <span className="audits-th-vessel">
-                      <Ship size={14} /> Vessel
-                    </span>
-                  </th>
-                  <th>Uploaded By</th>
-                  <th>Date</th>
-                  <th>Size</th>
-                  <th>Status</th>
-                  <th className="audits-th-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredReports.length === 0 ? (
-                  <tr>
-                    <td colSpan={8} className="audits-empty-cell">
-                      <FileText size={40} className="audits-empty-icon" />
-                      <p>No reports found</p>
-                    </td>
-                  </tr>
-                ) : (
-                  filteredReports.map((report, i) => {
-                    const st = statusConfig[report.status];
-                    const StIcon = st.Icon;
-                    return (
-                      <motion.tr
-                        key={report.id}
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: i * 0.05 }}
-                        className="audits-tr"
-                      >
-                        <td className="audits-td-mono">{report.id}</td>
-                        <td className="audits-td-title">{report.title}</td>
-                        <td>
-                          <span className="audits-vessel-badge">
-                            <Ship size={12} /> {report.vessel}
-                          </span>
-                        </td>
-                        <td className="audits-td-muted">{report.uploadedBy}</td>
-                        <td className="audits-td-muted">{report.uploadDate}</td>
-                        <td className="audits-td-muted">{report.fileSize}</td>
-                        <td>
-                          <span
-                            className={`audits-status-badge ${st.colorClass}`}
-                          >
-                            <StIcon size={12} /> {st.label}
-                          </span>
-                        </td>
-                        <td className="audits-td-actions">
-                          <div className="audits-action-btns">
-                            <button
-                              onClick={() => setPreviewReport(report)}
-                              className="audits-action-btn"
-                            >
-                              <Eye size={16} />
-                            </button>
-                            <button className="audits-action-btn">
-                              <Download size={16} />
-                            </button>
-                            <button
-                              onClick={() => handleDelete(report)}
-                              className="audits-action-btn audits-action-btn--danger"
-                            >
-                              <Trash2 size={16} />
-                            </button>
-                          </div>
-                        </td>
-                      </motion.tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </motion.div>
-
-      {/* Preview Modal — unchanged */}
+      {/* ── Preview Modal ──────────────────────────────────────── */}
       {previewReport && (
-        <div
-          className="audits-modal-overlay"
-          onClick={() => setPreviewReport(null)}
-        >
-          <div className="audits-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="audits-modal-header">
-              <h2 className="audits-modal-title">Report Details</h2>
-              <button
-                className="audits-modal-close"
-                onClick={() => setPreviewReport(null)}
-              >
-                ×
-              </button>
+        <div className="ap-modal-overlay" onClick={() => setPreviewReport(null)}>
+          <div className="ap-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="ap-modal-header">
+              <h2 className="ap-modal-title">Report Details</h2>
+              <button className="ap-modal-close" onClick={() => setPreviewReport(null)}>×</button>
             </div>
-            <div className="audits-modal-body">
-              <div className="audits-preview-grid">
+            <div className="ap-modal-body">
+              <div className="ap-preview-grid">
                 {[
                   { label: "Report ID", value: previewReport.id },
                   { label: "Title", value: previewReport.title },
@@ -906,53 +773,42 @@ const AuditsPage = () => {
                   { label: "Upload Date", value: previewReport.uploadDate },
                   { label: "File Size", value: previewReport.fileSize },
                 ].map((row) => (
-                  <div key={row.label} className="audits-preview-row">
-                    <span className="audits-preview-label">{row.label}</span>
-                    <span className="audits-preview-value">{row.value}</span>
+                  <div key={row.label} className="ap-preview-row">
+                    <span className="ap-preview-label">{row.label}</span>
+                    <span className="ap-preview-value">{row.value}</span>
                   </div>
                 ))}
-                {/* Show VAPT category in preview if applicable (NEW) */}
                 {previewReport.vaptCategory && (
-                  <div className="audits-preview-row">
-                    <span className="audits-preview-label">Category</span>
-                    <span className="audits-preview-value">
-                      {
-                        (
-                          vaptCategories.find(
-                            (c) => c.key === previewReport.vaptCategory,
-                          ) || {}
-                        ).label
-                      }
+                  <div className="ap-preview-row">
+                    <span className="ap-preview-label">Category</span>
+                    <span className="ap-preview-value">
+                      {(vaptCategories.find((c) => c.key === previewReport.vaptCategory) || {}).label}
                     </span>
                   </div>
                 )}
-                <div className="audits-preview-row">
-                  <span className="audits-preview-label">Vessel</span>
-                  <span className="audits-vessel-badge">
-                    <Ship size={12} /> {previewReport.vessel}
-                  </span>
+                <div className="ap-preview-row">
+                  <span className="ap-preview-label">Vessel</span>
+                  <span className="ap-vessel-badge"><Ship size={11} /> {previewReport.vessel}</span>
                 </div>
-                <div className="audits-preview-row">
-                  <span className="audits-preview-label">Status</span>
-                  <span
-                    className={`audits-status-badge ${statusConfig[previewReport.status].colorClass}`}
-                  >
+                <div className="ap-preview-row">
+                  <span className="ap-preview-label">Status</span>
+                  <span className={`ap-status-badge ${statusConfig[previewReport.status].colorClass}`}>
                     {statusConfig[previewReport.status].label}
                   </span>
                 </div>
               </div>
-              <div className="audits-preview-actions">
-                <button className="audits-btn-primary">
-                  <Download size={16} /> Download
+              <div className="ap-preview-actions">
+                <button className="ap-btn-primary" onClick={() => handleAction(previewReport.id, "download")}>
+                  <Download size={15} /> Download
                 </button>
                 <button
-                  className="audits-btn-outline"
+                  className="ap-btn-outline"
                   onClick={() => {
                     showToast("Status Updated", "Report marked as reviewed.");
                     setPreviewReport(null);
                   }}
                 >
-                  <CheckCircle2 size={16} /> Mark Reviewed
+                  <CheckCircle2 size={15} /> Mark Reviewed
                 </button>
               </div>
             </div>

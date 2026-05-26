@@ -16,11 +16,11 @@ import { downloadCertificatePDF } from "../lib/downloadCertificate";
 /* ── Static sidebar items ── */
 const sidebarItems = [
   { label: "Dashboard",       icon: LayoutDashboard, href: "/dashboard" },
-  { label: "My Courses",      icon: BookOpen,        href: "/mycourses" },
+  // { label: "My Courses",      icon: BookOpen,        href: "/mycourses" },
   { label: "Study Materials", icon: FileText,        href: "/study-materials" },
   { label: "Calendar",        icon: Calendar,        href: "/calendar" },
   { label: "Certificates",    icon: Award,           href: "/certificates", active: true },
-  { label: "Reports",         icon: BarChart3,       href: "/dashboard" },
+  // { label: "Reports",         icon: BarChart3,       href: "/dashboard" },
   { label: "Settings",        icon: Settings,        href: "/settings" },
   { label: "Help",            icon: HelpCircle,      href: "/help" },
 ];

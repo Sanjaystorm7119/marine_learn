@@ -310,14 +310,14 @@ class CourseInput(BaseModel):
 
 class PhishingTemplateCreate(BaseModel):
     name: str
-    subject: str
+    subject: list[str] 
     html_body: str
 
 
 class PhishingTemplateResponse(BaseModel):
     id: int
     name: str
-    subject: str
+    subject: list[str]
     html_body: str
     is_builtin: bool
     created_at: str
@@ -341,6 +341,7 @@ class PhishingTargetResult(BaseModel):
     clicked: bool
     clicked_at: str | None
     tracking_url: str | None = None
+    subject_used: str | None = None # <-- ADDED THIS
 
 
 class PhishingCampaignResponse(BaseModel):
@@ -384,16 +385,9 @@ class TeamsMeetingCreate(BaseModel):
     description: str | None = None
     start_time: datetime
     end_time: datetime
-    participants: list[EmailStr]
+    vessel: str
 
-    @field_validator("participants")
-    @classmethod
-    def at_least_one_participant(cls, v: list) -> list:
-        if not v:
-            raise ValueError("At least one participant email is required.")
-        if len(v) > 100:
-            raise ValueError("Maximum 100 participants per meeting.")
-        return v
+   
 
     @field_validator("end_time")
     @classmethod
@@ -414,8 +408,28 @@ class TeamsMeetingResponse(BaseModel):
     organizer_user_id: str
     status: str
     participants: list
+    vessel: str | None = None 
     email_status: str
+    recording_url: str | None = None 
     created_at: str
+
+    class Config:
+        from_attributes = True
+
+# ── Audits ────────────────────────────────────────────────────────────────────
+
+class AuditReportResponse(BaseModel):
+    id: str
+    title: str
+    type: str
+    vaptCategory: str | None = None
+    vessel: str
+    fileName: str
+    fileSize: str
+    fileUrl: str
+    status: str
+    uploadedBy: str
+    uploadDate: str
 
     class Config:
         from_attributes = True

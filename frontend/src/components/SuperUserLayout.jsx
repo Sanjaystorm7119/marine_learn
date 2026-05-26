@@ -1,17 +1,19 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  Anchor, Shield, AlertTriangle, Video,
-  Bell, Search, User, LogOut,
-  Menu, ChevronDown
-} from "lucide-react";
+import { Anchor, Shield, AlertTriangle, Video, FolderOpen, Bell, Search, User, LogOut, Menu, ChevronDown } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import "../pages/SuperUserLayout.css";
+         // adjust path if needed
+import { Routes, Route } from "react-router-dom";      // only if not already imported
 
 const sidebarItems = [
   { label: "Audits", icon: Shield, href: "/audits" },
   { label: "Phishing Drill", icon: AlertTriangle, href: "/phishing-drill" },
   { label: "Teams Meet", icon: Video, href: "/teams-meet" },
+];
+
+const teamsMeetSubItems = [
+  { label: "Recordings", icon: FolderOpen, href: "/teams-meet/recordings" },
 ];
 
 const SuperuserLayout = ({ children }) => {
@@ -100,22 +102,42 @@ const SuperuserLayout = ({ children }) => {
       </div>
 
      <nav className="sul-nav">
-        {sidebarItems.map((item) => {
-          const isActive = location.pathname === item.href;
+       {sidebarItems.map((item) => {
+        const isActive = location.pathname === item.href;
+        return (
+          <button
+            key={item.label}
+            onClick={() => {
+              navigate(item.href);
+              setMobileSidebarOpen(false);
+            }}
+            className={`sul-nav-btn ${isActive ? "sul-nav-btn--active" : ""}`}
+          >
+            <item.icon className="sul-nav-icon" />
+            {sidebarOpen && <span>{item.label}</span>}
+          </button>
+        );
+      })}
+ 
+      {/* ── Teams Meet sub-nav (visible only when on /teams-meet* route) ── */}
+      {location.pathname.startsWith("/teams-meet") && sidebarOpen &&
+        teamsMeetSubItems.map((sub) => {
+          const isSubActive = location.pathname.startsWith(sub.href);
           return (
             <button
-              key={item.label}
+              key={sub.label}
               onClick={() => {
-                navigate(item.href);
+                navigate(sub.href);
                 setMobileSidebarOpen(false);
               }}
-              className={`sul-nav-btn ${isActive ? "sul-nav-btn--active" : ""}`}
+              className={`sul-nav-btn sul-nav-btn--sub ${isSubActive ? "sul-nav-btn--active" : ""}`}
             >
-              <item.icon className="sul-nav-icon" />
-              {sidebarOpen && <span>{item.label}</span>}
+              <sub.icon className="sul-nav-icon" />
+              <span>{sub.label}</span>
             </button>
           );
-        })}
+        })
+      }
         
         {/* Logout Button moved right below Teams Meet */}
        

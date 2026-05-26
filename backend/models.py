@@ -162,8 +162,10 @@ class TeamsMeeting(Base):
     created_by_user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     status = Column(String, default="scheduled")             # scheduled | cancelled
-    participants = Column(JSONB, default=list)               # list of email strings
-    email_status = Column(String, default="pending")         # pending | sent | failed
+    participants = Column(JSONB, default=list) 
+    vessel = Column(String, nullable=True)                # list of email strings
+    email_status = Column(String, default="pending")
+    recording_url = Column(Text, nullable=True)          # pending | sent | failed
 
 
 class Notification(Base):
@@ -220,6 +222,7 @@ class PhishingTarget(Base):
     full_name_snapshot = Column(String, nullable=False)
     role_snapshot = Column(String, nullable=False)
     tracking_token = Column(String, unique=True, index=True, nullable=False)
+    subject_used = Column(String, nullable=True) # <-- ADDED THIS
     sent_at = Column(DateTime, nullable=True)
     clicked_at = Column(DateTime, nullable=True)
     click_ip = Column(String, nullable=True)
@@ -230,3 +233,20 @@ class PhishingTarget(Base):
     user = relationship("User")
 
     __table_args__ = (UniqueConstraint("campaign_id", "user_id", name="uq_phishing_campaign_user"),)
+
+class AuditReport(Base):
+    __tablename__ = "audit_reports"
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String, nullable=False)
+    report_type = Column(String, nullable=False)  # 'training', 'vapt', 'phishing'
+    vapt_category = Column(String, nullable=True) # 'technical', 'executive', 'remediation', 'excel'
+    vessel = Column(String, nullable=False)
+    file_name = Column(String, nullable=False)
+    file_size_bytes = Column(Integer, default=0)
+    file_url = Column(Text, nullable=False)       # SharePoint webUrl for viewing
+    status = Column(String, default="pending")    # 'pending', 'reviewed', 'flagged'
+    uploaded_by_user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    upload_date = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    uploader = relationship("User")    

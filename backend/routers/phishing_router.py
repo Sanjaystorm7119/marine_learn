@@ -15,6 +15,8 @@ Routes (superuser-only unless noted):
 
 import logging
 import os
+import json
+import random
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -65,6 +67,16 @@ def _campaign_summary(campaign: models.PhishingCampaign) -> dict:
 
 # ── Templates ─────────────────────────────────────────────────────────────────
 
+def _parse_subject(sub: str) -> list[str]:
+    if not sub: return ["Security Alert"]
+    try:
+        parsed = json.loads(sub)
+        return [str(x) for x in parsed] if isinstance(parsed, list) else [str(sub)]
+    except Exception:
+        return [str(sub)] # Fallback for old plain strings
+
+# ── Templates ─────────────────────────────────────────────────────────────────
+
 @router.get("/templates", response_model=list[schemas.PhishingTemplateResponse])
 def list_templates(
     db: Session = Depends(get_db),
@@ -75,11 +87,11 @@ def list_templates(
         models.PhishingTemplate.is_builtin.desc(),
         models.PhishingTemplate.created_at.asc(),
     ).all()
-    return [
+    return[
         {
             "id": t.id,
             "name": t.name,
-            "subject": t.subject,
+            "subject": _parse_subject(t.subject), # <-- Parses JSON string to list
             "html_body": t.html_body,
             "is_builtin": t.is_builtin,
             "created_at": t.created_at.isoformat(),
@@ -96,7 +108,7 @@ def create_template(
 ):
     tmpl = models.PhishingTemplate(
         name=payload.name,
-        subject=payload.subject,
+        subject=json.dumps(payload.subject), # <-- Saves list as JSON string
         html_body=payload.html_body,
         created_by_user_id=current_user.id,
         is_builtin=False,
@@ -108,7 +120,7 @@ def create_template(
     return {
         "id": tmpl.id,
         "name": tmpl.name,
-        "subject": tmpl.subject,
+        "subject": payload.subject, # <-- Returns the list
         "html_body": tmpl.html_body,
         "is_builtin": tmpl.is_builtin,
         "created_at": tmpl.created_at.isoformat(),
@@ -171,6 +183,7 @@ def get_campaign(
             "clicked": t.clicked_at is not None,
             "clicked_at": t.clicked_at.isoformat() if t.clicked_at else None,
             "tracking_url": phishing_service.build_click_url(t.tracking_token),
+            "subject_used": t.subject_used, # <-- ADDED THIS
         }
         for t in (campaign.targets or [])
     ]
@@ -201,8 +214,14 @@ def launch_campaign(
     tenant_id, client_id, client_secret, organizer_id, organizer_name = _load_creds()
 
     sent_count = 0
+    template_subjects = _parse_subject(template.subject) # <-- Parse subjects once
+
     for user in users:
         token = phishing_service.generate_tracking_token()
+        
+        # Randomly pick a subject for this specific user
+        chosen_subject = random.choice(template_subjects)
+
         target = models.PhishingTarget(
             campaign_id=campaign.id,
             user_id=user.id,
@@ -210,6 +229,7 @@ def launch_campaign(
             full_name_snapshot=user.full_name or user.email,
             role_snapshot=user.role,
             tracking_token=token,
+            subject_used=chosen_subject, # <-- Save the chosen subject
         )
         db.add(target)
         db.commit()
@@ -229,7 +249,7 @@ def launch_campaign(
                 client_secret=client_secret,
                 organizer_user_id=organizer_id,
                 organizer_display_name=organizer_name,
-                subject=template.subject,
+                subject=chosen_subject, # <-- Send with the chosen subject
                 html_body=html_body,
                 recipient_emails=[user.email],
             )

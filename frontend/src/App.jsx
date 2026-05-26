@@ -29,6 +29,7 @@ import PhishingDrillPage from "./components/Phishingdrillpage";
 import PhishingLanding from "./components/PhishingLanding";
 import SuperuserLayout from "./components/SuperUserLayout";
 import TeamsMeetPage from "./components/TeamsMeetPage";
+import Recordings from "./components/Recordings";
 import "./index.css";
 
 // Wrapper to hide standard Navbar & Footer on auth pages AND admin pages
@@ -49,6 +50,7 @@ const PublicLayout = ({ children }) => {
       "/phishing-drill",
       "/phishing-landing",
       "/teams-meet",
+      "/teams-meet/recordings",
     ].includes(location.pathname) || location.pathname.startsWith("/admin");
 
   return (
@@ -113,6 +115,14 @@ function App() {
   element={
     <SuperuserLayout>
       <TeamsMeetPage />
+    </SuperuserLayout>
+  }
+/>
+<Route
+  path="/teams-meet/recordings"
+  element={
+    <SuperuserLayout>
+      <Recordings />
     </SuperuserLayout>
   }
 />

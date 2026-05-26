@@ -32,11 +32,11 @@ import "../pages/dashboard.css";
 /* ── Sidebar Items — Calendar is active ── */
 const sidebarItems = [
   { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
-  { label: "My Courses", icon: BookOpen, href: "/mycourses" },
+  // { label: "My Courses", icon: BookOpen, href: "/mycourses" },
   { label: "Study Materials", icon: FileText, href: "/study-materials" },
   { label: "Calendar", icon: Calendar, href: "/calendar", active: true },
   { label: "Certificates", icon: Award, href: "/certificates" },
-  { label: "Reports", icon: BarChart3, href: "/dashboard" },
+  // { label: "Reports", icon: BarChart3, href: "/dashboard" },
   { label: "Settings", icon: Settings, href: "/settings" },
   { label: "Help", icon: HelpCircle, href: "/help" },
 ];
