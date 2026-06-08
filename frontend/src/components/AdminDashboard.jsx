@@ -4,7 +4,15 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, BarChart, Ba
 import '../pages/admin.css';
 
 const AdminDashboard = () => {
-    const [stats, setStats] = useState({ totalUsers: 0, loading: true, error: null, usersByRole: [] });
+    const [stats, setStats] = useState({
+        totalUsers: 0,
+        totalCourses: 0,
+        totalCertificates: 0,
+        totalVessels: 0,
+        loading: true,
+        error: null,
+        usersByRole: []
+    });
     const navigate = useNavigate();
 
     // Theme matching colors
@@ -43,6 +51,9 @@ const AdminDashboard = () => {
 
                 setStats({
                     totalUsers: data.total_users,
+                    totalCourses: data.total_courses,
+                    totalCertificates: data.total_certificates,
+                    totalVessels: data.total_vessels,
                     usersByRole,
                     loading: false,
                     error: null
@@ -76,18 +87,31 @@ const AdminDashboard = () => {
                         {stats.loading ? '...' : stats.totalUsers}
                     </div>
                 </div>
-                {/* Future stats can go here */}
                 <div className="admin-stat-card">
-                    <div className="stat-card-title">Platform Status</div>
-                    <div className="stat-card-value" style={{color: '#4CAF50', fontSize: '1.5rem', marginTop: '1rem'}}>
-                        Online 🚀
+                    <div className="stat-card-title">Total Courses</div>
+                    <div className="stat-card-value">
+                        {stats.loading ? '...' : stats.totalCourses}
+                    </div>
+                </div>
+                <div className="admin-stat-card">
+                    <div className="stat-card-title">Certificates Issued</div>
+                    <div className="stat-card-value">
+                        {stats.loading ? '...' : stats.totalCertificates}
+                    </div>
+                </div>
+                <div className="admin-stat-card">
+                    <div className="stat-card-title">Total Vessels</div>
+                    <div className="stat-card-value">
+                        {stats.loading ? '...' : stats.totalVessels}
                     </div>
                 </div>
             </div>
 
             {/* Charts Section */}
+            {/* Charts Section */}
             {!stats.loading && stats.usersByRole.length > 0 && (
-                <div className="admin-stats-grid" style={{ marginTop: '2rem', gap: '2rem' }}>
+                <div className="admin-stats-grid" style={{ marginTop: '2rem', gap: '2rem', gridTemplateColumns: 'repeat(2, 1fr)' }}>
+                    
                     <div className="admin-stat-card" style={{ padding: '2rem 1rem' }}>
                         <h3 className="stat-card-title" style={{ textAlign: 'center', marginBottom: '2rem' }}>User Role Distribution</h3>
                         <div style={{ width: '100%', height: 300 }}>

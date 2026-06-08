@@ -379,7 +379,19 @@ class TeamsCredentialsStatus(BaseModel):
     organizer_display_name: str | None = None
     updated_at: str | None = None
 
+class TeamsAvailabilityRequest(BaseModel):
+    title: str
+    vessel: str
+    agenda: str | None = None
+    proposed_dates: list[str]
+    proposed_times: list[str]
+    email_body: str
 
+class TeamsMeetingConfirm(BaseModel):
+    start_time: datetime
+    end_time: datetime
+
+    
 class TeamsMeetingCreate(BaseModel):
     title: str
     description: str | None = None
@@ -411,6 +423,7 @@ class TeamsMeetingResponse(BaseModel):
     vessel: str | None = None 
     email_status: str
     recording_url: str | None = None 
+    proposed_slots: dict | None = None 
     created_at: str
 
     class Config:
@@ -433,3 +446,14 @@ class AuditReportResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+class PaginatedMeetingResponse(BaseModel):
+    total: int
+    page: int
+    pages: int
+    scheduled_count: int
+    completed_count: int
+    cancelled_count: int
+    pending_count: int
+    items: list[TeamsMeetingResponse]
+

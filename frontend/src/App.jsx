@@ -18,6 +18,7 @@ import AdminDashboard from "./components/AdminDashboard";
 import AdminUsers from "./components/AdminUsers";
 import AdminUserDetails from "./components/AdminUserDetails";
 import AdminLayout from "./components/AdminLayout";
+import VesselManagement from "./components/VesselManagement";
 // import MyCourses from "./components/mycourse";
 import StudyMaterials from "./components/StudyMaterials";
 import AdminRole from "./components/AdminRole"; 
@@ -145,6 +146,7 @@ function App() {
                 <Route path="courses/new" element={<AdminCourseForm />} />
                 <Route path="courses/edit/:courseId" element={<AdminCourseForm />} />
                 <Route path="/user-courses" element={<AdminUserCourse />} />
+                <Route path="/vessels" element={<VesselManagement />} />
                 
               </Routes>
             </AdminLayout>

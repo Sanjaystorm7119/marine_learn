@@ -33,14 +33,15 @@ export default function Recordings() {
         if (!rawToken) return;
         const cleanToken = rawToken.replace(/^"|"$/g, '');
 
-        const response = await fetch("http://127.0.0.1:8000/teams/meetings", {
+        // Added ?limit=100 to fetch enough meetings from the backend
+        const response = await fetch("http://127.0.0.1:8000/teams/meetings?limit=100", {
           headers: { "Authorization": `Bearer ${cleanToken}` }
         });
         if (!response.ok) throw new Error("Failed to fetch");
         const data = await response.json();
 
-        // Only keep meetings that have a recording URL generated
-        setMeetings(data.filter(m => m.recording_url));
+        // Changed data.filter to data.items.filter because of pagination!
+        setMeetings(data.items.filter(m => m.recording_url));
       } catch (error) {
         console.error("Error fetching recordings:", error);
       }

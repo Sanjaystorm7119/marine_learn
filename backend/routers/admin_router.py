@@ -32,8 +32,19 @@ def get_stats(
         .group_by(models.User.role)
         .all()
     )
+    total_courses = db.query(models.Course).count()
+    total_certificates = db.query(models.Certificate).count()
+    total_vessels = (
+        db.query(models.User.vessel)
+        .filter(models.User.vessel.isnot(None), models.User.vessel != "")
+        .distinct()
+        .count()
+    )
     return {
         "total_users": total_users,
+        "total_courses": total_courses,
+        "total_certificates": total_certificates,
+        "total_vessels": total_vessels,
         "roles": {role: count for role, count in role_counts},
     }
 

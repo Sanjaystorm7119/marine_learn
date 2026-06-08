@@ -1,5 +1,24 @@
-venv
-.venv
-*venv
-backend\venv
+# Environments
+.env
+.env.local
+venv/
+.venv/
+*venv/
+backend/venv/
+
+# Python
+__pycache__/
+*.pyc
+
+# Node / Frontend
+node_modules/
+build/
+dist/
+npm-debug.log*
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# Custom
 phishing_drill_readme.md

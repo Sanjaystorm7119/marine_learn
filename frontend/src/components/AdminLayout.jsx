@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import {
-  LayoutDashboard, Users, BookOpen, Settings,
-  LogOut, Menu, X, Bell, Search, User as UserIcon, Shield,ShieldCheck, GraduationCap
-} from 'lucide-react';
+import { LayoutDashboard, Users, BookOpen, Settings, LogOut, Menu, X, Bell, Search, User as UserIcon, Shield, ShieldCheck, GraduationCap, Ship } from 'lucide-react';
 import '../pages/admin.css';
 
 const AdminLayout = ({ children }) => {
@@ -36,7 +33,8 @@ const AdminLayout = ({ children }) => {
     { name: 'User Info', path: '/admin/user-courses', icon: GraduationCap },
     { name: 'Role Management', path: '/admin/roles', icon: ShieldCheck }, 
     { name: 'Course Management', path: '/admin/courses', icon: BookOpen },
-    { name: 'System Settings', path: '/admin/settings', icon: Settings },
+    // { name: 'System Settings', path: '/admin/settings', icon: Settings },
+    // { name: 'Vessel Management', path: '/admin/vessels', icon: Ship },
   ];
 
   return (

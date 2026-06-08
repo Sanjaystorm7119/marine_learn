@@ -39,7 +39,7 @@ const Login = () => {
         if (data.role === "admin") {
           navigate("/admin"); // → Admin dashboard
         } else if (data.role === "super user" || data.role === "super_user") {
-          navigate("/teams-meet"); // → Super User dashboard (You can change this to "/audits" if you prefer)
+          navigate("/audits");// → Super User dashboard (You can change this to "/audits" if you prefer)
         } else {
           navigate("/dashboard"); // → Normal crew dashboard
         }

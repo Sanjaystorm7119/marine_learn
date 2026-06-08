@@ -5,16 +5,38 @@ import "../pages/admin.css";
 
 const AdminUsers = () => {
   const [users, setUsers] = useState([]);
+  const [roles, setRoles] = useState([]); // <-- NEW: Dynamic roles state
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [updateMessage, setUpdateMessage] = useState(null);
   const navigate = useNavigate();
 
-  const roles = ["crew", "officers", "super_user", "admin"];
-
   useEffect(() => {
+    fetchRoles(); // <-- NEW: Fetch roles on load
     fetchUsers();
   }, []);
+
+  // <-- NEW: Function to fetch roles from DB
+  const fetchRoles = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch("http://127.0.0.1:8000/admin/roles", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        const roleNames = data.map(r => r.name);
+        setRoles(roleNames);
+        
+        // Set the default role for the "Add User" form to the first role in the DB
+        if (roleNames.length > 0) {
+          setNewUser(prev => ({ ...prev, role: roleNames[0] }));
+        }
+      }
+    } catch (err) {
+      console.error("Failed to fetch roles", err);
+    }
+  };
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -121,7 +143,7 @@ const AdminUsers = () => {
         full_name: "",
         email: "",
         password: "",
-        role: "crew",
+        role: roles.length > 0 ? roles[0] : "", // <-- NEW: Defaults to first DB role
         department: "",
       });
       setTimeout(() => setUpdateMessage(null), 3000);
@@ -392,27 +414,29 @@ const AdminUsers = () => {
             {users.map((user) => (
               <tr key={user.id}>
                 <td>{user.id}</td>
-                <td
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "0.6rem",
-                  }}
-                >
-                  <div
-                    style={{
-                      width: "10px",
-                      height: "10px",
-                      borderRadius: "50%",
-                      backgroundColor: user.is_online ? "#10b981" : "#ef4444",
-                      boxShadow: user.is_online
-                        ? "0 0 5px rgba(16, 185, 129, 0.5)"
-                        : "none",
-                    }}
-                    title={user.is_online ? "Online" : "Offline"}
-                  />
-                  {user.full_name}
-                </td>
+                <td>
+  <div
+    style={{
+      display: "flex",
+      alignItems: "center",
+      gap: "0.6rem",
+    }}
+  >
+    <div
+      style={{
+        width: "10px",
+        height: "10px",
+        borderRadius: "50%",
+        backgroundColor: user.is_online ? "#10b981" : "#ef4444",
+        boxShadow: user.is_online
+          ? "0 0 5px rgba(16, 185, 129, 0.5)"
+          : "none",
+      }}
+      title={user.is_online ? "Online" : "Offline"}
+    />
+    {user.full_name}
+  </div>
+</td>
                 <td>{user.email}</td>
                 <td>
                   <select
@@ -421,6 +445,12 @@ const AdminUsers = () => {
                     onChange={(e) => handleRoleChange(user.id, e.target.value)}
                     disabled={user.email === "admin@marinelearn.com"} // Prevent changing main admin
                   >
+                    {/* Fallback: If the user has a legacy role not in the DB, still show it */}
+                    {!roles.includes(user.role) && (
+                      <option key={user.role} value={user.role}>
+                        {user.role}
+                      </option>
+                    )}
                     {roles.map((role) => (
                       <option key={role} value={role}>
                         {role}
@@ -436,12 +466,12 @@ const AdminUsers = () => {
                       gap: "1rem",
                     }}
                   >
-                    <Link
+                    {/* <Link
                       to={`/admin/users/${user.id}`}
                       className="view-details-link"
                     >
                       Details
-                    </Link>
+                    </Link> */}
                     <button
                       onClick={() => handleDeleteUser(user.id, user.full_name)}
                       style={{

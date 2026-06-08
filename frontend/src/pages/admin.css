@@ -270,7 +270,7 @@
 .admin-breadcrumb { color: var(--admin-text-muted); font-size: 0.9rem; }
 .admin-breadcrumb span { color: var(--admin-primary); font-weight: 500; }
 
-.admin-stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+.admin-stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem; }
 
 .admin-stat-card {
   background: var(--admin-surface);
@@ -294,7 +294,22 @@
 }
 
 .admin-users-table { width: 100%; border-collapse: collapse; }
-.admin-users-table th, .admin-users-table td { padding: 1.2rem 1.5rem; text-align: left; border-bottom: 1px solid var(--admin-border); }
+.admin-users-table th, .admin-users-table td {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  vertical-align: middle;
+  text-align: left;
+}
+
+.admin-users-table th {
+  padding-left: 1.25rem;
+}
+
+.admin-users-table td {
+  padding-left: 1.25rem;
+}
+
+
 .admin-users-table th { background: rgba(128,128,128,0.03); color: var(--admin-text-muted); font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; }
 .admin-users-table tr:hover { background: rgba(128,128,128,0.02); }
 .admin-users-table td { color: var(--admin-text-main); }

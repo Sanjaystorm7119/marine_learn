@@ -165,7 +165,9 @@ class TeamsMeeting(Base):
     participants = Column(JSONB, default=list) 
     vessel = Column(String, nullable=True)                # list of email strings
     email_status = Column(String, default="pending")
-    recording_url = Column(Text, nullable=True)          # pending | sent | failed
+    proposed_slots = Column(JSONB, nullable=True) 
+    recording_url = Column(Text, nullable=True)
+    upload_url = Column(Text, nullable=True)           # pending | sent | failed
 
 
 class Notification(Base):

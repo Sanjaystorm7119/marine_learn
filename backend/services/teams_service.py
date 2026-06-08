@@ -145,3 +145,42 @@ def send_invitation_email(
     )
     if resp.status_code not in (200, 202):
         _raise_graph_error(resp, "Send invitation email")
+
+
+def create_sharepoint_folder_and_link(
+    tenant_id: str, client_id: str, client_secret: str, drive_id: str, vessel_name: str, meeting_title: str
+) -> str:
+    token = _get_app_token(tenant_id, client_id, client_secret)
+    headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
+
+    # Clean names to prevent folder creation errors
+    safe_vessel = "".join([c for c in (vessel_name or "Unknown") if c.isalnum() or c == ' ']).rstrip().replace(' ', '_')
+    safe_title = "".join([c for c in meeting_title if c.isalnum() or c == ' ']).rstrip().replace(' ', '_')
+    folder_name = f"{safe_title}_Documents"
+
+    # 1. Create Folder directly in SharePoint (inside the Vessel's folder)
+    folder_url = f"https://graph.microsoft.com/v1.0/drives/{drive_id}/root:/Recordings/{safe_vessel}:/children"
+    folder_payload = {
+        "name": folder_name,
+        "folder": {},
+        "@microsoft.graph.conflictBehavior": "rename"
+    }
+    resp = httpx.post(folder_url, json=folder_payload, headers=headers, timeout=20)
+    
+    if resp.status_code not in (200, 201):
+        return "" # If it fails, just return empty string so the meeting still creates
+    
+    folder_id = resp.json().get("id")
+
+    # 2. Create Upload Link (Edit permission so Master can upload)
+    link_url = f"https://graph.microsoft.com/v1.0/drives/{drive_id}/items/{folder_id}/createLink"
+    link_payload = {
+        "type": "edit",
+        "scope": "organization" # Change to "anonymous" if your Masters use non-company emails
+    }
+    link_resp = httpx.post(link_url, json=link_payload, headers=headers, timeout=20)
+    
+    if link_resp.status_code in (200, 201):
+        return link_resp.json().get("link", {}).get("webUrl", "")
+    
+    return ""        

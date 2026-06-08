@@ -139,15 +139,33 @@ def delete_user(
     user = db.query(models.User).filter(models.User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    
-    # 1. Delete all related records first to prevent Foreign Key database crashes
-    db.query(models.UserTopicProgress).filter(models.UserTopicProgress.user_id == user_id).delete()
-    db.query(models.UserQuizAttempt).filter(models.UserQuizAttempt.user_id == user_id).delete()
-    db.query(models.UserCourseAssignment).filter(models.UserCourseAssignment.user_id == user_id).delete()
-    db.query(models.Certificate).filter(models.Certificate.user_id == user_id).delete()
-    db.query(models.Notification).filter(models.Notification.user_id == user_id).delete()
-    
-    # 2. Now it is safe to delete the user
+
+    # Prevent deleting the main admin account
+    if user.email == "admin@marinelearn.com":
+        raise HTTPException(status_code=400, detail="Cannot delete the main admin account")
+
+    # 1. Delete direct dependencies (Courses, Quizzes, Phishing Targets, Notifications, Audits)
+    db.query(models.UserTopicProgress).filter(models.UserTopicProgress.user_id == user_id).delete(synchronize_session=False)
+    db.query(models.UserQuizAttempt).filter(models.UserQuizAttempt.user_id == user_id).delete(synchronize_session=False)
+    db.query(models.Certificate).filter(models.Certificate.user_id == user_id).delete(synchronize_session=False)
+    db.query(models.UserCourseAssignment).filter(models.UserCourseAssignment.user_id == user_id).delete(synchronize_session=False)
+    db.query(models.Notification).filter(models.Notification.user_id == user_id).delete(synchronize_session=False)
+    db.query(models.PhishingTarget).filter(models.PhishingTarget.user_id == user_id).delete(synchronize_session=False)
+    db.query(models.AuditReport).filter(models.AuditReport.uploaded_by_user_id == user_id).delete(synchronize_session=False)
+
+    # 2. Nullify references where this user was the creator (Teams, Templates)
+    db.query(models.TeamsCredentials).filter(models.TeamsCredentials.created_by_user_id == user_id).update({"created_by_user_id": None}, synchronize_session=False)
+    db.query(models.TeamsMeeting).filter(models.TeamsMeeting.created_by_user_id == user_id).update({"created_by_user_id": None}, synchronize_session=False)
+    db.query(models.PhishingTemplate).filter(models.PhishingTemplate.created_by_user_id == user_id).update({"created_by_user_id": None}, synchronize_session=False)
+
+    # 3. Delete Phishing Campaigns created by this user (and their targets)
+    campaigns = db.query(models.PhishingCampaign).filter(models.PhishingCampaign.created_by_user_id == user_id).all()
+    for c in campaigns:
+        db.query(models.PhishingTarget).filter(models.PhishingTarget.campaign_id == c.id).delete(synchronize_session=False)
+        db.delete(c)
+
+    # 4. Finally, delete the user
     db.delete(user)
     db.commit()
-    return {"message": "User deleted successfully"}
+    
+    return {"message": "User and all associated data deleted successfully"}

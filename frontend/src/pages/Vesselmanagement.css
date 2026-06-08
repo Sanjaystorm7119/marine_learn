@@ -1,0 +1,671 @@
+/* ═══════════════════════════════════════════════════
+   VesselManagement.css
+   All styles converted from Tailwind utility classes
+═══════════════════════════════════════════════════ */
+
+/* ── Page wrapper ─────────────────────────────────── */
+.vm-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* ── Header ───────────────────────────────────────── */
+.vm-header {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+@media (min-width: 640px) {
+  .vm-header {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.vm-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: #fff;
+  margin: 0;
+}
+.vm-title-icon {
+  width: 1.75rem;
+  height: 1.75rem;
+  color: hsl(var(--secondary, 201 53% 56%));
+}
+
+.vm-breadcrumb {
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+  color: rgba(255,255,255,0.5);
+}
+.vm-breadcrumb-link {
+  color: hsl(var(--secondary, 201 53% 56%));
+  cursor: pointer;
+}
+.vm-breadcrumb-link:hover {
+  text-decoration: underline;
+}
+
+/* Add New Vessel button */
+.vm-add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1.25rem;
+  border-radius: 0.5rem;
+  border: none;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #fff;
+  background: linear-gradient(
+    to right,
+    hsl(var(--nav-gradient-start, 207 52% 40%)),
+    hsl(var(--secondary, 201 53% 56%))
+  );
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  transition: opacity 0.2s;
+}
+.vm-add-btn:hover { opacity: 0.9; }
+.vm-btn-icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+/* ── Stats grid ────────────────────────────────────── */
+.vm-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+@media (min-width: 1024px) {
+  .vm-stats-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.vm-stat-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 0.75rem;
+}
+
+.vm-stat-icon-wrap {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.vm-stat-icon { width: 1.25rem; height: 1.25rem; color: #fff; }
+
+.vm-stat-blue    { background: linear-gradient(135deg, #3b82f6, #22d3ee); }
+.vm-stat-green   { background: linear-gradient(135deg, #10b981, #2dd4bf); }
+.vm-stat-amber   { background: linear-gradient(135deg, #f59e0b, #f97316); }
+.vm-stat-violet  { background: linear-gradient(135deg, #8b5cf6, #a855f7); }
+
+.vm-stat-label {
+  font-size: 0.75rem;
+  color: rgba(255,255,255,0.5);
+  margin: 0;
+}
+.vm-stat-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #fff;
+  margin: 0;
+}
+
+/* ── Search card ───────────────────────────────────── */
+.vm-search-card {
+  padding: 1rem;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 0.75rem;
+}
+.vm-search-wrap {
+  position: relative;
+  max-width: 28rem;
+}
+.vm-search-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1rem;
+  height: 1rem;
+  color: rgba(255,255,255,0.4);
+  pointer-events: none;
+}
+.vm-search-input {
+  width: 100%;
+  padding: 0.5rem 0.75rem 0.5rem 2.25rem;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 0.5rem;
+  color: #fff;
+  font-size: 0.875rem;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+.vm-search-input::placeholder { color: rgba(255,255,255,0.4); }
+.vm-search-input:focus { border-color: rgba(255,255,255,0.3); }
+
+/* ── Table card ────────────────────────────────────── */
+.vm-table-card {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 0.75rem;
+  overflow: hidden;
+}
+.vm-table-scroll { overflow-x: auto; }
+
+.vm-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.vm-thead-row {
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+.vm-th {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: rgba(255,255,255,0.6);
+  white-space: nowrap;
+}
+.vm-th-right { text-align: right; }
+
+.vm-tr {
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  transition: background 0.15s;
+}
+.vm-tr:hover { background: rgba(255,255,255,0.05); }
+.vm-tr:last-child { border-bottom: none; }
+
+.vm-td {
+  padding: 0.875rem 1rem;
+  vertical-align: middle;
+  font-size: 0.875rem;
+}
+.vm-td-muted { color: rgba(255,255,255,0.7); }
+.vm-td-actions { text-align: right; }
+
+/* Vessel cell */
+.vm-vessel-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.vm-vessel-icon-wrap {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.5rem;
+  background: linear-gradient(
+    135deg,
+    hsl(var(--nav-gradient-start, 207 52% 40%)),
+    hsl(var(--secondary, 201 53% 56%))
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.vm-vessel-icon { width: 1rem; height: 1rem; color: #fff; }
+.vm-vessel-name { color: #fff; font-weight: 500; }
+
+/* Crew badges */
+.vm-crew-badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+/* Role badges */
+.vm-role-badge {
+  font-size: 0.625rem;
+  font-weight: 700;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  border: 1px solid;
+  text-transform: capitalize;
+  display: inline-block;
+}
+.vm-role-master  { background: rgba(139,92,246,0.15); color: #c4b5fd; border-color: rgba(139,92,246,0.3); }
+.vm-role-officer { background: rgba(14,165,233,0.15);  color: #7dd3fc; border-color: rgba(14,165,233,0.3); }
+.vm-role-crew    { background: rgba(16,185,129,0.15);  color: #6ee7b7; border-color: rgba(16,185,129,0.3); }
+
+/* Status badges */
+.vm-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  border: 1px solid;
+}
+.vm-status-icon { width: 0.75rem; height: 0.75rem; }
+.vm-status-active   { background: rgba(16,185,129,0.15); color: #6ee7b7; border-color: rgba(16,185,129,0.3); }
+.vm-status-inactive { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.5); border-color: rgba(255,255,255,0.15); }
+
+/* Actions */
+.vm-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+.vm-assign-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  height: 2rem;
+  padding: 0 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 0.5rem;
+  background: rgba(255,255,255,0.05);
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.vm-assign-btn:hover { background: rgba(255,255,255,0.1); }
+.vm-btn-icon-sm { width: 0.875rem; height: 0.875rem; }
+
+.vm-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.08);
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+.vm-edit-btn svg {
+  width: 1rem;
+  height: 1rem;
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+  display: block;
+}
+.vm-edit-btn:hover {
+  background: rgba(125,211,252,0.15);
+  border-color: rgba(125,211,252,0.4);
+}
+.vm-edit-btn:hover svg {
+  color: #7dd3fc !important;
+  stroke: #7dd3fc !important;
+}
+.vm-delete-btn svg {
+  width: 1rem;
+  height: 1rem;
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+  display: block;
+}
+.vm-delete-btn:hover {
+  background: rgba(248,113,113,0.15);
+  border-color: rgba(248,113,113,0.4);
+}
+.vm-delete-btn:hover svg {
+  color: #f87171 !important;
+  stroke: #f87171 !important;
+}
+
+/* Empty row */
+.vm-empty-row {
+  text-align: center;
+  color: rgba(255,255,255,0.4);
+  font-size: 0.875rem;
+  padding: 2.5rem 1rem;
+}
+
+/* Table footer */
+.vm-table-footer {
+  padding: 0.75rem 1rem;
+  border-top: 1px solid rgba(255,255,255,0.1);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.vm-table-count {
+  font-size: 0.75rem;
+  color: rgba(255,255,255,0.4);
+  margin: 0;
+}
+
+/* ── Dialog / Modal ────────────────────────────────── */
+.vm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.vm-dialog {
+  width: 100%;
+  max-width: 28rem;
+  background: hsl(var(--ocean-dark, 207 72% 18%));
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 1rem;
+  overflow: hidden;
+  box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+}
+.vm-dialog-wide { max-width: 42rem; }
+
+.vm-dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.vm-dialog-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #fff;
+}
+.vm-dialog-title-icon {
+  width: 1rem;
+  height: 1rem;
+  color: hsl(var(--secondary, 201 53% 56%));
+  flex-shrink: 0;
+}
+.vm-dialog-vessel-name {
+  color: hsl(var(--secondary, 201 53% 56%));
+}
+.vm-dialog-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 0.375rem;
+  border: none;
+  background: rgba(255,255,255,0.05);
+  color: rgba(255,255,255,0.5);
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.vm-dialog-close:hover { background: rgba(255,255,255,0.1); color: #fff; }
+
+.vm-dialog-body {
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.vm-dialog-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+
+/* ── Form fields ───────────────────────────────────── */
+.vm-field { display: flex; flex-direction: column; gap: 0.375rem; }
+.vm-label { font-size: 0.75rem; color: rgba(255,255,255,0.8); font-weight: 500; }
+
+.vm-input {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 0.5rem;
+  color: #fff;
+  font-size: 0.875rem;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+.vm-input::placeholder { color: rgba(255,255,255,0.4); }
+.vm-input:focus { border-color: rgba(255,255,255,0.3); }
+
+.vm-select {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 0.5rem;
+  color: #fff;
+  font-size: 0.875rem;
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  box-sizing: border-box;
+}
+.vm-select option { background: hsl(207, 72%, 18%); color: #fff; }
+
+/* Status toggle */
+.vm-status-toggle {
+  display: flex;
+  gap: 0.5rem;
+}
+.vm-status-btn {
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: 1px solid;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-transform: capitalize;
+}
+.vm-status-btn-active      { background: rgba(16,185,129,0.2);   border-color: rgba(16,185,129,0.4);   color: #6ee7b7; }
+.vm-status-btn-inactive-sel{ background: rgba(255,255,255,0.1);  border-color: rgba(255,255,255,0.3);  color: #fff; }
+.vm-status-btn-idle        { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1);  color: rgba(255,255,255,0.5); }
+.vm-status-btn-idle:hover  { background: rgba(255,255,255,0.1); }
+
+/* ── Buttons ────────────────────────────────────────── */
+.vm-btn-ghost {
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  border: none;
+  background: transparent;
+  color: rgba(255,255,255,0.7);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.vm-btn-ghost:hover { background: rgba(255,255,255,0.1); color: #fff; }
+
+.vm-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 1.25rem;
+  border-radius: 0.5rem;
+  border: none;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #fff;
+  background: linear-gradient(
+    to right,
+    hsl(var(--nav-gradient-start, 207 52% 40%)),
+    hsl(var(--secondary, 201 53% 56%))
+  );
+  transition: opacity 0.2s;
+}
+.vm-btn-primary:hover { opacity: 0.9; }
+
+/* ── Assign users dialog ────────────────────────────── */
+.vm-user-search-wrap {
+  position: relative;
+}
+.vm-user-search-icon {
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1rem;
+  height: 1rem;
+  color: rgba(255,255,255,0.4);
+  pointer-events: none;
+}
+.vm-user-search-input {
+  padding-left: 2.25rem !important;
+}
+
+.vm-assign-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.75rem;
+}
+.vm-assign-count { color: rgba(255,255,255,0.6); }
+.vm-assign-count strong { color: #fff; }
+.vm-clear-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.75rem;
+  color: hsl(var(--secondary, 201 53% 56%));
+  padding: 0;
+}
+.vm-clear-btn:hover { text-decoration: underline; }
+
+.vm-user-list-scroll {
+  height: 22.5rem;
+  overflow-y: auto;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.02);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.15) transparent;
+}
+.vm-user-list { padding: 0.5rem; display: flex; flex-direction: column; gap: 1rem; }
+
+/* Role section header inside list */
+.vm-role-section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.5rem;
+  position: sticky;
+  top: 0;
+  background: hsl(var(--ocean-dark, 207 72% 18%));
+  backdrop-filter: blur(4px);
+  z-index: 1;
+}
+.vm-role-count { font-size: 0.625rem; color: rgba(255,255,255,0.4); }
+
+.vm-user-items { display: flex; flex-direction: column; gap: 0.25rem; }
+
+.vm-user-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background 0.15s, border-color 0.15s;
+  background: rgba(255,255,255,0.02);
+}
+.vm-user-item:hover { background: rgba(255,255,255,0.05); }
+.vm-user-item-checked {
+  background: rgba(var(--secondary-rgb, 64 169 202), 0.1) !important;
+  border-color: hsl(var(--secondary, 201 53% 56%), 0.3) !important;
+}
+
+/* Fallback checked style without CSS vars */
+.vm-user-item-checked {
+  background: rgba(56,189,248,0.1) !important;
+  border-color: rgba(56,189,248,0.3) !important;
+}
+
+.vm-checkbox {
+  width: 1rem;
+  height: 1rem;
+  accent-color: hsl(var(--secondary, 201 53% 56%));
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.vm-user-info { flex: 1; min-width: 0; }
+.vm-user-name  { font-size: 0.875rem; color: #fff; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0; }
+.vm-user-email { font-size: 0.6875rem; color: rgba(255,255,255,0.4); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0; }
+
+.vm-no-users {
+  text-align: center;
+  color: rgba(255,255,255,0.4);
+  font-size: 0.875rem;
+  padding: 2rem 1rem;
+  margin: 0;
+}
+
+/* ── Toast notifications ────────────────────────────── */
+.vm-toast-container {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.vm-toast {
+  padding: 0.75rem 1rem;
+  border-radius: 0.625rem;
+  border: 1px solid;
+  min-width: 200px;
+  max-width: 320px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+}
+.vm-toast-success { background: rgba(16,185,129,0.15); border-color: rgba(16,185,129,0.3); }
+.vm-toast-error   { background: rgba(239,68,68,0.15);  border-color: rgba(239,68,68,0.3);  }
+.vm-toast-title   { font-size: 0.875rem; font-weight: 600; color: #fff; margin: 0; }
+.vm-toast-desc    { font-size: 0.75rem;  color: rgba(255,255,255,0.6); margin: 0.25rem 0 0; }
+
+.vm-icon-btn svg {
+  stroke: #ffffff !important;
+  color: #ffffff !important;
+  fill: none !important;
+  width: 1rem !important;
+  height: 1rem !important;
+  min-width: 1rem;
+  min-height: 1rem;
+  display: block;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.vm-icon-btn:hover svg {
+  stroke: currentColor !important;
+}
+
+.vm-edit-btn:hover svg   { stroke: #7dd3fc !important; color: #7dd3fc !important; }
+.vm-delete-btn:hover svg { stroke: #f87171 !important; color: #f87171 !important; }
